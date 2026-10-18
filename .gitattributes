@@ -1,0 +1,2 @@
+# Script shell phải dùng LF: CRLF làm bash báo lỗi khi clone trên Windows
+*.sh text eol=lf

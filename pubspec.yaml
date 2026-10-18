@@ -1,0 +1,54 @@
+name: quizhub
+description: "QuizHub - Mạng xã hội cho sinh viên đề xuất và đánh giá câu hỏi trong ngân hàng đề (HUST)."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_localizations:
+    sdk: flutter
+
+  # State management
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.5
+
+  # Dependency injection
+  get_it: ^8.0.3
+
+  # Networking
+  dio: ^5.9.0
+
+  # Local storage
+  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^9.2.4
+
+  # UI
+  cached_network_image: ^3.4.1
+  flutter_easyloading: ^3.0.5
+  video_player: ^2.9.1
+  shimmer: ^3.0.0
+
+  # Utilities
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  image_picker: ^1.1.2
+  url_launcher: ^6.3.1
+  package_info_plus: ^8.3.0
+  device_info_plus: ^11.5.0
+  phosphor_flutter: ^2.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
