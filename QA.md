@@ -1,7 +1,14 @@
 # Góc làm việc của Sơn — Tester / QA
 
 Nhánh: `qa/khanhson2005`. Phạm vi: test, tài liệu và cấu hình chạy phục vụ QA.
-Không thay đổi nghiệp vụ app trong đợt thiết lập này.
+Đây là nhánh cá nhân lâu dài; chỉ nhận thay đổi từ upstream `main`. Nhánh QA không
+được merge vào `main` hoặc nhánh khác, không dùng để mở PR, và không được push nếu
+chưa có yêu cầu rõ ràng sau này. Mã runtime QA mặc định theo đúng snapshot `main` đã
+tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệu. Không thay đổi nghiệp vụ app.
+
+Tài liệu: [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
+[quy trình Git](docs/qa/GIT_WORKFLOW.md),
+[thiết lập agent](docs/qa/AGENT_SETUP.md).
 
 Nguồn phân công: [Kế hoạch phân công — Flutter Social Question Bank](https://docs.google.com/spreadsheets/d/1URTpbSX2k_04dvurVlJUbkP2iDILs618CKItSpDxjq4/edit#gid=0),
 đọc ngày 21/10/2026, cả ba tab `Phân chia công việc`, `Phân chia màn hình`,
@@ -183,7 +190,9 @@ Mỗi lần bàn giao, copy khối sau vào báo cáo của lần chạy và đi
 
 ```text
 Ngày / người chạy: ... / Sơn
-Commit / build / môi trường API:
+SHA upstream `main` đã tích hợp:
+SHA nguồn QA được kiểm thử (`TESTED_SHA`):
+Build / môi trường API:
 Thiết bị 1 / OS:
 Thiết bị 2 / OS:
 Phạm vi / ID test cases:
@@ -193,7 +202,11 @@ Bug còn mở / severity / owner / kết quả retest:
 Kết luận: PASS, FAIL hoặc BLOCKED + lý do:
 ```
 
-- [ ] Ghi commit/build/server và phạm vi đã tích hợp; xác nhận các module chờ bàn giao.
+Sau khi commit báo cáo, ghi `REPORT_COMMIT_SHA` trong handoff bên ngoài commit đó
+hoặc lấy lại bằng `git log -1 --format=%H`. Không sửa/amend báo cáo để nhúng SHA
+commit chứa chính nó.
+
+- [ ] Ghi riêng SHA upstream `main` đã tích hợp và SHA nguồn QA đã kiểm thử (`TESTED_SHA`); kèm build/server và phạm vi.
 - [ ] `dart format --output=none --set-exit-if-changed lib test` và `flutter analyze` sạch.
 - [ ] `flutter test --coverage` xanh; lưu kết quả, không dùng coverage thay cho manual test.
 - [ ] Smoke Auth → Home → Profile → Social; kiểm tra chéo ít nhất hai tài khoản test.
@@ -202,4 +215,4 @@ Kết luận: PASS, FAIL hoặc BLOCKED + lý do:
 - [ ] Test ít nhất **hai điện thoại thật**, responsive, keyboard, camera/gallery permission.
 - [ ] Khi chat/push được tích hợp: verify reconnect, FCM và deep link theo trạng thái app.
 - [ ] Bug chặn release đã fix và retest; regression luồng liên quan pass, đính kèm bằng chứng.
-- [ ] Thay đổi đã merge nhánh tích hợp và không phá module khác; gửi kết quả cho Như/Nam trước đóng gói demo.
+- [ ] Xác nhận thay đổi upstream của app đã vào nhánh tích hợp theo quy trình phát triển; QA vẫn trên nhánh cá nhân riêng và chỉ gửi kết quả cho Như/Nam trước đóng gói demo.

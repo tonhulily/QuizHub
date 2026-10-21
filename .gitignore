@@ -46,3 +46,7 @@ app.*.map.json
 
 # Báo cáo / artefact do Gradle sinh ra
 /android/build/
+
+# Worktree đối chiếu và bằng chứng QA cục bộ
+/.worktrees/
+/qa-artifacts/
