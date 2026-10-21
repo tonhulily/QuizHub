@@ -1,0 +1,187 @@
+{
+  "id": "7857a4b7-2c30-436a-a77f-1b44eabc2ae9",
+  "name": "QuizHub QA — local template (fill only on your machine)",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://example.invalid/api/v1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "token_a",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "token_b",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token_a",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "email_a",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "email_b",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "password_b",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "password_a",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "device_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "platform",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "device_name",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "os_version",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "app_version",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "user_a_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "user_b_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "post_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "comment_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "after_cursor",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "post_visibility",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "search_query",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "profile_update_body",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "media_purpose",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "old_password_a",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "new_password_a",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "post_content_json",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "comment_content_json",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "post_update_body",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "requester_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "search_offset",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "violation_type",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

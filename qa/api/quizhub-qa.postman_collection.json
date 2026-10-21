@@ -1,0 +1,1034 @@
+{
+  "info": {
+    "_postman_id": "28e90b7f-97b7-413a-9530-65a18f6321e4",
+    "name": "QuizHub QA — manual API toolkit",
+    "description": "Bộ request API chạy thủ công cho các endpoint app Flutter hiện gọi. Không có auth cấp collection, script, tự bắt token hay runner tự động. Import environment đi kèm, đặt host QA được phép và giá trị test local, rồi gửi từng request đã chọn. Request có nhãn WRITE/DELETE/SESSION có thể đổi dữ liệu server hoặc trạng thái tài khoản. Envelope/mã thành công chỉ là hành vi client quan sát từ mã nguồn; contract server chưa xác minh vì Swagger không truy cập được. Xem README.md và ../../docs/qa/API_CONTRACT_GAPS.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 Xác thực",
+      "item": [
+        {
+          "name": "[PHIÊN] Đăng nhập A — thủ công, không tự lưu token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login",
+            "description": "Tạo phiên đăng nhập và trả token. Chỉ chạy trên tài khoản/môi trường test được cấp; sau đó chép token vào environment local thủ công. Collection không tự lưu token hay tự login.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email_a}}\",\n  \"password\": \"{{password_a}}\",\n  \"device_id\": \"{{device_id}}\",\n  \"platform\": \"{{platform}}\",\n  \"device_name\": \"{{device_name}}\",\n  \"os_version\": \"{{os_version}}\",\n  \"app_version\": \"{{app_version}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[PHIÊN] Đăng nhập B — thủ công, không tự lưu token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login",
+            "description": "Tạo phiên đăng nhập và trả token. Chỉ chạy trên tài khoản/môi trường test được cấp; sau đó chép token vào environment local thủ công. Collection không tự lưu token hay tự login.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email_b}}\",\n  \"password\": \"{{password_b}}\",\n  \"device_id\": \"{{device_id}}\",\n  \"platform\": \"{{platform}}\",\n  \"device_name\": \"{{device_name}}\",\n  \"os_version\": \"{{os_version}}\",\n  \"app_version\": \"{{app_version}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[PHIÊN] Làm mới token — thủ công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/refresh",
+            "description": "Gửi refresh_token theo AuthInterceptor. Nếu server xoay refresh token, cập nhật environment local thủ công; không có script bắt token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[GHI / PHIÊN] Đăng xuất token A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/logout",
+            "description": "Kết thúc phiên A nếu server hỗ trợ theo contract. Chỉ gửi khi chủ động muốn logout tài khoản test; không nằm trong runner.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[GHI / AUTH-06] Đổi mật khẩu A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/change-password",
+            "description": "Body theo AuthRepository.changePassword. Thay đổi mật khẩu tài khoản test A; chạy thủ công và cập nhật thông tin local sau khi xác minh.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"old_password\": \"{{old_password_a}}\",\n  \"new_password\": \"{{new_password_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Hồ sơ",
+      "item": [
+        {
+          "name": "[ĐỌC] Hồ sơ hiện tại — GET /users/me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/users/me",
+            "description": "Đọc hồ sơ của tài khoản A.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[GHI] Cập nhật hồ sơ — PUT /users/me",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/users/me",
+            "description": "Body lấy từ UserRepository.updateMe. Trước khi gửi, đặt profile_update_body trong environment local thành JSON chỉ chứa field muốn đổi; để trống thì request không có body hữu ích. Có thể thay đổi dữ liệu hồ sơ A.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{{profile_update_body}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC / QUYỀN] Hồ sơ người khác — GET /users/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/users/{{user_b_id}}",
+            "description": "Đọc hồ sơ B dưới phiên A. Không giả định email/ngày sinh phải có trong response; README dự án ghi GET /users/{id} không trả hai field này.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC / QUYỀN] B xem hồ sơ A",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/users/{{user_a_id}}",
+            "description": "Đọc profile A bằng token B để đối chiếu quyền riêng tư. Không giả định status/body lỗi; README dự án nói GET /users/{id} không trả email và ngày sinh.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_b}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 Bài viết",
+      "item": [
+        {
+          "name": "[ĐỌC] Bài của tôi — trang đầu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/posts/me?limit=10",
+            "description": "Trang đầu bài viết của A. Query limit lấy theo PostRepository.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC] Bài của user — GET /users/{id}/posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/users/{{user_b_id}}/posts?limit=10",
+            "description": "Trang đầu bài của B qua endpoint được PostRepository gọi; cursor dùng after_cursor nếu cần trang sau.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[ĐỌC / QUYỀN] A đọc bài của mình",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Đọc bài test của A; dùng để đối chiếu cùng request dưới token B.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC / QUYỀN] B đọc cùng bài",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Dùng với bài ONLY_ME hoặc FRIENDS của A. Kỳ vọng nghiệp vụ phải lấy từ requirement đã thống nhất; không khẳng định status HTTP 403/404. Đối chiếu body và xác nhận không lộ nội dung ngoài quyền.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_b}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[REPOSITORY ONLY / GHI] Sửa bài test — PUT /posts/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Body theo PostRepository.update; đây chỉ là request shape trong repository, không chứng minh UI/feature đã được bàn giao. Nếu có host/fixture và quyền được phép, chỉ sửa post disposable do A tạo. post_update_body chỉ gồm content, media_urls hoặc visibility.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{{post_update_body}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[GHI] Tạo bài — JSON content đã encode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/posts",
+            "description": "Body theo PostRepository.create. post_content_json phải là JSON string literal đã encode (không đặt trong dấu nháy thêm); hướng dẫn tạo bằng Python trong README. Điền post_visibility (PUBLIC, FRIENDS hoặc ONLY_ME). Tạo dữ liệu server.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": {{post_content_json}},\n  \"media_urls\": [],\n  \"visibility\": \"{{post_visibility}}\",\n  \"post_type\": \"SOCIAL_POST\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ÂM TÍNH / NGUY CƠ GHI] B thử xóa bài của A",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Chỉ dùng post disposable do A tạo. PostRepository.delete gọi DELETE /posts/{id}; xác minh B không thể xóa bài A và bài vẫn đọc được bằng A. Không giả định status lỗi; nếu backend cho phép, dữ liệu sẽ bị xóa.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_b}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[GHI / XÓA] A xóa bài test của mình",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/posts/{{post_id}}",
+            "description": "Chỉ dùng post disposable do A tạo. Xóa dữ liệu server; PostRepository coi success hoặc 404 là đã xóa phía client.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Bình luận",
+      "item": [
+        {
+          "name": "[ĐỌC] Danh sách bình luận — trang đầu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/comments?target_type=POST&target_id={{post_id}}&sort=newest&limit=20",
+            "description": "Query fields theo CommentRepository.list; target_type=POST cho comment trên post. Dùng post_id của fixture test.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC] Danh sách bình luận — trang tiếp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/comments?target_type=POST&target_id={{post_id}}&sort=newest&after={{after_cursor}}&limit=20",
+            "description": "Chỉ điền after_cursor bằng cursor tiếp theo quan sát được từ response trước. Hợp đồng cursor cần xác nhận với backend; client gửi tham số after.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[GHI] Tạo bình luận — JSON content đã encode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/comments",
+            "description": "Body theo CommentRepository.create. comment_content_json phải là JSON string literal đã encode (không đặt trong dấu nháy thêm); hướng dẫn tạo bằng Python trong README. Tạo comment test trên bài disposable.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_type\": \"POST\",\n  \"target_id\": {{post_id}},\n  \"content\": {{comment_content_json}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[GHI / XÓA] Xóa bình luận của A — token A",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/comments/{{comment_id}}",
+            "description": "Chỉ dùng comment disposable do A tạo.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ÂM TÍNH / NGUY CƠ GHI] B thử xóa bình luận của A",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/comments/{{comment_id}}",
+            "description": "Dùng comment disposable do A tạo. CommentRepository nêu chỉ người tạo được xóa; xác minh B không xóa được và comment vẫn còn. Mã HTTP/body lỗi cụ thể chưa xác minh; nếu server cho phép xóa, dữ liệu sẽ bị thay đổi nên chỉ dùng fixture test.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_b}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 Quan hệ",
+      "item": [
+        {
+          "name": "[ĐỌC] Danh sách bạn bè — token A",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/friendships?limit=10",
+            "description": "Đọc trang đầu danh sách bạn bè; không đổi quan hệ.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[GHI] Gửi lời mời — A tới B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/friendships/request",
+            "description": "Body theo FriendRepository.sendRequest. Chỉ chạy khi A/B là tài khoản test cùng role và request là hành động được chủ tài khoản cho phép; có thể tạo quan hệ server-side.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressee_id\": {{user_b_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC] Lời mời đã nhận",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/friendships/requests/received?limit=10",
+            "description": "Đọc lời mời đã nhận; cursor tiếp theo qua after_cursor.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[ĐỌC] Lời mời đã gửi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/friendships/requests/sent?limit=10",
+            "description": "Đọc lời mời đã gửi; cursor tiếp theo qua after_cursor.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[ĐỌC] Danh sách đã chặn",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/blocks?limit=50",
+            "description": "Đọc danh sách block; chỉ đọc.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[GHI] Chấp nhận lời mời từ B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/friendships/accept",
+            "description": "requester_id là ID người gửi lời mời; xác nhận có lời mời B→A trước khi gửi.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requester_id\": {{requester_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[GHI] Từ chối lời mời từ B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/friendships/decline",
+            "description": "requester_id là ID người gửi lời mời; từ chối làm thay đổi trạng thái request.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requester_id\": {{requester_id}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[GHI / XÓA] Hủy kết bạn với B",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/friendships/{{user_b_id}}",
+            "description": "Repository hiện gọi DELETE /friendships/{id} với userId của B. Dùng user_b_id và chỉ xóa quan hệ test; ý nghĩa ID/backend contract vẫn cần xác nhận khi có spec.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[GHI] Follow B",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/follows/{{user_b_id}}",
+            "description": "Tạo follow theo FriendRepository; chỉ dùng tài khoản test.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[GHI / XÓA] Unfollow B",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/follows/{{user_b_id}}",
+            "description": "Xóa follow theo FriendRepository; chỉ dùng quan hệ test.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[GHI / NGUY CƠ GHI] Block B",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/blocks/{{user_b_id}}",
+            "description": "Block có thể tự hủy friendship và follow hai chiều theo ghi chú repository; chỉ dùng tài khoản test, kiểm tra ảnh hưởng trước khi gửi.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[GHI / XÓA] Unblock B",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/blocks/{{user_b_id}}",
+            "description": "Gỡ block B; chỉ dùng quan hệ test.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Bảng tin",
+      "item": [
+        {
+          "name": "[ĐỌC] Bảng tin — trang đầu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/activity-feeds?limit=10",
+            "description": "GET theo FeedRepository.getFeed; chỉ đọc trang đầu.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC] Bảng tin — trang tiếp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/activity-feeds?after={{after_cursor}}&limit=10",
+            "description": "Điền after_cursor bằng next cursor quan sát từ trang trước. Client gửi after và limit; server response shape cần đối chiếu thực tế.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 Tìm kiếm",
+      "item": [
+        {
+          "name": "[ĐỌC] Tìm người dùng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/search?type=USER&query={{search_query}}&limit=20",
+            "description": "Tìm người dùng. SearchRepository gửi after là offset số; dùng search_offset riêng, không dùng after_cursor/cursor của feed.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ĐỌC] Tìm người dùng — offset tiếp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/search?type=USER&query={{search_query}}&after={{search_offset}}&limit=20",
+            "description": "Trang tiếp dùng search_offset (offset số riêng cho /search), không dùng cursor after_cursor.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Tệp đính kèm",
+      "item": [
+        {
+          "name": "[GHI] Tải media — chọn file thủ công",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/medias/upload?purpose={{media_purpose}}",
+            "description": "Chọn file test thủ công bằng nút chọn file trong Postman; không dựa vào biến src. Multipart field file và purpose theo MediaRepository. Chỉ upload fixture được phép.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 Tương tác",
+      "item": [
+        {
+          "name": "[GHI / TOGGLE] React LIKE vào bài test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/react",
+            "description": "ReactionRepository gửi target_type, target_id, reaction_type=LIKE. Có thể toggle thêm/bỏ reaction; dùng post disposable và kiểm tra trạng thái sau gửi.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_type\": \"POST\",\n  \"target_id\": {{post_id}},\n  \"reaction_type\": \"LIKE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[GHI] Báo cáo bài test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/report",
+            "description": "ReportRepository.createReport có thể tạo báo cáo/incident server-side. Chỉ dùng fixture và dữ liệu được phép; violation_type phải là SPAM, HARASSMENT, HATE_STATEMENT hoặc OTHER.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_a}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_type\": \"POST\",\n  \"target_id\": {{post_id}},\n  \"violation_type\": \"{{violation_type}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
