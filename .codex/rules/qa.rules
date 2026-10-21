@@ -1,0 +1,8 @@
+# Ask before any git push. Repo instructions still prohibit it unless Sơn explicitly requests it.
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Sơn must explicitly request this remote write before pushing QA work.",
+    match = ["git push", "git push origin qa/khanhson2005"],
+    not_match = ["git fetch origin"],
+)
