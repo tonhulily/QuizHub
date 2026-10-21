@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Sơn QA: Preview",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_preview.dart"
+    },
+    {
+      "name": "Sơn QA: Preview đăng nhập nhanh",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_preview.dart",
+      "toolArgs": ["--dart-define=SEED_SAVED_ACCOUNT=true"]
+    },
+    {
+      "name": "Sơn QA: Backend thật",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart"
+    }
+  ]
+}

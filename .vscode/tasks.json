@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Sơn QA: Test nền tảng mới",
+      "type": "process",
+      "command": "flutter",
+      "args": [
+        "test",
+        "test/features/auth_session_test.dart",
+        "test/core/paged_cubit_test.dart",
+        "test/data/media_validation_test.dart"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Sơn QA: Phân tích mã",
+      "type": "process",
+      "command": "flutter",
+      "args": ["analyze"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Sơn QA: Regression tự động",
+      "type": "process",
+      "command": "flutter",
+      "args": ["test", "--coverage"],
+      "problemMatcher": []
+    }
+  ]
+}

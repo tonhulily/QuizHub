@@ -5,6 +5,7 @@ Mạng xã hội cho sinh viên Bách Khoa (HUST) **đề xuất, đánh giá v�
 
 - Backend: <https://snsqb.duckdns.org/api/v1/swagger-ui/index.html>
 - Cài đặt môi trường: [REQUIREMENTS.md](REQUIREMENTS.md)
+- Góc làm việc của Sơn (QA): [QA.md](QA.md) — test matrix, bug list, regression và cấu hình chạy riêng.
 
 ## Chạy dự án
 
