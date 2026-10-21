@@ -6,7 +6,8 @@ Nhánh: `qa/khanhson2005`. Phạm vi: test, tài liệu và cấu hình chạy p
 chưa có yêu cầu rõ ràng sau này. Mã runtime QA mặc định theo đúng snapshot `main` đã
 tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệu. Không thay đổi nghiệp vụ app.
 
-Tài liệu: [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
+Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md),
+[kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
 [quy trình Git](docs/qa/GIT_WORKFLOW.md),
 [thiết lập agent](docs/qa/AGENT_SETUP.md).
 
