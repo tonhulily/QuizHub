@@ -66,11 +66,13 @@ class _AuthRepository implements AuthRepository {
   Future<void> logout() async {
     await clearLocalSession();
   }
+
   @override
   Future<void> clearLocalSession() async {
     clearCalls++;
     hasSession = false;
   }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
