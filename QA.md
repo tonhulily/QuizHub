@@ -8,6 +8,12 @@ tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệ
 
 Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md),
 [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
+[19 test case chi tiết + 6 case chờ bàn giao](docs/qa/TEST_CASES.md),
+[bộ request API Postman và hướng dẫn](qa/api/README.md),
+[fixture biên và self-check](qa/fixtures/README.md),
+[repro rủi ro network phía client](qa/repro/README.md),
+[rủi ro tĩnh cần xác minh](docs/qa/RISKS.md),
+[môi trường và lệnh đã thử](docs/qa/ENVIRONMENT.md),
 [quy trình Git](docs/qa/GIT_WORKFLOW.md),
 [thiết lập agent](docs/qa/AGENT_SETUP.md).
 
@@ -155,12 +161,14 @@ không kiểm chứng định dạng media thực, nội dung file hay dịch v�
 
 ## Bug list và mẫu ghi nhận
 
-Chưa có bug đã tái hiện trong đợt này. Ghi nhận ban đầu:
+Chưa có defect server/backend được xác nhận. Hai invariant client tái hiện bằng fake
+transport được ghi ở [RISKS.md](docs/qa/RISKS.md); không phải bằng chứng đã gọi server.
+Ghi nhận ban đầu:
 
 | ID | Liên quan | Quan sát | Cách xác nhận / trạng thái |
 |---|---|---|---|
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |
-| QA-ENV-01 | Môi trường | Máy chuẩn bị nhánh thiếu Flutter/Dart/Java/adb; lần khám phá trước không truy cập được Swagger | Cài SDK rồi chạy kiểm tra; xác nhận lại [Swagger](https://snsqb.duckdns.org/api/v1/swagger-ui/index.html) từ máy test. BLOCKED cho thực thi tự động tại đây |
+| QA-ENV-01 | Môi trường | SDK Flutter/Dart cô lập hiện đã sẵn; Android JDK/adb, backend test/tài khoản/thiết bị chưa sẵn hoặc chưa xác nhận. Swagger lookup bị ngắt khi người dùng yêu cầu dừng; kết quả chưa biết | Tiếp tục environment/API access check ngày mai; không dùng production credentials/data |
 
 Mỗi bug mới dùng mẫu này, không đưa password/token vào log hoặc ảnh:
 
@@ -183,9 +191,15 @@ README, bảng phân công và backend, ghi câu hỏi cho owner trước khi k�
 
 ## Báo cáo regression và release checklist
 
-Báo cáo khởi tạo ngày 21/10/2026: **NOT RUN — chưa đủ bằng chứng để kết luận release**.
-Test mới đã được viết và rà soát tĩnh, chưa chạy Dart formatter/analyze/test do thiếu SDK.
-Chưa có lần chạy UI/API thật hoặc xác minh trên thiết bị thật.
+Cập nhật ngày 21/10/2026: bộ regression Dart mặc định **95 PASS** trên source
+`d58cdf01a4b2e04a41901e8804fe1d49847faccf`; format cho 112 file trong `lib test` exit 0,
+không đổi file. Hai test opt-in trong `qa/repro/` **FAIL** vì tái hiện invariant client
+không đạt. Đây là hai scope riêng: kết quả 95 test xanh không xoá kết quả repro đỏ.
+Không test nào trong 19 acceptance case backend/UI/E2E đã chạy; matrix vẫn **19 NOT RUN,
+6 WAITING, 0 PASS, 0 FAIL**. Chưa có API request, backend acceptance hay xác minh thiết bị.
+`flutter analyze` ở snapshot `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6` có output “No issues
+found”; chưa chạy lại sau khi thêm repro QA. Chi tiết lệnh/log và giới hạn xem
+[PROGRESS.md](docs/qa/PROGRESS.md).
 
 Mỗi lần bàn giao, copy khối sau vào báo cáo của lần chạy và điền từ kết quả thực tế:
 

@@ -17,3 +17,5 @@ Mặc định file được tạo trong `qa-artifacts/fixtures/` (đã ignore b�
 - `manifest.json`: kích thước file và giới hạn của bộ fixture.
 
 Self-check chỉ xác minh generator và cấu trúc fixture; nó không chứng minh app/API chấp nhận hoặc từ chối file, backend giải mã media, hay upload thành công. `MediaRepository` kiểm tra đuôi `.gif` (không phân biệt hoa thường) và kích thước trước upload. Chỉ thử upload trên môi trường test được phép; không dùng dữ liệu cá nhân. Video UI chưa triển khai nên không tạo file `.mp4` giả.
+
+**Lưu ý picker:** UI có thể resize/re-encode ảnh và bỏ phần padding, nên kích thước file được chọn có thể khác fixture gốc. Để xác minh chính xác ngưỡng byte phía client, truyền fixture trực tiếp vào repository bằng test harness và kiểm tra API giả không nhận request với file quá cỡ. Backend validation cần kiểm tra riêng trên API test được phép.

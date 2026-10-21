@@ -1,87 +1,83 @@
 # Theo dõi tiến độ QA
 
-Dashboard ngắn cho biết trạng thái triển khai trong repo và trạng thái kiểm thử của Sơn.
-Nó bổ sung cho [matrix 25 ca](../../QA.md#test-matrix-khởi-đầu) và
-[kế hoạch thực thi](TEST_PLAN.md); không thay thế evidence chi tiết của từng lần chạy.
+Snapshot vận hành 2026-10-21 (Asia/Bangkok). Số matrix bên dưới là acceptance của app,
+không gộp với regression tự động hoặc reproduction harness. Chi tiết: [TEST_CASES.md](TEST_CASES.md),
+[TEST_PLAN.md](TEST_PLAN.md), [QA.md](../../QA.md).
 
-## Snapshot — 2026-10-21 (Asia/Bangkok)
+## Trạng thái hiện tại
+
+| Phạm vi | Kết quả |
+|---|---|
+| Acceptance API/UI/E2E matrix | **19 NOT RUN, 6 WAITING, 0 PASS, 0 FAIL**. Chưa có request API thật hoặc app UI/device run. |
+| Regression Flutter mặc định | **95 PASS**, exit 0 tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/flutter-regression-d58cdf0-local-runner.log`. |
+| Network risk reproductions | **2 FAIL** (đúng invariant được kiểm tra), exit 1; fake transport/in-memory tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/network-risks-repro.log`. |
+| Dart formatter | Format check cho 112 file `lib test`: exit 0, không đổi file; log `qa-artifacts/dart-format-d58cdf0.log`. |
+| `flutter analyze` | Output “No issues found” ở snapshot `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6`; không rerun sau khi thêm reproduction QA. Exit code/log không được ghi lại trong hồ sơ hiện có. |
+| `TESTED_SHA` acceptance app | **NONE** — không có app/backend/device acceptance run. |
+
+Hai FAIL reproduction không mâu thuẫn với 95 PASS: chúng là test opt-in riêng ngoài `test/`, chủ đích kiểm tra invariant chưa đạt. 95 test xanh không xóa hai kết quả này; ngược lại hai repro cũng không đánh dấu matrix backend/UI FAIL. Xem [RISKS.md](RISKS.md) và [hướng dẫn reproduction](../../qa/repro/README.md).
+
+Mã reproduction được lưu trong commit `e1fcf21`; lần chạy ghi ở trên dùng client source
+`d58cdf0` và file harness khi còn trong working tree. Chưa chạy lại sau commit theo yêu
+cầu dừng kiểm thử. Log, OpenAPI đã tải và fixture sinh ra chỉ giữ local trong
+`qa-artifacts/`; SDK/cache trong `/tmp` có thể mất sau khi reset môi trường.
+
+## Baseline và môi trường
 
 | Mốc | Giá trị |
 |---|---|
-| Nhánh QA | `qa/khanhson2005` |
-| QA HEAD để rà soát tài liệu/mã | `ddbcda516cb825eb37d64ce8bf06144a137f31b2` |
-| `origin/main` local ref được biết | `0cfa3fba4cb1a8858e448b81b62954ebec9c277e` — không fetch trong phiên này, độ mới chưa được xác minh |
-| Snapshot main làm nền cho nhánh theo lịch sử local | `0cfa3fba4cb1a8858e448b81b62954ebec9c277e` |
-| `TESTED_SHA` của app | **NONE** — chưa chạy test app, analyze hay UI/API trên snapshot này |
-| Working tree tại lúc kiểm tra | Sạch trước khi tạo tracker này |
+| Nhánh | `qa/khanhson2005` |
+| Runtime source đã test | `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; repro harness/docs được thêm trên cùng source tree và không đổi runtime app |
+| QA source/tool snapshot trước đó | `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6`; dùng cho kết quả fixtures và analyze ban đầu, không phải HEAD hiện tại của tracker |
+| local `origin/main` | `0cfa3fba4cb1a8858e448b81b62954ebec9c277e`; fetch origin exit 0, không có commit mới tại thời điểm kiểm tra; QA ahead/behind `6/0`, không merge |
+| Flutter / Dart | `3.41.6` / `3.11.4`, cài đặt riêng tại `/tmp/quizhub-qa-sdk/flutter`; tạm thời, có thể mất sau khi workspace reset |
+| Android build/device tools | JDK/adb và Android device chưa chuẩn bị/xác nhận; UI/device E2E chưa chạy |
+| Backend và Postman | Chưa xác nhận host/tài khoản cho API test; collection chưa import, chưa gửi request nghiệp vụ. Đã tải OpenAPI công khai qua TLS; đối chiếu contract còn dở khi người dùng yêu cầu dừng. |
+| Công việc hiện tại | Người dùng yêu cầu dừng test đến ngày mai. Không tiếp tục test, SDK hay lookup trong phiên này. |
 
-HEAD ở đây là source snapshot đã được đọc/rà soát. Nó không phải `TESTED_SHA` và không
-được dùng làm bằng chứng sản phẩm đã pass. Sau khi cập nhật từ `main`, ghi lại SHA mới;
-không giả định local `origin/main` đang mới nhất nếu chưa fetch theo quy trình được phép.
+## QA deliverables và giới hạn
 
-## Tiến độ theo test matrix
+| Deliverable | Trạng thái |
+|---|---|
+| Acceptance case pack | 19 ID matrix NOT RUN có steps/assertions/expected source/data/cleanup/evidence; 6 ID WAITING có entry criteria và câu hỏi contract. Chưa thực thi. |
+| Postman API collection | 41 request thủ công, environment mẫu `https://example.invalid/api/v1`, không có secrets. Chưa import/chạy; không chứng minh API contract. |
+| Fixtures | Generator sinh 20 file vào ignored `qa-artifacts/fixtures/`; `python3 qa/fixtures/generate_fixtures.py` exit 0. 6 self-check `python3 -m unittest discover -s qa/fixtures -p 'test_*.py' -v` exit 0. Tool-only, không xác minh app/backend. |
+| Collection linter | `python3 qa/api/test_collection.py`: 3 unittest PASS, exit 0 trong working tree, không import Postman hoặc gửi API. |
+| Risk review | RSK-01 redirect và RSK-02 concurrent refresh tái hiện hành vi client với transport giả. RSK-03 cache sau lỗi secure storage vẫn là static candidate cần device/contract evidence. Chưa xác nhận trigger trên backend, proxy hay thiết bị thật. |
+| Unit/component tests | Regression mặc định có 95 test PASS ở source ghi trên. Kết quả không thay API/UI/E2E acceptance; test unit/component thuộc hỗ trợ dev. |
 
-| Trạng thái hiện tại trong QA.md | Số ca | Diễn giải |
-|---|---:|---|
-| NOT RUN | 19 | Ca thuộc phần đã có trong source; chưa có kết quả chạy kèm evidence |
-| WAITING | 6 | Module/phạm vi chưa bàn giao hoặc chưa đủ contract để kiểm thử |
-| PASS | 0 | Chưa có ca nghiệm thu nào được xác nhận PASS |
-| FAIL | 0 | Chưa có ca lỗi nào được tái hiện và xác nhận |
+Không diễn giải trạng thái matrix 19/6 thành phần trăm hoàn tất. `NOT RUN`/`WAITING` là
+trạng thái acceptance; PASS/FAIL của lệnh tự động và repro luôn ghi ở bảng/log riêng.
 
-Đây là số dòng/case trong matrix, không phải phần trăm hoàn thành sản phẩm. NOT RUN và
-WAITING có nguyên nhân khác nhau; không cộng thành tỷ lệ chất lượng app. Các dòng chi
-tiết: `QA.md`.
+## Handoff cho phiên ngày mai
 
-## Trạng thái mã và kiểm thử
+Đã dừng công việc kiểm thử hôm nay theo yêu cầu người dùng. Khi tiếp tục:
 
-| Phạm vi | Trạng thái trong repo | Trạng thái QA |
-|---|---|---|
-| Auth/session, profile, feed/post/comment/Like, quan hệ, tìm kiếm người dùng | Có implementation theo phạm vi README | Chưa nghiệm thu; các case matrix liên quan còn NOT RUN |
-| Question Bank, Exam, Chat, Push/Notification, Search nâng cao, Advanced | Chưa bàn giao/đủ phạm vi theo QA.md | WAITING; tạo case khi có build và contract |
-| Bộ test Dart hiện có | 13 file `*_test.dart`; có test API, model, repository và widget | Chưa chạy trong snapshot này; sự tồn tại của test không phải PASS |
-| Test hỗ trợ QA mới | 3 file, 14 ca sinh ra từ test cases: Auth/session (4), pagination (4), media validation (6) | Đã rà soát tĩnh; chưa chạy vì thiếu SDK |
-| QA manual/API/UI/E2E | Có matrix và case hướng dẫn trong QA.md/TEST_PLAN.md | Chưa chạy trên backend/thiết bị thật |
+- [ ] Kiểm tra `/tmp/quizhub-qa-sdk/flutter` còn tồn tại; dùng Flutter 3.41.6/Dart 3.11.4 đã chuẩn bị, không cài thêm SDK.
+- [ ] Chạy `flutter analyze` sau các file reproduction QA mới và format-check riêng `qa/repro/network_risks_test.dart`; lần analyze trước ở f5e chưa bao phủ các file mới.
+- [ ] Cùng owner xem RSK-01/02 và quyết định fix runtime ở nhánh dev hay theo dõi; QA không tự sửa code production.
+- [ ] Xác nhận Android JDK/adb/device, backend test/API host, tài khoản A/B, fixture disposable, quyền ghi và cleanup.
+- [ ] Đối chiếu collection với OpenAPI đã tải ở `qa-artifacts/swagger/openapi.json`; metadata có URL và SHA-256. Phần so sánh contract chưa hoàn tất; lỗi DNS sandbox trước đó không chứng minh server ngừng hoạt động.
+- [ ] Thực hiện acceptance P0 trước trên build được bàn giao; ghi từng case và evidence. Không đổi 19 NOT RUN trước khi case chạy thật.
 
-## Môi trường và kiểm tra đã thực hiện
+`TESTED_SHA` cho từng lần chạy là commit source chính xác đã test, không phải SHA của
+file tracker hay nhánh “đã chuẩn bị”. Khi source đổi, đánh giá lại regression bị ảnh
+hưởng; không bê PASS từ SHA cũ.
 
-- `flutter`, `dart`, `java`, `adb`: không có trong PATH; các vị trí SDK Android/Flutter
-  thường gặp đã kiểm tra cũng không có. `flutter test`, `flutter analyze` và format chưa
-  chạy; không tự cài SDK hay dependency.
-- Test backend, tài khoản A/B và thiết bị thật chưa được xác minh/cấp trong phiên này.
-  Cần các tài nguyên đó để kết luận về server authorization, side effect, upload và E2E.
-- `bash -n scripts/setup.sh`: **exit 0** tại QA HEAD nêu trên. Đây chỉ xác nhận cú pháp
-  shell của script setup; không phải test ứng dụng.
-- Rà soát cấu hình trước đó: đường dẫn tài liệu/JSON đã được kiểm tra; rule Git khớp
-  `git push` với prompt và không khớp `git fetch`. Đây là kiểm tra cấu hình local, không
-  phải kiểm thử sản phẩm và không cho phép push.
-- Không ghi nhận kết quả API thật, thiết bị thật, Flutter test hay analyze là PASS.
+## Nhật ký append-only
 
-## Việc tiếp theo
+Giữ các dòng lịch sử, kể cả khi thông tin remote/tool được xác minh sau đó. Những dòng
+Flutter tự động phân biệt regression mặc định với reproduction opt-in; không cộng chung.
 
-- [ ] Người quản lý môi trường chuẩn bị Flutter/Dart và thiết bị; ghi phiên bản trước khi chạy. Không cài tự động từ tracker.
-- [ ] Xác nhận backend test, tài khoản được cấp cho vai trò cần kiểm tra và cách dọn fixture; không dùng production cho thao tác ghi.
-- [ ] Chạy test hỗ trợ QA, toàn bộ `flutter test`, format check và `flutter analyze`; lưu exit code và `TESTED_SHA` chính xác.
-- [ ] Thực thi các ca manual/API P0 trước, đặc biệt auth/session và quyền nội dung với hai tài khoản; lưu request/response đã che bí mật cùng ảnh/video.
-- [ ] Chạy các ca P1 theo module đã bàn giao, retest bug đã sửa và regression liên quan.
-- [ ] Khi module WAITING được tích hợp, chốt expected với owner rồi mới chuyển sang NOT RUN.
-
-Unit/component test Dart thuộc ownership dev và là bằng chứng hỗ trợ. Kết quả QA bắt
-buộc trong phạm vi đã thống nhất là acceptance API/UI/E2E theo build bàn giao, cùng
-evidence có thể tái lập. Xem [TEST_PLAN.md](TEST_PLAN.md).
-
-## Nhật ký chạy
-
-Giữ lại các dòng cũ; thêm một dòng sau mỗi lần chạy. `SOURCE_SHA` là commit code được
-đọc/chạy; chỉ điền `TESTED_SHA` sau khi thực sự chạy trên đúng commit. Với mỗi lần merge
-`main`, ghi snapshot main được nhập và chạy lại regression bị ảnh hưởng; PASS cũ không tự
-được chuyển sang SHA mới.
-
-| Ngày / giờ | SOURCE_SHA | MAIN_SNAPSHOT | TESTED_SHA | Case IDs / lệnh | Kết quả + evidence |
+| Ngày / giờ | SOURCE_SHA | MAIN snapshot | TESTED_SHA | Lệnh / scope | Kết quả và bằng chứng |
 |---|---|---|---|---|---|
-| 2026-10-21 | `ddbcda516cb825eb37d64ce8bf06144a137f31b2` | `0cfa3fba4cb1a8858e448b81b62954ebec9c277e` (local, chưa fetch) | — | Kiểm tra môi trường; `bash -n scripts/setup.sh` | Exit 0 cho cú pháp script; app test NOT RUN vì Flutter/Dart không có |
-| _Thêm dòng khi có phiên chạy mới_ |  |  |  |  |  |
-
-Mẫu dòng mới cần ghi thêm thiết bị/OS, API host, kết quả từng ID (`PASS`, `FAIL`,
-`BLOCKED`, `NOT RUN`, `WAITING`), exit code và vị trí evidence. Che token, cookie,
-password và thông tin cá nhân. Nếu không chạy được trên SHA mới, giữ trạng thái
-NOT RUN/BLOCKED; không sao chép PASS từ snapshot cũ.
+| 2026-10-21 | `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6` | `0cfa3fba4cb1a8858e448b81b62954ebec9c277e` (fetch exit 0; không có commit mới) | — | `python3 qa/fixtures/generate_fixtures.py` | Exit 0; sinh 20 fixture trong ignored `qa-artifacts/fixtures/`; tool-only |
+| 2026-10-21 | `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6` | cùng snapshot | — | `python3 -m unittest discover -s qa/fixtures -p 'test_*.py' -v` | 6 unittest PASS, exit 0; chỉ fixture generator/self-check |
+| 2026-10-21 | QA tooling snapshot `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6` | cùng snapshot | — | `python3 qa/api/test_collection.py` | 3 unittest PASS, exit 0; working-tree collection linter, không gửi API |
+| 2026-10-21 | `d58cdf01a4b2e04a41901e8804fe1d49847faccf` | `0cfa3fba4cb1a8858e448b81b62954ebec9c277e` | `d58cdf01a4b2e04a41901e8804fe1d49847faccf` | Flutter mặc định `flutter test --no-pub` | 95 PASS, exit 0; `qa-artifacts/flutter-regression-d58cdf0-local-runner.log` |
+| 2026-10-21 | `d58cdf01a4b2e04a41901e8804fe1d49847faccf` | cùng snapshot | `d58cdf01a4b2e04a41901e8804fe1d49847faccf` | Flutter opt-in `flutter test --no-pub qa/repro/network_risks_test.dart --reporter expanded` | 2 FAIL invariant, exit 1; `qa-artifacts/network-risks-repro.log`; in-memory fake transport, không gọi API thật |
+| 2026-10-21 | `d58cdf01a4b2e04a41901e8804fe1d49847faccf` | cùng snapshot | — | `dart format --output=none --set-exit-if-changed lib test` | 112 files, 0 changed, exit 0; `qa-artifacts/dart-format-d58cdf0.log` |
+| 2026-10-21 | `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6` | cùng snapshot | — | `flutter analyze` | Output “No issues found”; exit code không được ghi, không rerun sau khi thêm repro |
+| 2026-10-21 (lịch sử) | QA snapshot `ddbcda516cb825eb37d64ce8bf06144a137f31b2` | `0cfa3fba4cb1a8858e448b81b62954ebec9c277e` (remote chưa fetch khi đó) | — | `bash -n scripts/setup.sh` | Exit 0 cho cú pháp shell; không phải test ứng dụng |
+| 2026-10-21 23:32 +07 | Runtime không đổi | cùng snapshot | — | GET tài liệu Swagger/OpenAPI công khai | HTTP 200, TLS được kiểm tra; OpenAPI 3.1.0, 128 paths. Chỉ đọc tài liệu; đối chiếu contract chưa xong. Metadata: `qa-artifacts/swagger/metadata.json`. |
+| _Thêm dòng sau lần chạy mới_ |  |  |  |  |  |

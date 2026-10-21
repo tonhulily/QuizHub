@@ -33,9 +33,41 @@ gamification/AI được để WAITING cho đến khi có build tích hợp và 
 module được bàn giao, owner dev cung cấp build/commit, API host, tài khoản/fixture test,
 expected behavior và known limitations; QA cập nhật case thay vì đoán expected.
 
-Tại thời điểm ghi nhận trong QA.md, môi trường này thiếu Flutter, Dart, Java và adb.
-Do đó test tự động, analyze và format chưa chạy; UI trên thiết bị và API thật cũng chưa
-được xác minh. Giữ trạng thái NOT RUN hoặc BLOCKED cho tới khi có bằng chứng chạy thật.
+Flutter 3.41.6 / Dart 3.11.4 hiện đã được chuẩn bị riêng dưới `/tmp/quizhub-qa-sdk`.
+JDK/adb và thiết bị Android chưa sẵn sàng; backend test, tài khoản/fixture API cũng chưa
+được xác nhận. Regression Dart mặc định chạy 95/95 PASS tại source SHA
+`d58cdf01a4b2e04a41901e8804fe1d49847faccf`; hai test repro rủi ro chạy riêng và FAIL
+đúng các invariant client đang kiểm tra. Đây không phải acceptance API/UI/E2E; matrix
+nghiệm thu vẫn 19 NOT RUN và 6 WAITING. Analyze có output “No issues found” ở snapshot
+f5e trước khi repro được thêm, chưa rerun sau thay đổi QA đó. Sơn yêu cầu dừng test hôm
+nay; phiên tiếp theo tiếp tục từ handoff trong [PROGRESS.md](PROGRESS.md).
+
+## Bộ công cụ QA đã chuẩn bị
+
+- [TEST_CASES.md](TEST_CASES.md) có bước, assertion, expected source, dữ liệu, cleanup
+  và evidence cho đủ 19 ID matrix đang NOT RUN; sáu ID WAITING có tiêu chí bàn giao và
+  câu hỏi contract, không tự dựng expected cho module chưa có.
+- [Postman collection](../../qa/api/README.md) có 41 request thủ công theo repository
+  hiện tại và environment mẫu. Chỉ host `example.invalid`, chưa có secrets, không chạy
+  tự động; import/chạy Postman và mọi request backend vẫn chưa được xác minh. Chỉ đổi
+  sang backend test được cấp, rà soát nhãn ghi/xóa rồi gửi thủ công; không chạy Runner.
+- [Fixture biên](../../qa/fixtures/README.md) tạo dữ liệu local với Python chuẩn, không
+  cần package ngoài. Generator tạo 20 file vào `qa-artifacts/fixtures/`; self-check có
+  6 test. Log hiện tại ghi self-check 6/6 và generator 20 file đã xác minh; đây chỉ là
+  kiểm tra công cụ/fixture, không phải PASS cho app, picker hay backend. Picker có thể
+  re-encode ảnh, nên boundary UI cần đo byte thực tế ở repository.
+- [Static collection linter](../../qa/api/test_collection.py) có ba unittest offline;
+  3/3 đã chạy thành công để kiểm tra cấu trúc/guard local, không gọi Postman hay backend.
+- [RISKS.md](RISKS.md) ghi hai invariant client đã tái hiện trong fake transport
+  (redirect gửi token/body ngoài origin; caller chờ refresh timeout nhận sai loại lỗi),
+  cùng một candidate cache sau lỗi secure storage còn static-only. Fake transport không
+  chứng minh server, proxy, thiết bị hoặc production đã gặp trigger.
+- [ENVIRONMENT.md](ENVIRONMENT.md) là nhật ký lệnh, điều kiện môi trường và giới hạn
+  thử nghiệm; [PROGRESS.md](PROGRESS.md) là nguồn trạng thái/số đếm duy nhất.
+
+Các request Postman và fixtures giúp thao tác lặp lại; chúng không thay acceptance UI,
+API với backend thật, quyền/side effect server hay test thiết bị. Chưa import Postman,
+chưa gửi API request; `TESTED_SHA` cho acceptance case vẫn NONE.
 
 ## Các giai đoạn
 
@@ -187,7 +219,8 @@ trong đợt lập kế hoạch này.
    trong phạm vi được phép, ghi request/response (status/body đã che thông tin nhạy cảm)
    và side effects quan sát được, rồi dọn dữ liệu. Đây là bằng chứng bắt buộc cho server
    auth, authorization, persistence và upload. Mock/preview không thể thay thế chúng.
-2. **Regression tự động sẵn có:** khi Flutter SDK đã được chuẩn bị, chạy test hiện có
+2. **Regression tự động sẵn có:** Flutter SDK cô lập hiện đã được chuẩn bị; ở phiên QA
+   kế tiếp chạy test hiện có
    cùng ba test hỗ trợ QA trong `test/features/auth_session_test.dart`,
    `test/core/paged_cubit_test.dart`, `test/data/media_validation_test.dart`, rồi toàn
    bộ `flutter test`; chạy format-check và `flutter analyze`. Ghi lệnh, exit code và
