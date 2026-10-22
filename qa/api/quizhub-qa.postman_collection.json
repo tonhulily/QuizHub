@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "28e90b7f-97b7-413a-9530-65a18f6321e4",
     "name": "QuizHub QA — manual API toolkit",
-    "description": "Bộ request API chạy thủ công cho các endpoint app Flutter hiện gọi. Không có auth cấp collection, script, tự bắt token hay runner tự động. Import environment đi kèm, đặt host QA được phép và giá trị test local, rồi gửi từng request đã chọn. Request có nhãn WRITE/DELETE/SESSION có thể đổi dữ liệu server hoặc trạng thái tài khoản. Envelope/mã thành công chỉ là hành vi client quan sát từ mã nguồn; contract server chưa xác minh vì Swagger không truy cập được. Xem README.md và ../../docs/qa/API_CONTRACT_GAPS.md.",
+    "description": "Bộ request API chạy thủ công cho các endpoint app Flutter hiện gọi. Không có auth cấp collection, script, tự bắt token hay runner tự động. Import environment đi kèm, đặt host QA được phép và giá trị test local, rồi gửi từng request đã chọn. Request có nhãn WRITE/DELETE/SESSION có thể đổi dữ liệu server hoặc trạng thái tài khoản. Envelope/mã thành công chỉ là hành vi client quan sát từ mã nguồn; method/path/body đã đối chiếu snapshot OpenAPI; backend runtime chưa xác minh. Xem README.md và ../../docs/qa/API_CONTRACT_GAPS.md.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -213,7 +213,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/users/{{user_b_id}}",
-            "description": "Đọc hồ sơ B dưới phiên A. Không giả định email/ngày sinh phải có trong response; README dự án ghi GET /users/{id} không trả hai field này.",
+            "description": "OpenAPI ProfileResponse khai báo email và date_of_birth; README dự án ghi endpoint này không trả hai trường. Schema không nói rõ runtime có lọc theo viewer hay không. Đối chiếu privacy requirement/owner; không kết luận lộ dữ liệu chỉ từ schema.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -233,7 +233,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/users/{{user_a_id}}",
-            "description": "Đọc profile A bằng token B để đối chiếu quyền riêng tư. Không giả định status/body lỗi; README dự án nói GET /users/{id} không trả email và ngày sinh.",
+            "description": "OpenAPI ProfileResponse khai báo email và date_of_birth; README dự án ghi GET /users/{id} không trả hai trường. Response schema không phân biệt viewer; kiểm tra theo privacy requirement/owner, không khẳng định status/body hay field runtime.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -278,7 +278,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/users/{{user_b_id}}/posts?limit=10",
-            "description": "Trang đầu bài của B qua endpoint được PostRepository gọi; cursor dùng after_cursor nếu cần trang sau.",
+            "description": "Trang đầu bài của B qua endpoint được PostRepository gọi; spec cho after là integer ID post nếu sau này cần trang tiếp. Repository nhận after dưới dạng String.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -342,7 +342,7 @@
               }
             ],
             "url": "{{base_url}}/posts/{{post_id}}",
-            "description": "Body theo PostRepository.update; đây chỉ là request shape trong repository, không chứng minh UI/feature đã được bàn giao. Nếu có host/fixture và quyền được phép, chỉ sửa post disposable do A tạo. post_update_body chỉ gồm content, media_urls hoặc visibility.",
+            "description": "Body theo PostRepository.update; đây chỉ là request shape trong repository, không chứng minh UI/feature đã được bàn giao. Spec UpdatePostRequest yêu cầu visibility; khi gửi theo schema này hãy đặt post_update_body có visibility cùng field content/media_urls tùy chọn. Repository có thể bỏ visibility nếu caller không truyền, nên đây là contract gap.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -468,7 +468,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/comments?target_type=POST&target_id={{post_id}}&sort=newest&after={{after_cursor}}&limit=20",
-            "description": "Chỉ điền after_cursor bằng cursor tiếp theo quan sát được từ response trước. Hợp đồng cursor cần xác nhận với backend; client gửi tham số after.",
+            "description": "OpenAPI khai báo after là integer ID bình luận. Điền after_cursor bằng giá trị số pagination.after quan sát được; app giữ giá trị này dạng String trước khi gửi query. Không dùng cursor dạng opaque nếu chưa xác nhận backend.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -621,7 +621,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/friendships/requests/received?limit=10",
-            "description": "Đọc lời mời đã nhận; cursor tiếp theo qua after_cursor.",
+            "description": "OpenAPI khai báo after là integer timestamp cho trang tiếp; repository dùng String? cho giá trị này. Điền giá trị số từ pagination.after nếu kiểm tra thêm trang.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -640,7 +640,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/friendships/requests/sent?limit=10",
-            "description": "Đọc lời mời đã gửi; cursor tiếp theo qua after_cursor.",
+            "description": "OpenAPI khai báo after là integer timestamp cho trang tiếp; repository dùng String? cho giá trị này. Điền giá trị số từ pagination.after nếu kiểm tra thêm trang.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -864,7 +864,7 @@
             "method": "GET",
             "header": [],
             "url": "{{base_url}}/activity-feeds?after={{after_cursor}}&limit=10",
-            "description": "Điền after_cursor bằng next cursor quan sát từ trang trước. Client gửi after và limit; server response shape cần đối chiếu thực tế.",
+            "description": "OpenAPI khai báo after là integer ID hoạt động. Điền after_cursor bằng giá trị số pagination.after quan sát được; app giữ giá trị này dạng String trước khi gửi query. Không dùng cursor dạng opaque nếu chưa xác nhận backend.",
             "auth": {
               "type": "bearer",
               "bearer": [
