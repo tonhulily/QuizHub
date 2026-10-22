@@ -45,7 +45,7 @@ git log -1 --oneline --decorate
 
 ## Cập nhật từ upstream main
 
-`git fetch` đã được dùng trong phiên hướng dẫn này chưa? Chưa; chưa fetch hay đồng bộ branch nào. Khi bắt đầu phiên QA thực, chạy:
+Trước khi đồng bộ trong một phiên QA, cập nhật thông tin remote rồi kiểm tra SHA:
 
 ```bash
 git fetch origin
@@ -212,7 +212,7 @@ git worktree add --detach .worktrees/main-baseline "$MAIN_SNAPSHOT"
 git worktree remove .worktrees/main-baseline
 ```
 
-Đây là bước tùy chọn. Hướng dẫn này chưa tạo worktree, fetch hay đồng bộ nhánh.
+Đây là bước tùy chọn; chỉ tạo worktree khi cần đối chiếu rõ ràng với upstream sạch.
 
 ## Tài liệu Git chính thức
 
