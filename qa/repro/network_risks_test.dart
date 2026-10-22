@@ -97,6 +97,8 @@ void main() {
         tokens: _Tokens(),
         events: events,
         baseUrl: 'https://api.test/api/v1',
+        // This opt-in harness lives outside `test/`.
+        // ignore: invalid_use_of_visible_for_testing_member
         adapter: adapter,
       );
 
@@ -157,7 +159,13 @@ void main() {
         if (unauthorizedCount == 2) bothUnauthorized.complete();
         return _json(401, {'code': '9998', 'message': 'expired', 'data': null});
       });
-      final api = ApiClient(tokens: tokens, events: events, adapter: adapter);
+      final api = ApiClient(
+        tokens: tokens,
+        events: events,
+        // This opt-in harness lives outside `test/`.
+        // ignore: invalid_use_of_visible_for_testing_member
+        adapter: adapter,
+      );
 
       Future<ApiException> capture(Future<void> request) async {
         try {
