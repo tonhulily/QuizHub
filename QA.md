@@ -97,7 +97,7 @@ có liên quan, không có nghĩa file đó bao phủ toàn bộ acceptance crit
 
 | ID | Mức / owner | Ca kiểm thử và kết quả mong đợi | Tự động / môi trường | Trạng thái |
 |---|---|---|---|---|
-| AUTH-01 | P0 / Như | Email rỗng/sai, password rỗng: báo lỗi trước API; tài khoản hợp lệ vào đúng màn | `models_test`, UI/backend test | NOT RUN |
+| AUTH-01 | P0 / Như | Username trường hoặc email đầy đủ: trim/normalize đúng một lần, suggestion chỉ hiện khi ô email được focus; email rỗng/malformed bị chặn trước API | UI/API test | NOT RUN |
 | AUTH-02 | P0 / Như | Tài khoản mới bắt buộc tên + avatar; Back/khởi động lại không vượt bước | Backend test | NOT RUN |
 | AUTH-03 | P0 / Như | Access token hết hạn: refresh và retry; refresh không hợp lệ: xoá phiên, về login | `api_client_test`, `auth_session_test` | NOT RUN |
 | AUTH-04 | P0 / Như | Logout lúc server lỗi/mất mạng vẫn xoá token và cache profile/feed | `auth_session_test`, backend test | NOT RUN |
@@ -130,15 +130,31 @@ không kiểm chứng định dạng media thực, nội dung file hay dịch v�
 
 ## Ba ca manual bắt đầu ngay khi có môi trường
 
-**AUTH-01 — validate trước khi gọi API**
+**AUTH-01 — username/email trường và gợi ý domain**
 
-- Điều kiện: mở màn login, bật log debug; dùng preview hoặc bản thật.
-- Bước: để trống cả hai ô rồi bấm đăng nhập; nhập email `abc` với password bất kỳ;
-  cuối cùng nhập email hợp lệ nhưng để password trống.
-- Expected: báo lỗi đúng ô ở từng lần, vẫn ở login, không có request
-  `POST /auth/login` cho dữ liệu không hợp lệ. Không dùng preview để kết luận
-  password sai có bị server từ chối hay không.
-- Bằng chứng: ảnh lỗi và log request của khoảng thời gian thao tác.
+- Điều kiện: build tích hợp có auth delta từ `main` commit
+  `6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48`; tài khoản QA disposable hoặc proxy QA
+  có thể ghi request body và trả kết quả test cố định. Không dùng credentials thật trong
+  log. Nếu build chưa chứa commit này, để case `NOT RUN` cho feature mới.
+- Bước/assertion: (1) Để trống cả hai ô rồi submit: lỗi đúng ô, không có
+  `POST /auth/login`. (2) Nhập username `s12345` nhưng để password rỗng: username
+  được xem là email hợp lệ sau normalize; password báo required và không có request.
+  (3) Nhập `abc@` với password bất kỳ: lỗi malformed, không gọi API. (4) Focus email,
+  nhập ` s12345 `: chip gợi ý hiện đúng `s12345@sis.hust.edu.vn`; blur thì chip ẩn.
+  (5) Focus lại, bấm chip: field đổi thành email đầy đủ, con trỏ ở cuối và chip ẩn.
+  Submit bằng nút hoặc Next rồi Done phải gửi đúng một email đã chuẩn hoá. (6) Lặp
+  với username nhưng không bấm chip: submit vẫn tự nối domain đúng một lần. (7) Nhập
+  ` s12345@sis.hust.edu.vn `: không có chip, request trim và không nối domain lần hai.
+  Thử `qa@example.invalid`: request giữ nguyên full email; không kết luận backend có
+  chấp nhận domain ngoài trường hay không. (8) Quick login saved full email (nếu có)
+  không bị nối domain. (9) Với credentials hợp lệ của tài khoản QA trường, login thành
+  công đi Home hoặc màn hoàn tất hồ sơ nếu session báo profile chưa hoàn tất.
+- Expected/result: email/password thiếu và email malformed bị chặn; password rỗng được
+  phát hiện riêng cả khi username đã hợp lệ. Kiểm tra request đã normalize cho các
+  trường hợp hợp lệ; policy xác thực domain ngoài trường thuộc backend/owner. Không suy
+  kết luận auth server từ preview/proxy giả. Nếu login thành công, logout/cleanup.
+- Bằng chứng: ảnh chip khi focus/blur/click và network capture method/path/email đã
+  redact; không lưu password/token. Trạng thái hiện tại vẫn `NOT RUN`.
 
 **POST-02 — quyền xem ONLY_ME qua hai tài khoản**
 

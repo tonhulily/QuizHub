@@ -180,14 +180,14 @@ thời điểm tương ứng.
 
 | Trường | Giá trị |
 |---|---|
-| ID / tên | `AUTH-01A` — chặn đăng nhập khi email trống hoặc sai định dạng |
+| ID / tên | `AUTH-01` — username/email trường, trim và suggestion chip |
 | Mức / owner / loại | P0 / Như / UI + API |
-| Nguồn expected | Requirement đã duyệt trong README: client validate trước API; `Validators` chỉ giúp định vị code cần quan sát, không phải oracle độc lập |
-| Điều kiện | App ở màn login; backend test hoặc proxy/log request quan sát được |
-| Dữ liệu | Email rỗng, `abc`, sau đó email hợp lệ với password trống |
-| Bước | 1. Để trống cả hai ô và bấm đăng nhập. 2. Nhập `abc` và password bất kỳ. 3. Nhập email hợp lệ, xoá password, bấm đăng nhập. |
-| Mong đợi | Mỗi lần báo đúng lỗi tại ô liên quan, giữ màn login và không gửi `POST /auth/login` khi dữ liệu không hợp lệ. |
-| Bằng chứng / dọn dẹp | Ảnh lỗi và log khoảng thời gian thao tác; không cần xoá dữ liệu. |
+| Source / expected | Delta `main` SHA `6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48` auto-complete `@sis.hust.edu.vn`; README yêu cầu client validation. Owner xác nhận policy domain/username nếu cần. |
+| Điều kiện | Build đã tích hợp SHA delta; account test disposable hoặc proxy capture; log không lưu credential. |
+| Dữ liệu | Email/password rỗng, username `s12345` với password rỗng, malformed `abc@`, username ` s12345 `, full email trường có spaces và `qa@example.invalid`. |
+| Bước | 1. Empty submit báo đúng lỗi và không request. 2. Username hợp lệ nhưng password rỗng báo riêng password, không request. 3. `abc@` lỗi malformed. 4. Focus username → chip đúng domain; blur ẩn; focus/click chip điền full email, cursor ở cuối, chip ẩn. 5. Submit bằng nút và ở lượt khác bằng Next rồi Done; request có đúng email. 6. Full email trường có spaces được trim, không append lần hai. 7. `qa@example.invalid` giữ nguyên ở client; không đoán server policy. 8. Login thành công với account QA trường đi Home hoặc profile completion theo session. |
+| Mong đợi | Username trần được normalize dù không click chip; click chip điền cùng giá trị; full email được trim và không đổi domain. Password rỗng bị chặn riêng. Kết quả `qa@example.invalid` chỉ xác nhận request client, không khẳng định backend policy. Login thành công đi đúng màn. |
+| Bằng chứng / dọn dẹp | Ảnh focus/blur/chip, capture method/path/email đã redact, build SHA/device/API host; logout sau login thành công. Trạng thái `NOT RUN`. |
 
 Không dùng preview để xác minh password sai bị backend từ chối. Để kiểm tra thành công/
 thất bại xác thực, dùng tài khoản QA và backend test; không thử nhiều mật khẩu ngẫu nhiên
