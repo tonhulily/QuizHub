@@ -43,6 +43,7 @@ class _LoginBodyState extends State<_LoginBody> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
   bool _autoValidate = false;
 
@@ -79,6 +80,7 @@ class _LoginBodyState extends State<_LoginBody> {
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _emailFocus.dispose();
     _passwordFocus.dispose();
     super.dispose();
   }
@@ -89,7 +91,7 @@ class _LoginBodyState extends State<_LoginBody> {
     // Validate phía client trước; chỉ khi hợp lệ mới gọi API
     if (!(_formKey.currentState?.validate() ?? false)) return;
     _login(
-      email: _emailCtrl.text,
+      email: Validators.withSchoolDomain(_emailCtrl.text),
       password: _passwordCtrl.text,
       remember: _remember,
     );
@@ -333,6 +335,31 @@ class _LoginBodyState extends State<_LoginBody> {
     );
   }
 
+  Widget _buildDomainSuggestion() {
+    return ListenableBuilder(
+      listenable: Listenable.merge([_emailCtrl, _emailFocus]),
+      builder: (context, _) {
+        final text = _emailCtrl.text.trim();
+        if (!_emailFocus.hasFocus || text.isEmpty || text.contains('@')) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: ActionChip(
+            label: Text('$text${Validators.schoolEmailDomain}'),
+            onPressed: () {
+              final full = Validators.withSchoolDomain(text);
+              _emailCtrl.value = TextEditingValue(
+                text: full,
+                selection: TextSelection.collapsed(offset: full.length),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildManualForm(ThemeData theme) {
     return Form(
       key: _formKey,
@@ -355,14 +382,17 @@ class _LoginBodyState extends State<_LoginBody> {
             controller: _emailCtrl,
             label: 'Email',
             hint: 'ten.sv12345@sis.hust.edu.vn',
+            focusNode: _emailFocus,
             prefixIcon: AppIcons.email,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username, AutofillHints.email],
-            validator: Validators.email,
+            validator: (v) =>
+                Validators.email(Validators.withSchoolDomain(v ?? '')),
             classic: true,
             onSubmitted: (_) => _passwordFocus.requestFocus(),
           ),
+          _buildDomainSuggestion(),
           const SizedBox(height: 16),
           AppTextField(
             controller: _passwordCtrl,

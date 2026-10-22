@@ -23,6 +23,12 @@ class Validators {
   static const String msgPasswordLength =
       'Mật khẩu phải từ $passwordMinLength đến $passwordMaxLength ký tự.';
 
+  static const String schoolEmailDomain = '@sis.hust.edu.vn';
+  static String withSchoolDomain(String value) {
+    final v = value.trim();
+    if (v.isEmpty || v.contains('@')) return v;
+    return '$v$schoolEmailDomain';
+  }
   static String? email(String? value) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return msgEmailRequired;
