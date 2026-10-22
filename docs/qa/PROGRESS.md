@@ -9,32 +9,32 @@ không gộp với regression tự động hoặc reproduction harness. Chi ti�
 | Phạm vi | Kết quả |
 |---|---|
 | Acceptance API/UI/E2E matrix | **19 NOT RUN, 6 WAITING, 0 PASS, 0 FAIL**. Chưa có request API thật hoặc app UI/device run. |
-| Regression Flutter mặc định | **NOT RUN trên merge SHA hôm nay**; SDK persistent đã sẵn sàng, chờ coordinator commit setup rồi chạy trên clean SHA. Lần gần nhất: **95 PASS**, exit 0 tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/flutter-regression-d58cdf0-local-runner.log`. |
-| Network risk reproductions | **2 FAIL** trong client fake-transport/in-memory repro tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; exit 1, log `qa-artifacts/network-risks-repro.log`. Đây là kết quả ở SHA cũ, chưa chạy trên merge mới. |
-| Dart formatter | **NOT RUN trên merge SHA hôm nay**; SDK persistent sẵn sàng, chờ clean SHA. Lần gần nhất: 112 file `lib test`, exit 0, không đổi file tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/dart-format-d58cdf0.log`. |
-| `flutter analyze` | **NOT RUN trên merge mới**; SDK persistent sẵn sàng, chờ clean SHA. Lịch sử tại `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6`: output “No issues found”; exit code/log không được ghi lại. |
+| Regression Flutter mặc định | **98 PASS**, exit 0 tại source `f1951b0c03c5b21929414485101108c804c3ebd0`; log [flutter-default-tests-f1951b0.log](../../qa-artifacts/2026-10-22/flutter-default-tests-f1951b0.log). Không rerun tại `520c738` vì các thay đổi sau đó chỉ là analyzer suppressions trong risk harness; default tests/runtime không đổi. |
+| Network risk reproductions | **2 FAIL** tại source `520c7381f0159ce40f9534ace1c657b87aa523d1`, exit 1; repro client fake-transport, không phải lỗi đã tái hiện với API thật. Log [repro-520c738.log](../../qa-artifacts/2026-10-22/repro-520c738.log). |
+| Dart formatter | Full check `lib test qa/repro` tại `f1951b0` exit 1 vì 2 file upstream cần format; check-only, không sửa file ([log](../../qa-artifacts/2026-10-22/dart-format-check-f1951b0.log)). QA-only `qa/repro` tại `520c738` exit 0, 1 file/0 changes ([log](../../qa-artifacts/2026-10-22/format-check-520c738.log)). |
+| `flutter analyze` | `f1951b0`: exit 1 do 2 `invalid_use_of_visible_for_testing_member` warning trong QA harness; sau suppression có comment lý do, `520c738`: exit 0, “No issues found”, log [analyze-520c738.log](../../qa-artifacts/2026-10-22/analyze-520c738.log). |
 | `TESTED_SHA` acceptance app | **NONE** — không có app/backend/device acceptance run. |
 | OpenAPI / collection static review | **Hoàn tất tĩnh**: 41 request, 33 operation duy nhất (method/path) trên 128 paths; OpenAPI SHA-256 `63dc2323…939cc5`. `python3 qa/api/test_collection.py`: 3 PASS, exit 0 tại source `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6`; log `qa-artifacts/2026-10-22/api-contract-74c8ea1.log`. Sơn chưa có API host/account; chưa import Postman hoặc gửi request nghiệp vụ. |
 
-Hai FAIL reproduction không mâu thuẫn với 95 PASS: chúng là test opt-in riêng ngoài `test/`, chủ đích kiểm tra invariant chưa đạt. 95 test xanh không xóa hai kết quả này; ngược lại hai repro cũng không đánh dấu matrix backend/UI FAIL. Xem [RISKS.md](RISKS.md) và [hướng dẫn reproduction](../../qa/repro/README.md).
+Hai FAIL reproduction là test opt-in ngoài `test/`, kiểm tra riêng invariant redirect và concurrent refresh. Chúng không làm matrix API/UI FAIL; 98 default PASS cũng không làm các invariant đạt. Xem [RISKS.md](RISKS.md) và [hướng dẫn reproduction](../../qa/repro/README.md).
 
-Mã reproduction được lưu trong commit `e1fcf21`; lần chạy ghi ở trên dùng client source
-`d58cdf0` và file harness khi còn trong working tree. Chưa chạy lại sau commit theo yêu
-cầu dừng kiểm thử. Log, OpenAPI đã tải và fixture sinh ra chỉ giữ local trong
-`qa-artifacts/`; SDK/cache trong `/tmp` có thể mất sau khi reset môi trường.
+Repro đã chạy lại trên `520c738`; code mạng/runtime không đổi từ `f1951b0`. Mọi log dưới
+`qa-artifacts/` là local ignored artifact. Flutter 3.41.6/Dart 3.11.4 và cache nằm trong
+`.qa-tools/`; lượt kiểm tra không dùng API host hoặc thiết bị.
 
 ## Baseline và môi trường
 
 | Mốc | Giá trị |
 |---|---|
 | Nhánh | `qa/khanhson2005` |
-| Runtime source đã test | `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; repro harness/docs được thêm trên cùng source tree và không đổi runtime app |
+| Runtime snapshot hiện tại | `6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48`; runtime/dependency/platform files khớp upstream main. |
+| QA verification sources | Default tests at `f1951b0c03c5b21929414485101108c804c3ebd0`; analyzer/QA-only formatter/repro at `520c7381f0159ce40f9534ace1c657b87aa523d1`. Các analyzer annotations chỉ sửa QA harness; runtime không đổi. |
 | QA source/tool snapshot trước đó | `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6`; dùng cho kết quả fixtures và analyze ban đầu, không phải HEAD hiện tại của tracker |
 | Điểm đồng bộ upstream | `QA_BEFORE=0d38d2c494299cfa43ca4358688f0e472d26276b`; `MAIN_SNAPSHOT=6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48`; `BASE_BEFORE=0cfa3fba4cb1a8858e448b81b62954ebec9c277e`; merge commit `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6`. No-conflict; runtime/dependency/platform diff against main exit 0. |
-| Flutter / Dart | Flutter 3.41.6 / Dart 3.11.4 đã xác minh trong `.qa-tools/flutter`; cache `.qa-tools/pub-cache`. Archive SHA-256 `503b3e6b7d352fca5d21b6474eca95ad544d8fc3b053782eab63a360c7fc7569`; `pub get --enforce-lockfile` exit 0, lock SHA không đổi. Log `qa-artifacts/2026-10-22/sdk-setup.log`. Chưa chạy kiểm tra ứng dụng trên clean SHA. |
+| Flutter / Dart | Flutter 3.41.6 / Dart 3.11.4 đã xác minh trong `.qa-tools/flutter`; cache `.qa-tools/pub-cache`. Archive SHA-256 `503b3e6b7d352fca5d21b6474eca95ad544d8fc3b053782eab63a360c7fc7569`; `pub get --enforce-lockfile` exit 0, lock SHA không đổi. Log `qa-artifacts/2026-10-22/sdk-setup.log`. |
 | Android build/device tools | JDK/adb và Android device chưa chuẩn bị/xác nhận; UI/device E2E chưa chạy |
 | Backend và Postman | User chưa cung cấp API host/account test; collection chưa import, chưa gửi request nghiệp vụ. OpenAPI static review đã hoàn tất, không chứng minh API thật. |
-| Công việc hiện tại | SDK persistent setup xong; coordinator sẽ commit setup rồi chạy Flutter analyze/regression/formatter/repro trên clean SHA. Tại merge checkpoint `74c8ea1`, các lệnh này chưa chạy. Acceptance matrix giữ nguyên 19 NOT RUN / 6 WAITING. |
+| Công việc hiện tại | Flutter checks đã chạy tại các SHA ghi riêng dưới đây. Không có API host/account/device; acceptance matrix vẫn 19 NOT RUN / 6 WAITING. |
 
 ## QA deliverables và giới hạn
 
@@ -45,17 +45,17 @@ cầu dừng kiểm thử. Log, OpenAPI đã tải và fixture sinh ra chỉ gi�
 | Fixtures | Generator sinh 20 file vào ignored `qa-artifacts/fixtures/`; `python3 qa/fixtures/generate_fixtures.py` exit 0. 6 self-check `python3 -m unittest discover -s qa/fixtures -p 'test_*.py' -v` exit 0. Tool-only, không xác minh app/backend. |
 | Collection linter / contract review | 41 request khớp 33 operation method/path duy nhất trên 128 OpenAPI paths; `python3 qa/api/test_collection.py`: 3 unittest PASS, exit 0 tại source `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6`; log `qa-artifacts/2026-10-22/api-contract-74c8ea1.log`. Không import Postman hoặc gửi API. |
 | Risk review | RSK-01 redirect và RSK-02 concurrent refresh tái hiện hành vi client với transport giả. RSK-03 cache sau lỗi secure storage vẫn là static candidate cần device/contract evidence. Chưa xác nhận trigger trên backend, proxy hay thiết bị thật. |
-| Unit/component tests | Regression mặc định có 95 test PASS ở source ghi trên. Kết quả không thay API/UI/E2E acceptance; test unit/component thuộc hỗ trợ dev. |
+| Unit/component tests | Regression mặc định 98 test PASS tại `f1951b0`. Kết quả không thay API/UI/E2E acceptance; test unit/component thuộc hỗ trợ dev. |
 
 Không diễn giải trạng thái matrix 19/6 thành phần trăm hoàn tất. `NOT RUN`/`WAITING` là
 trạng thái acceptance; PASS/FAIL của lệnh tự động và repro luôn ghi ở bảng/log riêng.
 
 ## Handoff
 
-Trong khi SDK persistent đang được chuẩn bị và API host/account chưa có:
+Handoff hiện tại:
 
-- [ ] Sau khi coordinator commit SDK setup, chạy `flutter analyze`, formatter check và regression/repro trên clean SHA đó; không gắn kết quả cũ vào SHA mới.
 - [ ] Cùng owner xem RSK-01/02 và quyết định fix runtime ở nhánh dev hay theo dõi; QA không tự sửa code production.
+- [ ] Owner dev xử lý formatter drift của `lib/core/utils/validators.dart` và `test/core/school_email_test.dart` (cả hai từ upstream `main`); kiểm tra lại full formatter khi có snapshot main mới, giữ runtime QA khớp main.
 - [ ] Xác nhận Android JDK/adb/device, API host và account test, tài khoản A/B, fixture disposable, quyền ghi và cleanup. Chưa có API host/account nên chưa chạy API/UI acceptance.
 - [x] OpenAPI static review và collection checks đã hoàn tất tại SHA `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6`; xem `qa-artifacts/2026-10-22/api-contract-74c8ea1.log`. Không thay thế API test thật.
 - [ ] Thực hiện acceptance P0 trước trên build được bàn giao; ghi từng case và evidence. Không đổi 19 NOT RUN trước khi case chạy thật.
@@ -82,4 +82,7 @@ Flutter tự động phân biệt regression mặc định với reproduction op
 | 2026-10-21 23:32 +07 | Runtime không đổi | cùng snapshot | — | GET tài liệu Swagger/OpenAPI công khai | HTTP 200, TLS được kiểm tra; OpenAPI 3.1.0, 128 paths. Chỉ đọc tài liệu; đối chiếu contract chưa xong tại thời điểm đó. Metadata: `qa-artifacts/swagger/metadata.json`. |
 | 2026-10-22 | QA `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6` | `6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48`; baseline `0cfa3fba4cb1a8858e448b81b62954ebec9c277e` | — | Merge main vào QA | QA trước merge `0d38d2c494299cfa43ca4358688f0e472d26276b`; merge không conflict, staged diff check exit 0, runtime/dependency/platform diff với main exit 0. Không push. |
 | 2026-10-22 | `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6` | `6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48` | `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6` | `python3 qa/api/test_collection.py` + static OpenAPI/collection review | 3 Python tests PASS, exit 0; 41 requests / 33 operations / 128 paths; OpenAPI hash `63dc2323…939cc5`; `qa-artifacts/2026-10-22/api-contract-74c8ea1.log`. Không import Postman/gọi API thật. |
+| 2026-10-22 | `f1951b0c03c5b21929414485101108c804c3ebd0` | `6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48` | `f1951b0c03c5b21929414485101108c804c3ebd0` | `flutter test --no-pub --reporter expanded` | 98 PASS, exit 0; Flutter 3.41.6/Dart 3.11.4; API host/device NONE; log `qa-artifacts/2026-10-22/flutter-default-tests-f1951b0.log`. |
+| 2026-10-22 | `f1951b0c03c5b21929414485101108c804c3ebd0` | cùng snapshot | `f1951b0c03c5b21929414485101108c804c3ebd0` | `flutter analyze --no-pub`; `dart format --output=none --set-exit-if-changed lib test qa/repro`; `flutter test --no-pub qa/repro/network_risks_test.dart --reporter expanded` | Analyze exit 1 (2 QA harness warnings); full formatter exit 1 (2 upstream files would change, check-only); repro 2 invariant FAIL, exit 1. Logs `flutter-analyze-f1951b0.log`, `dart-format-check-f1951b0.log`, `network-risk-repros-f1951b0.log`. |
+| 2026-10-22 | `520c7381f0159ce40f9534ace1c657b87aa523d1` | cùng snapshot | `520c7381f0159ce40f9534ace1c657b87aa523d1` | `flutter analyze --no-pub`; QA-only `dart format --output=none --set-exit-if-changed qa/repro`; network repro | Analyze exit 0, “No issues found”; formatter 1 file/0 changes exit 0; repro 2 invariant FAIL exit 1. Default suite không chạy lại; chỉ thay annotation trong QA harness. Logs `analyze-520c738.log`, `format-check-520c738.log`, `repro-520c738.log`. |
 | _Thêm dòng sau lần chạy mới_ |  |  |  |  |  |
