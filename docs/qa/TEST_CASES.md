@@ -3,7 +3,7 @@
 Bộ case này triển khai chi tiết 19 ID đang `NOT RUN` trong [QA.md](../../QA.md#test-matrix-khởi-đầu).
 Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là biến thể cùng phạm vi.
 [TEST_PLAN.md](TEST_PLAN.md) mô tả chuẩn bị phiên chạy, evidence, bug và thứ tự QA;
-[PROGRESS.md](PROGRESS.md) là bảng trạng thái hiện thời.
+[PROGRESS.md](PROGRESS.md) là nguồn duy nhất cho trạng thái và số liệu chạy hiện thời.
 
 ## Baseline và quy tắc kết luận
 
@@ -29,16 +29,14 @@ Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là bi
   thiết bị/OS, API host, request/response đã che credential, ảnh/video, thời gian và
   cleanup. Không lưu password/token, không thao tác ghi trên tài khoản người khác.
 
-### Điều kiện lúc soạn và kết quả mới nhất
+### Điều kiện lúc soạn
 
 Ở snapshot ghi trên, `flutter`, `dart`, `java`, `adb` không có trong PATH; các thư mục
-SDK thường gặp cũng chưa được xác nhận. Backend test, tài khoản vai trò và thiết bị thật
-chưa được cấp/xác minh trong phiên soạn. Vì vậy matrix giữ `NOT RUN` cho app cases còn
-readiness thực thi là `BLOCKED` tới khi prerequisite sẵn sàng. Đây không phải lỗi app.
-Sau đó Flutter/Dart đã được chuẩn bị cô lập trong `/tmp` và bộ regression mặc định đã
-chạy; các acceptance case bên dưới vẫn chưa thực thi. Kết quả 95 test đạt, hai repro
-client thất bại và handoff cho phiên tiếp theo nằm ở [PROGRESS.md](PROGRESS.md),
-[ENVIRONMENT.md](ENVIRONMENT.md) và [RISKS.md](RISKS.md).
+SDK thường gặp cũng chưa được xác nhận. Persistent Flutter SDK 3.41.6/Dart 3.11.4 và
+cache/config hiện đã sẵn; lệnh môi trường xem [ENVIRONMENT.md](ENVIRONMENT.md). Không
+dùng SDK/cache tạm trong `/tmp`. Acceptance case bên dưới vẫn cần chạy trên build tích hợp
+với backend test và thiết bị phù hợp; trạng thái/số liệu của các lượt chạy thực tế chỉ ghi
+trong [PROGRESS.md](PROGRESS.md). Đây không phải lỗi app.
 
 ## 1. Authentication và session
 

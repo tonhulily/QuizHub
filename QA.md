@@ -49,29 +49,26 @@ tính năng đã hoàn thành hoặc tự động ghi nhận nó là bug.
 
 ## Chạy phiên làm việc
 
-1. Cài môi trường theo [REQUIREMENTS](REQUIREMENTS.md). Trên Windows dùng PowerShell;
-   trên Linux/macOS/Git Bash dùng script bash đã có. Test tự động không cần điện thoại,
-   nhưng cần Flutter SDK và thư viện từ `flutter pub get`.
-2. Chạy bộ test mới, rồi toàn bộ regression:
+1. Đọc [REQUIREMENTS](REQUIREMENTS.md) và [nhật ký môi trường](docs/qa/ENVIRONMENT.md),
+   rồi dùng biến môi trường/path persistent đã ghi tại đó. Không chạy `pub get` hay cài
+   lại SDK/dependency trong bước QA.
+2. Chạy analyzer và regression:
 
 ```bash
-flutter pub get
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test test/features/auth_session_test.dart test/core/paged_cubit_test.dart test/data/media_validation_test.dart
-flutter test --coverage
+"$FLUTTER" analyze --no-pub
+"$FLUTTER" test --no-pub
+.qa-tools/flutter/bin/dart format --output=none --set-exit-if-changed lib test qa/repro
 ```
 
-3. Chạy UI: lấy ID từ `flutter devices`, thay `<device-id>` trong lệnh:
+3. UI cần device ID do `"$FLUTTER" devices` xác nhận:
 
 ```bash
-flutter run -d <device-id> -t lib/main_preview.dart
-flutter run -d <device-id> -t lib/main.dart
+"$FLUTTER" run -d <device-id> -t lib/main_preview.dart
+"$FLUTTER" run -d <device-id> -t lib/main.dart
 ```
 
-Đổi server test cho bản thật bằng
-`--dart-define=API_BASE_URL=https://<test-host>/api/v1`. Bản thật mặc định dùng server
-trong `lib/core/config/app_config.dart`; ghi rõ URL và commit trong mỗi lần test.
+Chỉ đổi `API_BASE_URL` sang host test đã được phép bằng `--dart-define`; ghi host đã
+redact và SHA/log theo [PROGRESS](docs/qa/PROGRESS.md). Không dùng production data.
 
 VS Code có ba cấu hình F5 trong `.vscode/launch.json`: preview, preview có tài khoản
 đăng nhập nhanh, backend thật. Bản có tài khoản mẫu vẫn vào app trước; logout để xem
@@ -184,7 +181,7 @@ Ghi nhận ban đầu:
 | ID | Liên quan | Quan sát | Cách xác nhận / trạng thái |
 |---|---|---|---|
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |
-| QA-ENV-01 | Môi trường | SDK Flutter/Dart cô lập hiện đã sẵn; Android JDK/adb, backend test/tài khoản/thiết bị chưa sẵn hoặc chưa xác nhận. Swagger lookup bị ngắt khi người dùng yêu cầu dừng; kết quả chưa biết | Tiếp tục environment/API access check ngày mai; không dùng production credentials/data |
+| QA-ENV-01 | Môi trường | Persistent Flutter SDK 3.41.6/Dart 3.11.4 và cache/config đã sẵn. Android JDK/adb, backend test/tài khoản/thiết bị chưa sẵn hoặc chưa xác nhận. OpenAPI đã được đọc tĩnh; xem [PROGRESS](docs/qa/PROGRESS.md) và [ENVIRONMENT](docs/qa/ENVIRONMENT.md) | Không dùng production credentials/data |
 
 Mỗi bug mới dùng mẫu này, không đưa password/token vào log hoặc ảnh:
 
@@ -207,15 +204,10 @@ README, bảng phân công và backend, ghi câu hỏi cho owner trước khi k�
 
 ## Báo cáo regression và release checklist
 
-Cập nhật ngày 21/10/2026: bộ regression Dart mặc định **95 PASS** trên source
-`d58cdf01a4b2e04a41901e8804fe1d49847faccf`; format cho 112 file trong `lib test` exit 0,
-không đổi file. Hai test opt-in trong `qa/repro/` **FAIL** vì tái hiện invariant client
-không đạt. Đây là hai scope riêng: kết quả 95 test xanh không xoá kết quả repro đỏ.
-Không test nào trong 19 acceptance case backend/UI/E2E đã chạy; matrix vẫn **19 NOT RUN,
-6 WAITING, 0 PASS, 0 FAIL**. Chưa có API request, backend acceptance hay xác minh thiết bị.
-`flutter analyze` ở snapshot `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6` có output “No issues
-found”; chưa chạy lại sau khi thêm repro QA. Chi tiết lệnh/log và giới hạn xem
-[PROGRESS.md](docs/qa/PROGRESS.md).
+Số liệu regression/repro gần nhất, lịch sử source SHA và acceptance matrix chỉ ghi ở
+[PROGRESS.md](docs/qa/PROGRESS.md), nguồn trạng thái duy nhất. Acceptance API/UI/E2E
+chưa chạy trên build/backend/device mới; không bê kết quả source cũ sang snapshot mới.
+Lệnh, môi trường và trạng thái setup xem [ENVIRONMENT.md](docs/qa/ENVIRONMENT.md).
 
 Mỗi lần bàn giao, copy khối sau vào báo cáo của lần chạy và điền từ kết quả thực tế:
 

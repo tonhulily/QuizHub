@@ -4,14 +4,14 @@ Hai test opt-in này gọi `ApiClient` và `AuthInterceptor` thật qua Dio adap
 bộ nhớ. Chúng không gọi server, không cần tài khoản và không thuộc bộ regression mặc
 định trong `test/`.
 
+Persistent Flutter SDK/cache đã sẵn. Dùng cấu hình trong
+[ENVIRONMENT.md](../../docs/qa/ENVIRONMENT.md):
+
 ```bash
-XDG_CONFIG_HOME=/tmp/quizhub-qa-sdk/config \
-XDG_CACHE_HOME=/tmp/quizhub-qa-sdk/cache \
-PUB_CACHE=/tmp/quizhub-pub-cache \
-FLUTTER_SUPPRESS_ANALYTICS=true CI=true \
-/tmp/quizhub-qa-sdk/flutter/bin/flutter test --no-pub \
-  qa/repro/network_risks_test.dart --reporter expanded
+"$FLUTTER" test --no-pub qa/repro/network_risks_test.dart --reporter expanded
 ```
+
+Không dùng SDK hoặc cache tạm trong `/tmp`.
 
 Các assertion mô tả invariant an toàn. Test đỏ là bằng chứng harness đã quan sát
 hành vi client trái invariant; không sửa expected để khớp hành vi hiện tại. Test xanh
@@ -25,7 +25,7 @@ test chờ request A bắt đầu refresh rồi phát request B, đồng bộ c�
 thả timeout, sau đó kiểm tra error type, token, event hết phiên và số refresh.
 
 Flutter test runner cần bind localhost tạm thời. Sandbox có thể chặn socket này trước
-khi test được tải; lần reproduction được chạy trong môi trường cho phép loopback. Output
-đầy đủ nằm ở `qa-artifacts/network-risks-repro.log` (ignored/local). Hai test reproduction
-đỏ là kết quả riêng; chúng không làm thay đổi hay bị xóa bởi kết quả xanh của 95 test
-regression mặc định.
+khi test được tải; reproduction trước đây chạy trong môi trường cho phép loopback.
+Log cục bộ (nếu được tạo) nằm trong `qa-artifacts/network-risks-repro.log` (ignored).
+Số liệu/history của repro và regression được ghi theo SHA duy nhất trong
+[PROGRESS.md](../../docs/qa/PROGRESS.md); đây là hai phạm vi bằng chứng riêng.

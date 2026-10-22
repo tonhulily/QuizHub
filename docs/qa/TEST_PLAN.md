@@ -33,14 +33,12 @@ gamification/AI được để WAITING cho đến khi có build tích hợp và 
 module được bàn giao, owner dev cung cấp build/commit, API host, tài khoản/fixture test,
 expected behavior và known limitations; QA cập nhật case thay vì đoán expected.
 
-Flutter 3.41.6 / Dart 3.11.4 hiện đã được chuẩn bị riêng dưới `/tmp/quizhub-qa-sdk`.
-JDK/adb và thiết bị Android chưa sẵn sàng; backend test, tài khoản/fixture API cũng chưa
-được xác nhận. Regression Dart mặc định chạy 95/95 PASS tại source SHA
-`d58cdf01a4b2e04a41901e8804fe1d49847faccf`; hai test repro rủi ro chạy riêng và FAIL
-đúng các invariant client đang kiểm tra. Đây không phải acceptance API/UI/E2E; matrix
-nghiệm thu vẫn 19 NOT RUN và 6 WAITING. Analyze có output “No issues found” ở snapshot
-f5e trước khi repro được thêm, chưa rerun sau thay đổi QA đó. Sơn yêu cầu dừng test hôm
-nay; phiên tiếp theo tiếp tục từ handoff trong [PROGRESS.md](PROGRESS.md).
+Persistent Flutter SDK 3.41.6, Dart 3.11.4 và cache/config đã sẵn. Lệnh và biến môi
+trường xem [ENVIRONMENT.md](ENVIRONMENT.md). Kết quả theo SHA xem [PROGRESS.md](PROGRESS.md);
+SDK/cache tạm trong `/tmp` không còn là hướng dẫn sử dụng.
+JDK/adb, thiết bị Android, backend test và tài khoản/fixture API cũng chưa được xác nhận.
+Số liệu test/repro theo từng SHA và trạng thái acceptance matrix chỉ được duy trì trong
+[PROGRESS.md](PROGRESS.md), không lặp tại đây. Đây là kế hoạch, không phải báo cáo kết quả.
 
 ## Bộ công cụ QA đã chuẩn bị
 
@@ -103,13 +101,14 @@ thể chạy lại, trạng thái các case chịu ảnh hưởng là NOT RUN/BL
 
 ### Giai đoạn 0 — chuẩn bị môi trường và dữ liệu
 
-1. Chuẩn bị Flutter/Dart theo [REQUIREMENTS](../../REQUIREMENTS.md) qua người quản lý
-   môi trường; không cài SDK/dependency tự động trong bước QA. Khi đã sẵn sàng, chạy
-   `flutter pub get`, `flutter doctor -v` và xác nhận `flutter devices` nhận thiết bị.
+1. Dùng persistent Flutter/Dart đã chuẩn bị theo [ENVIRONMENT](ENVIRONMENT.md), với
+   đúng path/config/cache được ghi ở đó. Chưa cài SDK/dependency tự động trong bước QA.
+   Chỉ chạy lệnh setup/kiểm tra còn cần thiết theo checkpoint môi trường.
 2. Lấy commit/build hash, phiên bản app, OS, model thiết bị, API base URL và cấu hình
    mạng. Không đưa credential vào hồ sơ test.
-3. Chạy `flutter test` và `flutter analyze`; lưu exit code và log. Nếu SDK chưa sẵn
-   sàng, ghi BLOCKED cùng công cụ còn thiếu, không ghi PASS.
+3. Chạy `flutter test` và `flutter analyze` bằng lệnh persistent đã ghi trong
+   [ENVIRONMENT](ENVIRONMENT.md); lưu exit code và log. Chưa có lần chạy thì giữ
+   NOT RUN, không ghi PASS.
 4. Xin backend test host và tài khoản riêng cho từng vai trò. Với test quyền riêng tư,
    cần ít nhất tài khoản A là chủ nội dung và B là người xem; xác nhận A/B có quyền dùng
    dữ liệu test và cách dọn dữ liệu.
@@ -219,12 +218,10 @@ trong đợt lập kế hoạch này.
    trong phạm vi được phép, ghi request/response (status/body đã che thông tin nhạy cảm)
    và side effects quan sát được, rồi dọn dữ liệu. Đây là bằng chứng bắt buộc cho server
    auth, authorization, persistence và upload. Mock/preview không thể thay thế chúng.
-2. **Regression tự động sẵn có:** Flutter SDK cô lập hiện đã được chuẩn bị; ở phiên QA
-   kế tiếp chạy test hiện có
-   cùng ba test hỗ trợ QA trong `test/features/auth_session_test.dart`,
-   `test/core/paged_cubit_test.dart`, `test/data/media_validation_test.dart`, rồi toàn
-   bộ `flutter test`; chạy format-check và `flutter analyze`. Ghi lệnh, exit code và
-   source SHA. Không tự cài SDK/dependency; nếu thiếu thì BLOCKED.
+2. **Regression tự động sẵn có:** dùng path/config ở [ENVIRONMENT.md](ENVIRONMENT.md)
+   để chạy regression, format-check và analyzer. Ghi lệnh, exit code, log và source SHA;
+   trạng thái mới nhất xem [PROGRESS.md](PROGRESS.md). Không dùng `/tmp` và không tự cài
+   thêm SDK/dependency.
 3. **API fake/component checks (hỗ trợ dev):** kiểm tra parsing, request shape, mapping
    lỗi và hành vi repository với `HttpClientAdapter`/backend giả theo convention trong
    README. Đây là component/contract helper test, không chứng minh server thật xác thực

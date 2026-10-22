@@ -49,4 +49,5 @@ app.*.map.json
 
 # Worktree đối chiếu và bằng chứng QA cục bộ
 /.worktrees/
+/.qa-tools/
 /qa-artifacts/

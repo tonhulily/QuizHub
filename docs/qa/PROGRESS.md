@@ -9,10 +9,10 @@ không gộp với regression tự động hoặc reproduction harness. Chi ti�
 | Phạm vi | Kết quả |
 |---|---|
 | Acceptance API/UI/E2E matrix | **19 NOT RUN, 6 WAITING, 0 PASS, 0 FAIL**. Chưa có request API thật hoặc app UI/device run. |
-| Regression Flutter mặc định | **NOT RUN hôm nay; chờ setup SDK persistent đã được Sơn duyệt** tại `.qa-tools/flutter`. Lần gần nhất: **95 PASS**, exit 0 tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/flutter-regression-d58cdf0-local-runner.log`. |
+| Regression Flutter mặc định | **NOT RUN trên merge SHA hôm nay**; SDK persistent đã sẵn sàng, chờ coordinator commit setup rồi chạy trên clean SHA. Lần gần nhất: **95 PASS**, exit 0 tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/flutter-regression-d58cdf0-local-runner.log`. |
 | Network risk reproductions | **2 FAIL** trong client fake-transport/in-memory repro tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; exit 1, log `qa-artifacts/network-risks-repro.log`. Đây là kết quả ở SHA cũ, chưa chạy trên merge mới. |
-| Dart formatter | **NOT RUN hôm nay; chờ setup SDK persistent**. Lần gần nhất: 112 file `lib test`, exit 0, không đổi file tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/dart-format-d58cdf0.log`. |
-| `flutter analyze` | **NOT RUN trên merge mới; chờ setup SDK persistent**. Lịch sử tại `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6`: output “No issues found”; exit code/log không được ghi lại. |
+| Dart formatter | **NOT RUN trên merge SHA hôm nay**; SDK persistent sẵn sàng, chờ clean SHA. Lần gần nhất: 112 file `lib test`, exit 0, không đổi file tại source `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; log `qa-artifacts/dart-format-d58cdf0.log`. |
+| `flutter analyze` | **NOT RUN trên merge mới**; SDK persistent sẵn sàng, chờ clean SHA. Lịch sử tại `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6`: output “No issues found”; exit code/log không được ghi lại. |
 | `TESTED_SHA` acceptance app | **NONE** — không có app/backend/device acceptance run. |
 | OpenAPI / collection static review | **Hoàn tất tĩnh**: 41 request, 33 operation duy nhất (method/path) trên 128 paths; OpenAPI SHA-256 `63dc2323…939cc5`. `python3 qa/api/test_collection.py`: 3 PASS, exit 0 tại source `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6`; log `qa-artifacts/2026-10-22/api-contract-74c8ea1.log`. Sơn chưa có API host/account; chưa import Postman hoặc gửi request nghiệp vụ. |
 
@@ -31,10 +31,10 @@ cầu dừng kiểm thử. Log, OpenAPI đã tải và fixture sinh ra chỉ gi�
 | Runtime source đã test | `d58cdf01a4b2e04a41901e8804fe1d49847faccf`; repro harness/docs được thêm trên cùng source tree và không đổi runtime app |
 | QA source/tool snapshot trước đó | `f5e225a5d4aa5d8e8e366770eb2bb4b0212621a6`; dùng cho kết quả fixtures và analyze ban đầu, không phải HEAD hiện tại của tracker |
 | Điểm đồng bộ upstream | `QA_BEFORE=0d38d2c494299cfa43ca4358688f0e472d26276b`; `MAIN_SNAPSHOT=6ee7f6d9a9a9d2342803c41a32f8dd03ac7a0d48`; `BASE_BEFORE=0cfa3fba4cb1a8858e448b81b62954ebec9c277e`; merge commit `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6`. No-conflict; runtime/dependency/platform diff against main exit 0. |
-| Flutter / Dart | Bản tạm 3.41.6 / 3.11.4 và cache trong `/tmp` từ 21/10 đã mất. Sơn đã duyệt cài SDK persistent trong `.qa-tools/flutter` với package cache `.qa-tools/pub-cache`; delegate đang setup và chưa báo xác minh hoàn tất. Không cần hỏi lại quyền cài. |
+| Flutter / Dart | Flutter 3.41.6 / Dart 3.11.4 đã xác minh trong `.qa-tools/flutter`; cache `.qa-tools/pub-cache`. Archive SHA-256 `503b3e6b7d352fca5d21b6474eca95ad544d8fc3b053782eab63a360c7fc7569`; `pub get --enforce-lockfile` exit 0, lock SHA không đổi. Log `qa-artifacts/2026-10-22/sdk-setup.log`. Chưa chạy kiểm tra ứng dụng trên clean SHA. |
 | Android build/device tools | JDK/adb và Android device chưa chuẩn bị/xác nhận; UI/device E2E chưa chạy |
 | Backend và Postman | User chưa cung cấp API host/account test; collection chưa import, chưa gửi request nghiệp vụ. OpenAPI static review đã hoàn tất, không chứng minh API thật. |
-| Công việc hiện tại | Setup SDK persistent đã được duyệt và đang chạy. Tại checkpoint merge `74c8ea1`, Flutter analyze, regression, formatter và reproduction mới chưa chạy. Acceptance matrix giữ nguyên 19 NOT RUN / 6 WAITING. |
+| Công việc hiện tại | SDK persistent setup xong; coordinator sẽ commit setup rồi chạy Flutter analyze/regression/formatter/repro trên clean SHA. Tại merge checkpoint `74c8ea1`, các lệnh này chưa chạy. Acceptance matrix giữ nguyên 19 NOT RUN / 6 WAITING. |
 
 ## QA deliverables và giới hạn
 
@@ -54,7 +54,7 @@ trạng thái acceptance; PASS/FAIL của lệnh tự động và repro luôn gh
 
 Trong khi SDK persistent đang được chuẩn bị và API host/account chưa có:
 
-- [ ] Sau khi setup `.qa-tools/flutter` và cache hoàn tất, xác minh phiên bản/path rồi chạy `flutter analyze`, formatter check và regression/repro trên merge SHA mới; không gắn kết quả cũ vào SHA mới.
+- [ ] Sau khi coordinator commit SDK setup, chạy `flutter analyze`, formatter check và regression/repro trên clean SHA đó; không gắn kết quả cũ vào SHA mới.
 - [ ] Cùng owner xem RSK-01/02 và quyết định fix runtime ở nhánh dev hay theo dõi; QA không tự sửa code production.
 - [ ] Xác nhận Android JDK/adb/device, API host và account test, tài khoản A/B, fixture disposable, quyền ghi và cleanup. Chưa có API host/account nên chưa chạy API/UI acceptance.
 - [x] OpenAPI static review và collection checks đã hoàn tất tại SHA `74c8ea16b05733a2e5620dc48f3c52cc6867c3b6`; xem `qa-artifacts/2026-10-22/api-contract-74c8ea1.log`. Không thay thế API test thật.
