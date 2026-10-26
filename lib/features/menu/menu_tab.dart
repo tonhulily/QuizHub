@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/design_system/app_colors.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/widgets/app_feedback.dart';
 import '../../core/widgets/fb_widgets.dart';
 import '../../core/widgets/user_avatar.dart';
+import '../../data/models/auth_session.dart';
 import '../auth/logout_action.dart';
 import '../shell/main_shell.dart';
 import '../profile/cubit/profile_cubit.dart';
@@ -39,6 +41,16 @@ class MenuTab extends StatelessWidget {
   static void _goToQuestionBank(BuildContext context) =>
       context.findAncestorStateOfType<MainShellState>()?.select(2);
 
+  /// Đề thi chỉ dành cho giảng viên (sinh viên gọi API bị 403).
+  static void _openExams(BuildContext context) {
+    final role = context.read<ProfileCubit>().state.profile?.role;
+    if (role == UserRole.lecturer) {
+      Navigator.of(context).pushNamed(AppRoutes.examMyExams);
+    } else {
+      AppFeedback.info(context, 'Chỉ giảng viên mới sinh và quản lý đề thi.');
+    }
+  }
+
   static const List<MenuShortcut> shortcuts = [
     MenuShortcut(
       icon: AppIcons.friendsActive,
@@ -66,6 +78,7 @@ class MenuTab extends StatelessWidget {
       icon: AppIcons.exam,
       color: AppColors.infoDark,
       label: 'Đề thi của tôi',
+      onTap: _openExams,
     ),
     MenuShortcut(
       icon: AppIcons.shop,
