@@ -5,6 +5,7 @@ import '../../features/friends/view/search_users_view.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
 import '../../features/question_bank/view/my_submissions_view.dart';
+import '../../features/question_bank/view/submission_detail_view.dart';
 import '../../features/question_bank/view/submission_form_view.dart';
 import '../../data/models/profile_model.dart';
 import '../../data/models/session_models.dart';
@@ -59,6 +60,15 @@ class AppRouter {
         page = const ChangePasswordView();
       case AppRoutes.qbankMySubmissions:
         page = const MySubmissionsView();
+      case AppRoutes.qbankSubmission:
+        page = switch (args) {
+          final int id => SubmissionDetailView(sessionId: id),
+          (:final int id, :final SessionStatus status) => SubmissionDetailView(
+            sessionId: id,
+            statusHint: status,
+          ),
+          _ => _NotFoundView(name: settings.name),
+        };
       case AppRoutes.qbankSubmissionForm:
         page = SubmissionFormView(
           initial: args is SubmissionDetail ? args : null,
