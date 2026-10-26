@@ -4,6 +4,7 @@ import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
+import '../../features/question_bank/view/my_submissions_view.dart';
 import '../../data/models/profile_model.dart';
 import '../../features/profile/view/about_profile_view.dart';
 import '../../features/profile/view/change_password_view.dart';
@@ -54,6 +55,8 @@ class AppRouter {
         page = CreatePostView(pickImagesOnOpen: args == true);
       case AppRoutes.changePassword:
         page = const ChangePasswordView();
+      case AppRoutes.qbankMySubmissions:
+        page = const MySubmissionsView();
       default:
         page = _NotFoundView(name: settings.name);
     }
