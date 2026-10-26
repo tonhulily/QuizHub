@@ -36,6 +36,9 @@ class MenuTab extends StatelessWidget {
   static void _goToFriends(BuildContext context) =>
       context.findAncestorStateOfType<MainShellState>()?.select(1);
 
+  static void _goToQuestionBank(BuildContext context) =>
+      context.findAncestorStateOfType<MainShellState>()?.select(2);
+
   static const List<MenuShortcut> shortcuts = [
     MenuShortcut(
       icon: AppIcons.friendsActive,
@@ -47,6 +50,7 @@ class MenuTab extends StatelessWidget {
       icon: AppIcons.quizActive,
       color: AppColors.primary600,
       label: 'Ngân hàng đề',
+      onTap: _goToQuestionBank,
     ),
     MenuShortcut(
       icon: AppIcons.leaderboard,
