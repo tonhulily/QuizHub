@@ -17,7 +17,7 @@ Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md),
 [quy trình Git](docs/qa/GIT_WORKFLOW.md),
 [thiết lập agent](docs/qa/AGENT_SETUP.md).
 
-Nguồn phân công: [Kế hoạch phân công — Flutter Social Question Bank](https://docs.google.com/spreadsheets/d/1URTpbSX2k_04dvurVlJUbkP2iDILs618CKItSpDxjq4/edit#gid=0),
+Nguồn phân công và log bug: [Kế hoạch phân công — Flutter Social Question Bank](https://docs.google.com/spreadsheets/d/1URTpbSX2k_04dvurVlJUbkP2iDILs618CKItSpDxjq4/edit#gid=2122578546), tab [TESTING LỖI](https://docs.google.com/spreadsheets/d/1URTpbSX2k_04dvurVlJUbkP2iDILs618CKItSpDxjq4/edit#gid=2122578546) là tracker bug và tiến độ QA chuẩn.
 đọc ngày 21/10/2026, cả ba tab `Phân chia công việc`, `Phân chia màn hình`,
 `Dependency & Tiêu chí`. Đây là bản ghi tại thời điểm đọc, cần đối chiếu lại khi nhóm đổi phân công.
 

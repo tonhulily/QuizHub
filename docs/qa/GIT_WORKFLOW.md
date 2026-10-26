@@ -7,7 +7,7 @@ Hướng dẫn này giữ công việc của tester trên nhánh local `qa/khanh
 - `main` là nguồn duy nhất để nhận thay đổi app.
 - `qa/khanhson2005` là nhánh QA cá nhân lâu dài, chỉ để kiểm thử và lưu test, cấu hình, tài liệu, bằng chứng QA.
 - Có thể merge `origin/main` vào QA để kiểm tra snapshot mới.
-- Tuyệt đối không merge QA vào `main` hay nhánh khác, không mở PR từ QA, và không push nếu chưa có yêu cầu rõ ràng trong phạm vi công việc sau này.
+- Tuyệt đối không merge QA vào `main` hay nhánh khác. Sơn cho phép commit và push thường lệ các thay đổi QA đã được scope lên `origin/qa/khanhson2005`, không cần hỏi lại. Không push lên `main` hoặc nhánh khác; không mở PR trừ khi Sơn yêu cầu rõ ràng. Không ghi lên remote service nào khác nếu chưa được Sơn yêu cầu cụ thể.
 - Mặc định mã runtime trên QA phải giống `main` đã tích hợp. Không mang riêng hành vi runtime QA sang; giới hạn thay đổi QA vào test, cấu hình QA và tài liệu.
 - Dùng `git fetch origin` để cập nhật thông tin remote rồi kiểm tra SHA và diff. Fetch không đẩy commit.
 - Không dùng `git pull`, `reset --hard`, `clean -fd` hoặc stash tự động trong quy trình này.
