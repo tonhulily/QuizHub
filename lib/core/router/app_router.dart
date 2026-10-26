@@ -4,6 +4,7 @@ import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
+import '../../features/exam/view/exam_detail_view.dart';
 import '../../features/exam/view/my_exams_view.dart';
 import '../../features/question_bank/cubit/ai_refine_cubit.dart';
 import '../../features/question_bank/view/ai_refine_view.dart';
@@ -13,6 +14,7 @@ import '../../features/question_bank/view/question_stats_view.dart';
 import '../../features/question_bank/view/submission_detail_view.dart';
 import '../../features/question_bank/view/submission_form_view.dart';
 import '../../data/models/profile_model.dart';
+import '../../data/models/exam_models.dart';
 import '../../data/models/session_models.dart';
 import '../../features/profile/view/about_profile_view.dart';
 import '../../features/profile/view/change_password_view.dart';
@@ -65,6 +67,15 @@ class AppRouter {
         page = const ChangePasswordView();
       case AppRoutes.examMyExams:
         page = const MyExamsView();
+      case AppRoutes.examDetail:
+        page = switch (args) {
+          final int id => ExamDetailView(examId: id),
+          final ExamDetail exam => ExamDetailView(
+            examId: exam.examId,
+            initial: exam,
+          ),
+          _ => _NotFoundView(name: settings.name),
+        };
       case AppRoutes.qbankAiRefine:
         page = args is AiRefineArgs
             ? AiRefineView(args: args)
