@@ -6,6 +6,7 @@ import '../../features/post/create_post_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
 import '../../features/question_bank/view/my_submissions_view.dart';
 import '../../features/question_bank/view/practice_view.dart';
+import '../../features/question_bank/view/question_stats_view.dart';
 import '../../features/question_bank/view/submission_detail_view.dart';
 import '../../features/question_bank/view/submission_form_view.dart';
 import '../../data/models/profile_model.dart';
@@ -78,6 +79,12 @@ class AppRouter {
         page = args is int
             ? PracticeView(sessionId: args)
             : _NotFoundView(name: settings.name);
+      case AppRoutes.qbankQuestionStats:
+        page = switch (args) {
+          (:final int questionId, :final List<String> correctKeys) =>
+            QuestionStatsView(questionId: questionId, correctKeys: correctKeys),
+          _ => _NotFoundView(name: settings.name),
+        };
       default:
         page = _NotFoundView(name: settings.name);
     }
