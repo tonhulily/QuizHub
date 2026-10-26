@@ -5,6 +5,7 @@ import '../../features/friends/view/search_users_view.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
 import '../../features/question_bank/view/my_submissions_view.dart';
+import '../../features/question_bank/view/practice_view.dart';
 import '../../features/question_bank/view/submission_detail_view.dart';
 import '../../features/question_bank/view/submission_form_view.dart';
 import '../../data/models/profile_model.dart';
@@ -73,6 +74,10 @@ class AppRouter {
         page = SubmissionFormView(
           initial: args is SubmissionDetail ? args : null,
         );
+      case AppRoutes.qbankPractice:
+        page = args is int
+            ? PracticeView(sessionId: args)
+            : _NotFoundView(name: settings.name);
       default:
         page = _NotFoundView(name: settings.name);
     }
