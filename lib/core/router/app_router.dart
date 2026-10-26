@@ -5,6 +5,7 @@ import '../../features/friends/view/search_users_view.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
 import '../../features/exam/view/exam_detail_view.dart';
+import '../../features/exam/view/exam_generator_view.dart';
 import '../../features/exam/view/my_exams_view.dart';
 import '../../features/question_bank/cubit/ai_refine_cubit.dart';
 import '../../features/question_bank/view/ai_refine_view.dart';
@@ -67,6 +68,8 @@ class AppRouter {
         page = const ChangePasswordView();
       case AppRoutes.examMyExams:
         page = const MyExamsView();
+      case AppRoutes.examGenerator:
+        page = const ExamGeneratorView();
       case AppRoutes.examDetail:
         page = switch (args) {
           final int id => ExamDetailView(examId: id),
