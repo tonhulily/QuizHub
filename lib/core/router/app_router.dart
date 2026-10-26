@@ -4,6 +4,8 @@ import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
+import '../../features/question_bank/cubit/ai_refine_cubit.dart';
+import '../../features/question_bank/view/ai_refine_view.dart';
 import '../../features/question_bank/view/my_submissions_view.dart';
 import '../../features/question_bank/view/practice_view.dart';
 import '../../features/question_bank/view/question_stats_view.dart';
@@ -60,6 +62,10 @@ class AppRouter {
         page = CreatePostView(pickImagesOnOpen: args == true);
       case AppRoutes.changePassword:
         page = const ChangePasswordView();
+      case AppRoutes.qbankAiRefine:
+        page = args is AiRefineArgs
+            ? AiRefineView(args: args)
+            : _NotFoundView(name: settings.name);
       case AppRoutes.qbankMySubmissions:
         page = const MySubmissionsView();
       case AppRoutes.qbankSubmission:
