@@ -9,7 +9,7 @@
 - Trạng thái QA được kiểm tra: `b949513b254bee55a3887e619786ea91f85b477f`
 - Trước khi merge: `e44594d460146687bcb048cab4c36aee973dd158`
 - Môi trường: Linux x86_64 WSL2, Flutter 3.41.6 stable, Dart 3.11.4; không có API host hoặc thiết bị.
-- Bằng chứng cục bộ (được `.gitignore` loại trừ): [`qa-artifacts/2026-10-26/dung-review`](../../../qa-artifacts/2026-10-26/dung-review/).
+- Bằng chứng cục bộ (được `.gitignore` loại trừ): [`qa-artifacts/2026-10-26/dung-review`](../../../qa-artifacts/2026-10-26/dung-review/). Bản lưu chọn lọc các harness tái hiện và lệnh: [repros evidence](../evidence/2026-10-26/repros/README.md).
 
 ## Lỗi đã xác nhận
 
@@ -19,19 +19,19 @@ Các lỗi và mục theo dõi test đã ghi vào tracker chuẩn [tab TESTING L
    - **Tình huống:** mở màn chi tiết/thống kê rồi rời màn hình trước khi request kết thúc. `BlocProvider` đóng cubit; khi loader trả về, `load()` vẫn gọi `emit`.
    - **Kết quả:** `StateError` thoát khỏi future tải chưa được await ở nơi gọi, tạo lỗi async không xử lý.
    - **Sửa tối thiểu:** kiểm tra `isClosed` trước các lần emit sau await (cả nhánh thành công và lỗi).
-   - **Tái hiện:** harness `qbank/cubit_lifecycle_repro_test.dart`, case `LoadCubit completion after close`; exit 0 vì harness xác nhận exception. Log: [`qbank/cubit-lifecycle.log`](../../../qa-artifacts/2026-10-26/dung-review/qbank/cubit-lifecycle.log).
+   - **Tái hiện:** harness [đã lưu](../evidence/2026-10-26/repros/cubit_lifecycle_repro_test.dart.txt), case `LoadCubit completion after close`; exit 0 vì harness xác nhận exception. Log: [`qbank/cubit-lifecycle.log`](../../../qa-artifacts/2026-10-26/dung-review/qbank/cubit-lifecycle.log).
 
 2. **QH-QA-002 · P2 — Không nộp được câu có hai phương án chỉ gồm ảnh** — `lib/features/question_bank/cubit/submission_form_cubit.dart:64-66`
    - **Tình huống:** hai phương án có ảnh khác nhau và text rỗng. Validator cho phép text rỗng nếu có `mediaUrl` (dòng 59-62), và form có nút thêm ảnh riêng cho từng phương án.
    - **Kết quả:** cả hai text thành `''`, bị báo trùng dù ảnh khác nhau; người dùng không thể nộp phiên hợp lệ.
    - **Sửa tối thiểu:** chỉ so trùng các text không rỗng; giữ kiểm tra nội dung/ảnh của từng lựa chọn.
-   - **Tái hiện:** `qbank/image_only_options_repro_test.dart`, case `two distinct image-only options are accepted`; validator trả `Câu 1: có hai phương án trùng nhau.` Log: [`qbank/image-only-validation.log`](../../../qa-artifacts/2026-10-26/dung-review/qbank/image-only-validation.log). Test thoát 1 theo dự kiến vì kỳ vọng hiện tại không đạt.
+   - **Tái hiện:** [harness đã lưu](../evidence/2026-10-26/repros/image_only_options_repro_test.dart.txt), case `two distinct image-only options are accepted`; validator trả `Câu 1: có hai phương án trùng nhau.` Log: [`qbank/image-only-validation.log`](../../../qa-artifacts/2026-10-26/dung-review/qbank/image-only-validation.log). Test thoát 1 theo dự kiến vì kỳ vọng hiện tại không đạt.
 
 3. **QH-QA-003 · P2 — Lỗi mở link export thoát khỏi màn hình, không báo người dùng** — `lib/features/exam/view/exam_detail_view.dart:93-99`
    - **Tình huống:** API export trả link hợp lệ nhưng nền tảng không có ứng dụng xử lý URL, `url_launcher` ném `PlatformException(ACTIVITY_NOT_FOUND)`.
    - **Kết quả:** `_export` chỉ bắt `ApiException`, nên exception thoát ra ngoài và không hiển thị feedback.
    - **Sửa tối thiểu:** bắt `PlatformException` tại đây và dùng feedback lỗi sẵn có như trường hợp `launchUrl` trả false.
-   - **Tái hiện:** case `EX-EXPORT-PLATFORM-001`, fake repository trả URL hợp lệ, launcher giả ném lỗi nền tảng; test xác nhận exception thoát (exit 1 theo kỳ vọng lỗi). Log và harness: [`exam-ai/export-platform-exception.log`](../../../qa-artifacts/2026-10-26/dung-review/exam-ai/export-platform-exception.log), [`exam-ai/export_platform_exception_repro_test.dart`](../../../qa-artifacts/2026-10-26/dung-review/exam-ai/export_platform_exception_repro_test.dart).
+   - **Tái hiện:** case `EX-EXPORT-PLATFORM-001`, fake repository trả URL hợp lệ, launcher giả ném lỗi nền tảng; test xác nhận exception thoát (exit 1 theo kỳ vọng lỗi). Log và harness: [`exam-ai/export-platform-exception.log`](../../../qa-artifacts/2026-10-26/dung-review/exam-ai/export-platform-exception.log), [harness đã lưu](../evidence/2026-10-26/repros/export_platform_exception_repro_test.dart.txt).
 
 ## QH-QA-004 · Cần sửa test harness
 
@@ -54,6 +54,6 @@ Lệnh Flutter/Dart dùng SDK cô lập theo [môi trường QA](../ENVIRONMENT.
 
 ## Còn chờ
 
-- Test API/UI/E2E trên backend, thiết bị và tài khoản thật: **BLOCKED**, chưa có API host/tài khoản/thiết bị.
-- Browser UI đã chạy trên web preview in-memory tại SHA nguồn đã nêu; xem [báo cáo web UI](2026-10-26-web-ui.md). API thật, thiết bị native và acceptance trên app điện thoại vẫn **BLOCKED/NOT RUN**; preview không thay thế các kiểm tra đó.
+- Native Android với APK preview/mock: 5 case **PASS**, 2 case **BLOCKED**; ảnh đen sau thao tác AI vẫn là quan sát cần điều tra, chưa kết luận lỗi app. Chi tiết: [báo cáo mobile UI](2026-10-26-mobile-ui-setup.md). Chưa retest hoặc sửa ba lỗi P2.
+- Browser UI chạy trên web preview in-memory tại SHA nguồn đã nêu; xem [báo cáo web UI](2026-10-26-web-ui.md). API backend thật và acceptance API vẫn **BLOCKED**, chưa có host/tài khoản; preview web/mobile không thay thế các kiểm tra đó.
 - Các placeholder chưa có contract rõ ràng tiếp tục là **WAITING**, không tính là lỗi.

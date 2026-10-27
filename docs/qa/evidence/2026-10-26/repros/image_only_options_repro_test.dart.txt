@@ -1,0 +1,23 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:quizhub/data/models/question_models.dart';
+import 'package:quizhub/data/models/session_models.dart';
+import 'package:quizhub/features/question_bank/cubit/submission_form_cubit.dart';
+
+void main() {
+  test('two distinct image-only options are accepted', () {
+    final draft = SessionDraft(
+      subjectId: 10,
+      title: 'Image choices',
+      questions: [
+        QuestionDraft(
+          content: 'Which diagram is correct?',
+          options: const [
+            QuestionOption(key: 'A', text: '', mediaUrl: 'https://img/a.png', isCorrect: true),
+            QuestionOption(key: 'B', text: '', mediaUrl: 'https://img/b.png'),
+          ],
+        ),
+      ],
+    );
+    expect(validateSessionDraft(draft), isNull);
+  });
+}

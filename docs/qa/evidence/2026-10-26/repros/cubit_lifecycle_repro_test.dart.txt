@@ -1,0 +1,14 @@
+import 'dart:async';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:quizhub/features/question_bank/cubit/load_cubit.dart';
+
+void main() {
+  test('LoadCubit completion after close', () async {
+    final gate = Completer<int>();
+    final cubit = LoadCubit<int>(() => gate.future);
+    final loading = cubit.load();
+    await cubit.close();
+    gate.complete(1);
+    await expectLater(loading, throwsA(isA<StateError>()));
+  });
+}
