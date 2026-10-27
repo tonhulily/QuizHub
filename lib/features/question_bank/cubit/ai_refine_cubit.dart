@@ -145,9 +145,11 @@ class AiRefineCubit extends Cubit<AiRefineState> {
     emit(AiRefineState(status: AiRefineStatus.refining, result: state.result));
     try {
       final r = await _ai.refine(target.questionId, prompt: p);
+      if (isClosed) return null;
       emit(AiRefineState(status: AiRefineStatus.ready, result: r));
       return null;
     } on ApiException catch (e) {
+      if (isClosed) return e;
       emit(AiRefineState(status: _settled, result: state.result));
       if (e.code == 'CONTENT_VIOLATES_POLICY') {
         return ApiException(
@@ -193,9 +195,11 @@ class AiRefineCubit extends Cubit<AiRefineState> {
         }
         await _submissions.update(args.session!.sessionId, draft);
       }
+      if (isClosed) return null;
       emit(AiRefineState(status: AiRefineStatus.ready, result: r));
       return null;
     } on ApiException catch (e) {
+      if (isClosed) return e;
       emit(AiRefineState(status: AiRefineStatus.ready, result: r));
       return e;
     }

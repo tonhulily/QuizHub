@@ -131,6 +131,7 @@ class SubmissionFormCubit extends Cubit<SubmissionFormState> {
     emit(state.copyWith(subjectsStatus: LoadStatus.loading));
     try {
       final list = await _subjects.enrolled();
+      if (isClosed) return;
       final current = currentSubject;
       emit(
         state.copyWith(
@@ -144,6 +145,7 @@ class SubmissionFormCubit extends Cubit<SubmissionFormState> {
         ),
       );
     } on ApiException catch (e) {
+      if (isClosed) return;
       emit(state.copyWith(subjectsStatus: LoadStatus.failure, error: e));
     }
   }
@@ -163,10 +165,10 @@ class SubmissionFormCubit extends Cubit<SubmissionFormState> {
       } else {
         await _submissions.update(id, draft);
       }
-      emit(state.copyWith(saving: false));
+      if (!isClosed) emit(state.copyWith(saving: false));
       return null;
     } on ApiException catch (e) {
-      emit(state.copyWith(saving: false));
+      if (!isClosed) emit(state.copyWith(saving: false));
       return e;
     }
   }

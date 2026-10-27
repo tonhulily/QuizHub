@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quizhub/core/config/app_config.dart';
@@ -242,6 +244,29 @@ void main() {
         ),
         isNull,
       );
+    });
+  });
+
+  // QH-QA-001: rời màn hình trước khi tải xong thì không emit sau close()
+  group('LoadCubit', () {
+    test('tải xong sau khi đã đóng thì bỏ qua, không ném lỗi', () async {
+      final gate = Completer<int>();
+      final cubit = LoadCubit<int>(() => gate.future);
+      final loading = cubit.load();
+      await cubit.close();
+      gate.complete(1);
+      await expectLater(loading, completes);
+    });
+
+    test('lỗi tải sau khi đã đóng cũng bỏ qua', () async {
+      final gate = Completer<int>();
+      final cubit = LoadCubit<int>(() => gate.future);
+      final loading = cubit.load();
+      await cubit.close();
+      gate.completeError(
+        const ApiException(type: ApiErrorType.server, message: 'lỗi'),
+      );
+      await expectLater(loading, completes);
     });
   });
 

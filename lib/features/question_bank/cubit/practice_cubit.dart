@@ -104,6 +104,7 @@ class PracticeCubit extends Cubit<PracticeState> {
     if (!silent) emit(const PracticeState());
     try {
       final s = await _repo.sessionQuestions(sessionId);
+      if (isClosed) return;
       final index = state.index < s.questions.length ? state.index : 0;
       emit(
         state.copyWith(
@@ -115,7 +116,7 @@ class PracticeCubit extends Cubit<PracticeState> {
         ),
       );
     } on ApiException catch (e) {
-      if (silent && state.session != null) return;
+      if (isClosed || (silent && state.session != null)) return;
       emit(PracticeState(status: LoadStatus.failure, error: e));
     }
   }
@@ -156,6 +157,7 @@ class PracticeCubit extends Cubit<PracticeState> {
       _replace(q.withAnswer(r), result: r);
       return null;
     } on ApiException catch (e) {
+      if (isClosed) return e;
       emit(state.copyWith(submitting: false));
       // 409: đã trả lời ở thiết bị khác; 412: tác giả vừa sửa câu. Cả hai
       // trường hợp dữ liệu trên máy đã cũ nên tải lại phiên.
@@ -196,6 +198,7 @@ class PracticeCubit extends Cubit<PracticeState> {
   }
 
   void _replace(PracticeQuestion updated, {AnswerResult? result}) {
+    if (isClosed) return; // trả lời / đánh giá xong khi đã rời màn hình
     final list = [
       for (final x in state.questions)
         x.questionId == updated.questionId ? updated : x,

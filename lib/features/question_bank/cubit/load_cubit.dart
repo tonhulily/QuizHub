@@ -31,12 +31,16 @@ class LoadCubit<T> extends Cubit<LoadState<T>> {
       );
 
   /// [silent]: giữ dữ liệu đang hiển thị trong lúc tải lại (sau khi sửa).
+  ///
+  /// Rời màn hình trước khi tải xong thì cubit đã đóng: bỏ kết quả, không emit.
   Future<void> load({bool silent = false}) async {
     if (!silent || state.data == null) emit(LoadState<T>());
     try {
       final data = await _loader();
+      if (isClosed) return;
       emit(LoadState<T>(status: LoadStatus.loaded, data: data));
     } on ApiException catch (e) {
+      if (isClosed) return;
       if (silent && state.data != null) {
         emit(
           LoadState<T>(status: LoadStatus.loaded, data: state.data, error: e),
