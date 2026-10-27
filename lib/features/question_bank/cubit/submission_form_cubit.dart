@@ -61,7 +61,11 @@ String? validateSessionDraft(SessionDraft d) {
         return '$n: phương án ${o.key} đang để trống.';
       }
     }
-    final texts = [for (final o in q.options) o.text.trim().toLowerCase()];
+    // Phương án chỉ có ảnh (text rỗng) không tính là trùng nhau
+    final texts = [
+      for (final o in q.options)
+        if (o.text.trim().isNotEmpty) o.text.trim().toLowerCase(),
+    ];
     if (texts.toSet().length != texts.length) {
       return '$n: có hai phương án trùng nhau.';
     }

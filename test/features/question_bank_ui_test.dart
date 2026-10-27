@@ -215,6 +215,34 @@ void main() {
         contains('500 từ'),
       );
     });
+
+    // QH-QA-002: hai phương án chỉ có ảnh (text rỗng) không bị báo trùng
+    test('phương án chỉ có ảnh thì hợp lệ', () {
+      expect(
+        validateSessionDraft(
+          _draft(
+            questions: [
+              _q(
+                options: const [
+                  QuestionOption(
+                    key: 'A',
+                    text: '',
+                    mediaUrl: 'https://img/a.png',
+                    isCorrect: true,
+                  ),
+                  QuestionOption(
+                    key: 'B',
+                    text: '',
+                    mediaUrl: 'https://img/b.png',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        isNull,
+      );
+    });
   });
 
   group('PracticeCubit', () {
