@@ -219,13 +219,15 @@ void main() {
       expect(exams.generated, isEmpty);
     });
 
-    testWidgets('chi tiết đề: chỉ giảng viên có nút AI gợi ý', (tester) async {
+    testWidgets('chi tiết đề: sinh viên không có nút AI gợi ý', (tester) async {
       await tester.pumpWidget(
         app(const ExamDetailView(examId: 9, initial: _exam)),
       );
       await tester.pumpAndSettle();
       expect(find.text('AI gợi ý'), findsNothing);
+    });
 
+    testWidgets('chi tiết đề: giảng viên có nút AI gợi ý', (tester) async {
       await tester.pumpWidget(
         app(
           const ExamDetailView(examId: 9, initial: _exam),
