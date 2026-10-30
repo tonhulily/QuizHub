@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_icons.dart';
 import '../../../core/design_system/design_tokens.dart';
+import '../../../core/utils/text_diff.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -122,12 +123,7 @@ class _BodyState extends State<_Body> {
                     children: [
                       const QbankSectionTitle('Câu hiện tại'),
                       const SizedBox(height: 8),
-                      _QuestionPreview(
-                        content: q.content,
-                        imageUrls: q.imageUrls,
-                        options: q.options,
-                        explanation: q.explanation,
-                      ),
+                      _QuestionPreview(_Version.ofTarget(q)),
                     ],
                   ),
                 ),
@@ -183,7 +179,10 @@ class _BodyState extends State<_Body> {
                     ],
                   ),
                 ),
-                if (r != null) ...[const SectionGap(), _ResultBlock(result: r)],
+                if (r != null) ...[
+                  const SectionGap(),
+                  _ResultBlock(original: _Version.ofTarget(q), result: r),
+                ],
               ],
             ),
           ),
@@ -239,13 +238,29 @@ class _BodyState extends State<_Body> {
 }
 
 class _ResultBlock extends StatelessWidget {
+  /// Câu hiện tại, để tô chỗ AI đã sửa.
+  final _Version original;
   final AiRefineResult result;
-  const _ResultBlock({required this.result});
+  const _ResultBlock({required this.original, required this.result});
+
+  void _compare(BuildContext context, _Version suggestion) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => FractionallySizedBox(
+          heightFactor: 0.92,
+          child: _CompareSheet(before: original, after: suggestion),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final r = result;
+    final suggestion = _Version.ofResult(r);
+    final changed = original.differsFrom(suggestion);
+    final correctChange = original.correctChange(suggestion);
     final score = r.confidenceScore;
     final meta = [
       if (r.model != null) r.model!,
@@ -258,7 +273,17 @@ class _ResultBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const QbankSectionTitle('Bản gợi ý của AI'),
+          Row(
+            children: [
+              const Expanded(child: QbankSectionTitle('Bản gợi ý của AI')),
+              if (!r.refused)
+                TextButton.icon(
+                  onPressed: () => _compare(context, suggestion),
+                  icon: const Icon(AppIcons.compare, size: 18),
+                  label: const Text('So sánh'),
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           if (r.refused)
             ExplanationBox(
@@ -294,10 +319,22 @@ class _ResultBlock extends StatelessWidget {
               _ViolationTile(violation: v),
             ],
             const SizedBox(height: 12),
-            _QuestionPreview(
-              content: r.content,
-              options: r.options,
-              explanation: r.explanation,
+            if (correctChange != null) ...[
+              ExplanationBox(
+                title: 'AI đổi đáp án đúng',
+                text: correctChange,
+                icon: AppIcons.errorOutline,
+                color: AppColors.warningDark,
+                background: AppColors.warningLight,
+              ),
+              const SizedBox(height: 8),
+            ],
+            _DiffLegend(changed: changed),
+            const SizedBox(height: 8),
+            _QuestionPreview.diff(
+              version: suggestion,
+              other: original,
+              side: _Side.after,
             ),
           ],
           if (meta.isNotEmpty) ...[
@@ -361,35 +398,248 @@ class _ViolationTile extends StatelessWidget {
   }
 }
 
-/// Nội dung + phương án (đáp án đúng tô xanh) + lời giải.
-class _QuestionPreview extends StatelessWidget {
+/// Một bản của câu hỏi (gốc hoặc AI sửa) để hiển thị / so sánh.
+class _Version {
   final String content;
   final List<String> imageUrls;
   final List<QuestionOption> options;
-  final String? explanation;
+  final String explanation;
 
-  const _QuestionPreview({
+  const _Version({
     required this.content,
     this.imageUrls = const [],
     required this.options,
-    this.explanation,
+    this.explanation = '',
   });
 
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
+  factory _Version.ofTarget(AiTarget t) => _Version(
+    content: t.content,
+    imageUrls: t.imageUrls,
+    options: t.options,
+    explanation: t.explanation ?? '',
+  );
+
+  factory _Version.ofResult(AiRefineResult r) => _Version(
+    content: r.content,
+    options: r.options,
+    explanation: r.explanation ?? '',
+  );
+
+  String textOf(String key) {
+    for (final o in options) {
+      if (o.key == key) return o.text;
+    }
+    return '';
+  }
+
+  bool differsFrom(_Version o) =>
+      content != o.content ||
+      explanation != o.explanation ||
+      options.length != o.options.length ||
+      options.any((x) => x.text != o.textOf(x.key));
+
+  /// "A → C" nếu đáp án đúng đổi. Câu luyện tập chưa làm bị ẩn đáp án thì
+  /// không biết đáp án cũ: null.
+  String? correctChange(_Version after) {
+    if (options.every((o) => o.isCorrect == null)) return null;
+    String keys(_Version v) => [
+      for (final o in v.options)
+        if (o.isCorrect == true) o.key,
+    ].join(', ');
+    final from = keys(this), to = keys(after);
+    return from == to ? null : '${from.isEmpty ? '?' : from} → $to';
+  }
+}
+
+/// Phía nào khi so sánh: bản gốc tô phần bị bỏ, bản AI tô phần thêm / sửa.
+enum _Side { before, after }
+
+/// Chữ của [side] với phần khác bản kia được tô màu.
+InlineSpan _diffSpan(String before, String after, _Side side) {
+  const added = TextStyle(
+    backgroundColor: AppColors.successLight,
+    color: AppColors.successDark,
+    fontWeight: FontWeight.w600,
+  );
+  const removed = TextStyle(
+    backgroundColor: AppColors.errorLight,
+    color: AppColors.errorDark,
+    decoration: TextDecoration.lineThrough,
+  );
+  return TextSpan(
     children: [
-      QuestionBody(content: content, imageUrls: imageUrls),
-      const SizedBox(height: 12),
-      for (final o in options) ...[
-        OptionTile(
-          option: o,
-          look: o.isCorrect == true ? OptionLook.correct : OptionLook.idle,
-        ),
-        const SizedBox(height: 8),
-      ],
-      if (explanation != null && explanation!.trim().isNotEmpty)
-        ExplanationBox(title: 'Lời giải', text: explanation!),
+      for (final p in diffWords(before, after))
+        if (p.op == DiffOp.same)
+          TextSpan(text: p.text)
+        else if (side == _Side.after && p.op == DiffOp.added)
+          TextSpan(text: p.text, style: added)
+        else if (side == _Side.before && p.op == DiffOp.removed)
+          TextSpan(text: p.text, style: removed),
     ],
   );
+}
+
+/// Chú thích màu dưới tiêu đề bản gợi ý.
+class _DiffLegend extends StatelessWidget {
+  final bool changed;
+  const _DiffLegend({required this.changed});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary);
+    if (!changed) {
+      return Text('AI giữ nguyên nội dung câu hỏi.', style: style);
+    }
+    return Text.rich(
+      TextSpan(
+        children: [
+          const TextSpan(
+            text: ' Tô xanh ',
+            style: TextStyle(
+              backgroundColor: AppColors.successLight,
+              color: AppColors.successDark,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const TextSpan(
+            text:
+                ' là chỗ AI thêm / sửa so với câu hiện tại. Bấm "So sánh" '
+                'để xem hai bản cạnh nhau.',
+          ),
+        ],
+      ),
+      style: style,
+    );
+  }
+}
+
+/// Bản gốc và bản AI đặt cạnh nhau.
+class _CompareSheet extends StatelessWidget {
+  final _Version before;
+  final _Version after;
+
+  const _CompareSheet({required this.before, required this.after});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget column(String title, _Version v, _Version other, _Side side) =>
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: side == _Side.before
+                        ? AppColors.errorDark
+                        : AppColors.successDark,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                  child: _QuestionPreview.diff(
+                    version: v,
+                    other: other,
+                    side: side,
+                    showImages: false,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Text(
+            'So sánh bản gốc và bản AI',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              column('Bản gốc', before, after, _Side.before),
+              const VerticalDivider(width: 1),
+              column('Bản AI', after, before, _Side.after),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Nội dung + phương án (đáp án đúng tô xanh) + lời giải.
+class _QuestionPreview extends StatelessWidget {
+  final _Version version;
+
+  /// Bản để so sánh; null thì hiện bình thường, không tô.
+  final _Version? other;
+  final _Side side;
+  final bool showImages;
+
+  const _QuestionPreview(this.version)
+    : other = null,
+      side = _Side.after,
+      showImages = true;
+
+  const _QuestionPreview.diff({
+    required this.version,
+    required _Version this.other,
+    required this.side,
+    this.showImages = true,
+  });
+
+  /// Chữ của bản này, tô phần khác [other].
+  InlineSpan? _span(String mine, String theirs) {
+    if (other == null) return null;
+    return side == _Side.before
+        ? _diffSpan(mine, theirs, side)
+        : _diffSpan(theirs, mine, side);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final v = version;
+    final o = other;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        QuestionBody(
+          content: v.content,
+          imageUrls: showImages ? v.imageUrls : const [],
+          contentSpan: o == null ? null : _span(v.content, o.content),
+        ),
+        const SizedBox(height: 12),
+        for (final opt in v.options) ...[
+          OptionTile(
+            option: opt,
+            look: opt.isCorrect == true ? OptionLook.correct : OptionLook.idle,
+            textSpan: o == null ? null : _span(opt.text, o.textOf(opt.key)),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (v.explanation.trim().isNotEmpty)
+          ExplanationBox(
+            title: 'Lời giải',
+            text: v.explanation,
+            textSpan: o == null ? null : _span(v.explanation, o.explanation),
+          ),
+      ],
+    );
+  }
 }

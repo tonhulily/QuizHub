@@ -232,18 +232,22 @@ class QuestionBody extends StatelessWidget {
   final String content;
   final List<String> imageUrls;
 
+  /// Thay cho [content] khi cần tô từng đoạn (vd so sánh với bản AI).
+  final InlineSpan? contentSpan;
+
   const QuestionBody({
     super.key,
     required this.content,
     this.imageUrls = const [],
+    this.contentSpan,
   });
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(
-        content,
+      Text.rich(
+        contentSpan ?? TextSpan(text: content),
         style: Theme.of(
           context,
         ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
@@ -279,11 +283,15 @@ class OptionTile extends StatelessWidget {
   final OptionLook look;
   final VoidCallback? onTap;
 
+  /// Thay cho chữ của [option] khi cần tô từng đoạn.
+  final InlineSpan? textSpan;
+
   const OptionTile({
     super.key,
     required this.option,
     this.look = OptionLook.idle,
     this.onTap,
+    this.textSpan,
   });
 
   @override
@@ -363,8 +371,8 @@ class OptionTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      option.text,
+                    Text.rich(
+                      textSpan ?? TextSpan(text: option.text),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: look == OptionLook.dimmed
                             ? AppColors.textSecondary
@@ -403,6 +411,9 @@ class ExplanationBox extends StatelessWidget {
   final Color background;
   final IconData icon;
 
+  /// Thay cho [text] khi cần tô từng đoạn.
+  final InlineSpan? textSpan;
+
   const ExplanationBox({
     super.key,
     required this.title,
@@ -410,6 +421,7 @@ class ExplanationBox extends StatelessWidget {
     this.color = AppColors.infoDark,
     this.background = AppColors.infoLight,
     this.icon = AppIcons.info,
+    this.textSpan,
   });
 
   @override
@@ -437,9 +449,12 @@ class ExplanationBox extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                if (text.isNotEmpty) ...[
+                if (text.isNotEmpty || textSpan != null) ...[
                   const SizedBox(height: 4),
-                  Text(text, style: theme.textTheme.bodyMedium),
+                  Text.rich(
+                    textSpan ?? TextSpan(text: text),
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ],
               ],
             ),
