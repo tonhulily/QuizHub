@@ -10,8 +10,11 @@ import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/fb_widgets.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../core/widgets/user_avatar.dart';
+import '../../../data/models/profile_model.dart';
 import '../../../data/models/question_models.dart';
 import '../../../data/repositories/question_bank_repository.dart';
+import '../../../data/repositories/user_directory.dart';
 import '../../../di/locator.dart';
 import '../cubit/load_cubit.dart';
 import '../widgets/qbank_widgets.dart';
@@ -278,13 +281,24 @@ class _Bar extends StatelessWidget {
   }
 }
 
-class _RatingTile extends StatelessWidget {
+class _RatingTile extends StatefulWidget {
   final RatingItem item;
   const _RatingTile({required this.item});
 
   @override
+  State<_RatingTile> createState() => _RatingTileState();
+}
+
+class _RatingTileState extends State<_RatingTile> {
+  /// API danh sách đánh giá chỉ trả `user_id`: tra thêm tên / ảnh (có cache).
+  late final Future<ProfileModel?> _author = getIt<UserDirectory>().lookup(
+    widget.item.userId,
+  );
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final item = widget.item;
     final level = item.level;
     return Container(
       color: AppColors.white,
@@ -297,12 +311,39 @@ class _RatingTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Backend chỉ trả user_id, chưa có tên người đánh giá
-              Text(
-                'Người dùng #${item.userId}',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              FutureBuilder<ProfileModel?>(
+                future: _author,
+                builder: (context, snap) {
+                  final p = snap.data;
+                  // Chưa tải xong hoặc lỗi thì hiện id
+                  final name = p?.fullName.trim().isNotEmpty == true
+                      ? p!.fullName
+                      : 'Người dùng #${item.userId}';
+                  return Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        UserAvatar(
+                          avatarUrl: p?.avatarUrl,
+                          frameUrl: p?.frameUrl,
+                          name: p?.fullName ?? '',
+                          size: ComponentTokens.avatarSM,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(width: 8),
               if (item.isError)
@@ -330,7 +371,12 @@ class _RatingTile extends StatelessWidget {
           ),
           if (item.comment != null && item.comment!.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(item.comment!, style: theme.textTheme.bodyMedium),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: ComponentTokens.avatarSM + 8,
+              ),
+              child: Text(item.comment!, style: theme.textTheme.bodyMedium),
+            ),
           ],
         ],
       ),

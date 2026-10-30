@@ -14,6 +14,9 @@ import 'package:quizhub/data/models/subject_model.dart';
 import 'package:quizhub/data/repositories/question_bank_repository.dart';
 import 'package:quizhub/data/repositories/subject_repository.dart';
 import 'package:quizhub/data/repositories/submission_repository.dart';
+import 'package:quizhub/data/repositories/user_directory.dart';
+import 'package:quizhub/data/repositories/user_repository.dart';
+import 'package:quizhub/data/models/profile_model.dart';
 import 'package:quizhub/di/locator.dart';
 import 'package:quizhub/data/models/auth_session.dart';
 import 'package:quizhub/features/question_bank/cubit/load_cubit.dart';
@@ -125,6 +128,23 @@ class _FakeBank implements QuestionBankRepository {
     String? after,
     int limit = AppConfig.defaultPageSize,
   }) async => CursorPage(items: ratingItems);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// `GET /users/{id}`: người #5 có hồ sơ, người khác lỗi; đếm số lần gọi.
+class _FakeUsers implements UserRepository {
+  final Map<int, int> calls = {};
+
+  @override
+  Future<ProfileModel> getUser(int userId) async {
+    calls[userId] = (calls[userId] ?? 0) + 1;
+    if (userId == 5) {
+      return const ProfileModel(userId: 5, fullName: 'Trần Thị B');
+    }
+    throw const ApiException(type: ApiErrorType.notFound, message: '404');
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -327,6 +347,24 @@ void main() {
     });
   });
 
+  group('UserDirectory', () {
+    test(
+      'mỗi người chỉ gọi API một lần; lỗi thì null và lần sau thử lại',
+      () async {
+        final users = _FakeUsers();
+        final dir = UserDirectory(users);
+
+        final both = await Future.wait([dir.lookup(5), dir.lookup(5)]);
+        expect(both.map((p) => p?.fullName), ['Trần Thị B', 'Trần Thị B']);
+        expect(users.calls[5], 1);
+
+        expect(await dir.lookup(6), isNull);
+        expect(await dir.lookup(6), isNull);
+        expect(users.calls[6], 2);
+      },
+    );
+  });
+
   // QH-QA-001: rời màn hình trước khi tải xong thì không emit sau close()
   group('LoadCubit', () {
     test('tải xong sau khi đã đóng thì bỏ qua, không ném lỗi', () async {
@@ -470,6 +508,7 @@ void main() {
       tester,
     ) async {
       getIt.registerSingleton<QuestionBankRepository>(_FakeBank(const []));
+      getIt.registerSingleton<UserDirectory>(UserDirectory(_FakeUsers()));
       await tester.pumpWidget(
         app(const QuestionStatsView(questionId: 1, correctKeys: ['A'])),
       );
@@ -480,6 +519,29 @@ void main() {
       expect(shaky, findsOneWidget);
       final text = tester.renderObject<RenderParagraph>(shaky);
       expect(text.didExceedMaxLines, isFalse);
+    });
+
+    testWidgets('thống kê: hiện tên người đánh giá, lỗi thì hiện id', (
+      tester,
+    ) async {
+      getIt.registerSingleton<QuestionBankRepository>(
+        _FakeBank(const [])
+          ..ratingItems = const [
+            RatingItem(userId: 5, rating: 4, comment: 'Hay'),
+            RatingItem(userId: 6, rating: 3),
+          ],
+      );
+      getIt.registerSingleton<UserDirectory>(UserDirectory(_FakeUsers()));
+      // Đủ cao để thấy danh sách nhận xét dưới phần thống kê
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(const QuestionStatsView(questionId: 1)));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Trần Thị B'), findsOneWidget);
+      expect(find.text('Người dùng #5'), findsNothing);
+      expect(find.text('Người dùng #6'), findsOneWidget);
     });
 
     testWidgets('luyện tập: chọn, nộp rồi thấy kết quả và lời giải', (
