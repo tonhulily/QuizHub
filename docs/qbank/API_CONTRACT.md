@@ -134,6 +134,7 @@ hạn lưu tạm (ảnh phải upload qua `/medias/...` ngay trước khi nộp)
 | 8 | Danh sách đánh giá chỉ có `user_id`, **không có tên / ảnh** | Không hiện được người đánh giá | Xin thêm `author` như bình luận. Tạm thời app gọi `GET /users/{id}` cho từng người (`UserDirectory`, cache theo id), lỗi thì hiện "Người dùng #id" |
 | 9 | Giá trị `format` khi xuất: `excel` hay `xlsx`? | Có thể nhận lỗi 400 khi xuất Excel | Model đang gửi `excel`; thử cả hai |
 | 10 | Sinh đề cần `class_ids`, nhưng **sinh viên không có lớp dạy** | Bảng phân công ghi "Sinh đề" nhưng sinh viên bị 403 | Chốt với nhóm: nhánh Đề thi chỉ hiện cho giảng viên, test bằng tài khoản giảng viên hoặc bản xem trước |
+| 12 | Câu hỏi trong chi tiết phiên (`MySubmissionQuestionDto`) có `react_count`, `comment_count` nhưng **không có `reacted_by_me`** | Nút Thích dưới mỗi câu không biết mình đã thích chưa khi mở màn | Xin thêm `reacted_by_me` như `PostResponseDto`. App đã đọc nếu có; bấm Thích thì lấy trạng thái + số từ kết quả `POST /react` |
 | 11 | `GET /sessions/{id}` (bản cho giảng viên duyệt) **tự chuyển phiên sang `REVIEWING`** | Mở nhầm bằng tài khoản giảng viên làm đổi dữ liệu thật | Module này không gọi API đó; script lấy mẫu cũng đã bỏ |
 
 Câu trả lời của backend ghi thẳng vào bảng trên (thêm cột "Trả lời") để cả nhóm cùng tra.

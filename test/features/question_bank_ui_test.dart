@@ -18,6 +18,11 @@ import 'package:quizhub/data/repositories/user_directory.dart';
 import 'package:quizhub/data/repositories/user_repository.dart';
 import 'package:quizhub/data/models/profile_model.dart';
 import 'package:quizhub/di/locator.dart';
+import 'package:quizhub/data/models/comment_model.dart';
+import 'package:quizhub/data/models/react_result.dart';
+import 'package:quizhub/data/repositories/comment_repository.dart';
+import 'package:quizhub/data/repositories/reaction_repository.dart';
+import 'package:quizhub/features/question_bank/view/submission_detail_view.dart';
 import 'package:quizhub/data/models/auth_session.dart';
 import 'package:quizhub/features/question_bank/cubit/load_cubit.dart';
 import 'package:quizhub/features/question_bank/cubit/practice_cubit.dart';
@@ -155,6 +160,44 @@ class _FakeUsers implements UserRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// `POST /react`: ghi lại đối tượng đã thích, trả số của server.
+class _FakeReactions implements ReactionRepository {
+  final List<(TargetType, int)> toggled = [];
+
+  @override
+  Future<ReactResult> toggleLike({
+    required TargetType targetType,
+    required int targetId,
+  }) async {
+    toggled.add((targetType, targetId));
+    return const ReactResult(myReaction: 'LIKE', totalCount: 3);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// `GET /comments`: chưa có bình luận nào; ghi lại đối tượng được hỏi.
+class _FakeComments implements CommentRepository {
+  final List<(TargetType, int)> listed = [];
+
+  @override
+  Future<CursorPage<CommentModel>> list({
+    required TargetType targetType,
+    required int targetId,
+    int? parentCommentId,
+    bool newestFirst = true,
+    String? after,
+    int limit = 20,
+  }) async {
+    listed.add((targetType, targetId));
+    return const CursorPage();
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _FakeSubjects implements SubjectRepository {
   @override
   Future<List<SubjectModel>> enrolled() async => const [
@@ -167,6 +210,25 @@ class _FakeSubjects implements SubjectRepository {
 
 class _FakeSubmissions implements SubmissionRepository {
   final List<SessionDraft> proposed = [];
+
+  @override
+  Future<SubmissionDetail> detail(int sessionId) async => SubmissionDetail(
+    sessionId: sessionId,
+    title: 'Bảng băm',
+    status: SessionStatus.resolved,
+    questions: const [
+      SubmissionQuestion(
+        questionId: 301,
+        content: 'Đụng độ là gì?',
+        reactCount: 2,
+        commentCount: 1,
+        options: [
+          QuestionOption(key: 'A', text: 'Hai khoá cùng ô', isCorrect: true),
+          QuestionOption(key: 'B', text: 'Bảng đầy', isCorrect: false),
+        ],
+      ),
+    ],
+  );
 
   @override
   Future<ProposeResult> propose(SessionDraft draft) async {
@@ -575,6 +637,33 @@ void main() {
         find.textContaining('Giảng viên không thấy nguồn này'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('chi tiết phiên: thích và bình luận từng câu hỏi', (
+      tester,
+    ) async {
+      final reactions = _FakeReactions();
+      final comments = _FakeComments();
+      getIt.registerSingleton<ReactionRepository>(reactions);
+      getIt.registerSingleton<CommentRepository>(comments);
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(app(const SubmissionDetailView(sessionId: 3)));
+      await tester.pumpAndSettle();
+      expect(find.text('2 lượt thích'), findsOneWidget);
+      expect(find.text('1 bình luận'), findsOneWidget);
+
+      await tester.tap(find.text('Thích'));
+      await tester.pumpAndSettle();
+      expect(reactions.toggled.single, (TargetType.question, 301));
+      expect(find.text('3 lượt thích'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Bình luận'));
+      await tester.pumpAndSettle();
+      expect(comments.listed.single, (TargetType.question, 301));
+      expect(find.text('Chưa có bình luận'), findsOneWidget);
     });
 
     testWidgets('luyện tập: chọn, nộp rồi thấy kết quả và lời giải', (
