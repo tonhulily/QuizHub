@@ -61,9 +61,18 @@ class _QuestionEditor {
 
   /// URL ảnh của từng phương án (null = phương án chỉ có chữ).
   final List<String?> optionMedia;
-  int correct;
+
+  /// Đáp án đúng. Câu mới để trống, bắt người dùng tự chọn (chọn sẵn A thì
+  /// dễ gửi luôn mà quên kiểm tra).
+  int? correct;
   QuestionSource source;
   double confidence;
+
+  /// Vị trí các ô để cuộn tới khi báo lỗi.
+  final contentKey = GlobalKey();
+  final imagesKey = GlobalKey();
+  final optionsKey = GlobalKey();
+  final confidenceKey = GlobalKey();
 
   _QuestionEditor({
     this.questionId,
@@ -72,7 +81,7 @@ class _QuestionEditor {
     String explanation = '',
     List<String> options = const ['', '', '', ''],
     List<String?>? optionMedia,
-    this.correct = 0,
+    this.correct,
     this.source = QuestionSource.human,
     this.confidence = 3,
   }) : mediaUrls = [...mediaUrls],
@@ -91,7 +100,7 @@ class _QuestionEditor {
       explanation: q.explanation ?? '',
       options: [for (final o in q.options) o.text],
       optionMedia: [for (final o in q.options) o.mediaUrl],
-      correct: correct < 0 ? 0 : correct,
+      correct: correct < 0 ? null : correct,
       source: q.source,
       confidence: q.confidence ?? 3,
     );
@@ -107,12 +116,20 @@ class _QuestionEditor {
   void removeOption(int i) {
     options.removeAt(i).dispose();
     optionMedia.removeAt(i);
-    if (correct == i) {
-      correct = 0;
-    } else if (correct > i) {
-      correct--;
+    final c = correct;
+    if (c == i) {
+      correct = null;
+    } else if (c != null && c > i) {
+      correct = c - 1;
     }
   }
+
+  GlobalKey anchorOf(DraftField f) => switch (f) {
+    DraftField.images => imagesKey,
+    DraftField.options || DraftField.correct => optionsKey,
+    DraftField.confidence => confidenceKey,
+    _ => contentKey,
+  };
 
   QuestionDraft toDraft() => QuestionDraft(
     questionId: questionId,
@@ -160,6 +177,13 @@ class _FormState extends State<_Form> {
     if (widget.initial == null) _QuestionEditor(),
   ];
 
+  /// Lỗi nhập liệu đang hiển thị (viền đỏ + dòng báo ngay tại ô đó).
+  DraftIssue? _issue;
+  final _subjectKey = GlobalKey();
+  final _titleKey = GlobalKey();
+  final _sourceKey = GlobalKey();
+  final _questionsKey = GlobalKey();
+
   @override
   void dispose() {
     _title.dispose();
@@ -181,14 +205,58 @@ class _FormState extends State<_Form> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-    final cubit = context.read<SubmissionFormCubit>();
-    final error = await cubit.submit(_draft());
+    final draft = _draft();
+    final issue = checkSessionDraft(draft);
+    if (issue != null) {
+      _showIssue(issue);
+      return;
+    }
+    setState(() => _issue = null);
+    final error = await context.read<SubmissionFormCubit>().submit(draft);
     if (!mounted) return;
     if (error != null) {
       AppFeedback.error(context, error);
     } else {
       Navigator.of(context).pop(true);
     }
+  }
+
+  /// Đánh dấu ô lỗi rồi cuộn tới đó (sau khi khung hình mới đã dựng xong).
+  void _showIssue(DraftIssue issue) {
+    setState(() => _issue = issue);
+    final key = switch (issue.field) {
+      DraftField.subject => _subjectKey,
+      DraftField.title => _titleKey,
+      DraftField.source => _sourceKey,
+      DraftField.questions => _questionsKey,
+      final f => _questions[issue.question!].anchorOf(f),
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = key.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.2,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  /// Đang báo lỗi mà người dùng sửa thì kiểm tra lại: hết lỗi ở ô đó thì bỏ
+  /// viền đỏ (lỗi ở ô khác sẽ báo ở lần bấm Gửi sau).
+  void _edited() {
+    final old = _issue;
+    if (old == null) return;
+    final now = checkSessionDraft(_draft());
+    final next = old.sameSpot(now) ? now : null;
+    if (next != old) setState(() => _issue = next);
+  }
+
+  /// Lỗi của ô thông tin phiên [f] (không thuộc câu hỏi nào).
+  String? _errorOf(DraftField f) {
+    final i = _issue;
+    return i != null && i.field == f && i.question == null ? i.message : null;
   }
 
   Future<void> _removeQuestion(int i) async {
@@ -205,6 +273,7 @@ class _FormState extends State<_Form> {
       if (!ok || !mounted) return;
     }
     setState(() => _questions.removeAt(i).dispose());
+    _edited();
   }
 
   void _addQuestion() {
@@ -272,15 +341,23 @@ class _FormState extends State<_Form> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _SubjectPicker(
+                      key: _subjectKey,
                       value: _subjectId,
-                      onChanged: (id) => setState(() => _subjectId = id),
+                      errorText: _errorOf(DraftField.subject),
+                      onChanged: (id) {
+                        setState(() => _subjectId = id);
+                        _edited();
+                      },
                     ),
                     const SizedBox(height: 12),
                     AppTextField(
+                      key: _titleKey,
                       controller: _title,
                       label: 'Tiêu đề phiên *',
                       hint: 'VD: Ôn tập chương 3 - Cây nhị phân',
                       maxLength: SubmissionLimits.maxTitleLength,
+                      errorText: _errorOf(DraftField.title),
+                      onChanged: (_) => _edited(),
                     ),
                     const SizedBox(height: 12),
                     AppTextField(
@@ -290,9 +367,12 @@ class _FormState extends State<_Form> {
                     ),
                     const SizedBox(height: 12),
                     AppTextField(
+                      key: _sourceKey,
                       controller: _source,
                       label: 'Link nguồn tham khảo (tuỳ chọn)',
                       keyboardType: TextInputType.url,
+                      errorText: _errorOf(DraftField.source),
+                      onChanged: (_) => _edited(),
                     ),
                   ],
                 ),
@@ -303,16 +383,26 @@ class _FormState extends State<_Form> {
                   key: ObjectKey(_questions[i]),
                   index: i,
                   editor: _questions[i],
+                  issue: _issue?.question == i ? _issue : null,
                   canRemove: _questions.length > 1,
                   onRemove: () => _removeQuestion(i),
-                  onChanged: () => setState(() {}),
+                  onChanged: () {
+                    setState(() {});
+                    _edited();
+                  },
+                  onEdited: _edited,
                 ),
               ],
               const SectionGap(),
               QbankBlock(
+                key: _questionsKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_errorOf(DraftField.questions) case final m?) ...[
+                      _ErrorLine(m),
+                      const SizedBox(height: 8),
+                    ],
                     AppButton(
                       label: 'Thêm câu hỏi',
                       icon: AppIcons.add,
@@ -348,9 +438,15 @@ class _FormState extends State<_Form> {
 /// Chọn môn: chỉ các môn đang học (đề xuất môn khác bị 403).
 class _SubjectPicker extends StatelessWidget {
   final int? value;
+  final String? errorText;
   final ValueChanged<int?> onChanged;
 
-  const _SubjectPicker({required this.value, required this.onChanged});
+  const _SubjectPicker({
+    super.key,
+    required this.value,
+    this.errorText,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -378,9 +474,10 @@ class _SubjectPicker extends StatelessWidget {
     return DropdownButtonFormField<int>(
       initialValue: valid ? value : null,
       isExpanded: true,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Môn học *',
-        prefixIcon: Icon(AppIcons.subject),
+        prefixIcon: const Icon(AppIcons.subject),
+        errorText: errorText,
       ),
       items: [
         for (final s in state.subjects)
@@ -397,18 +494,33 @@ class _SubjectPicker extends StatelessWidget {
 class _QuestionCard extends StatelessWidget {
   final int index;
   final _QuestionEditor editor;
+
+  /// Lỗi nhập liệu của câu này (null nếu không có).
+  final DraftIssue? issue;
   final bool canRemove;
   final VoidCallback onRemove;
+
+  /// Đổi cấu trúc câu (đáp án, ảnh, thêm / bớt phương án): dựng lại form.
   final VoidCallback onChanged;
+
+  /// Gõ chữ trong các ô của câu (không cần dựng lại form).
+  final VoidCallback onEdited;
 
   const _QuestionCard({
     super.key,
     required this.index,
     required this.editor,
+    this.issue,
     required this.canRemove,
     required this.onRemove,
     required this.onChanged,
+    required this.onEdited,
   });
+
+  String? _errorOf(DraftField f, {int? option}) {
+    final i = issue;
+    return i != null && i.field == f && i.option == option ? i.message : null;
+  }
 
   Future<void> _addQuestionImage(BuildContext context) async {
     final r = await pickAndUploadImage(context, purpose: MediaPurpose.question);
@@ -430,6 +542,10 @@ class _QuestionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final e = editor;
     final level = RatingLevel.fromValue(e.confidence)!;
+    // Lỗi của cả nhóm phương án (thiếu / thừa phương án, chưa chọn đáp án đúng)
+    final optionsError =
+        _errorOf(DraftField.options) ?? _errorOf(DraftField.correct);
+    final needCorrect = _errorOf(DraftField.correct) != null;
     return QbankBlock(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -454,12 +570,16 @@ class _QuestionCard extends StatelessWidget {
             ],
           ),
           AppTextField(
+            key: e.contentKey,
             controller: e.content,
             label: 'Nội dung câu hỏi *',
             maxLines: 4,
+            errorText: _errorOf(DraftField.content),
+            onChanged: (_) => onEdited(),
           ),
           const SizedBox(height: 8),
           _ImageStrip(
+            key: e.imagesKey,
             urls: e.mediaUrls,
             onAdd: e.mediaUrls.length < SubmissionLimits.maxImagesPerQuestion
                 ? () => _addQuestionImage(context)
@@ -469,93 +589,27 @@ class _QuestionCard extends StatelessWidget {
               onChanged();
             },
           ),
+          if (_errorOf(DraftField.images) case final m?) ...[
+            const SizedBox(height: 6),
+            _ErrorLine(m),
+          ],
           const SizedBox(height: 16),
-          Text(
-            'Phương án (chạm vòng tròn để chọn đáp án đúng)',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: AppColors.textSecondary,
+          Container(
+            key: e.optionsKey,
+            padding: optionsError == null
+                ? EdgeInsets.zero
+                : const EdgeInsets.fromLTRB(4, 8, 4, 0),
+            decoration: optionsError == null
+                ? null
+                : BoxDecoration(
+                    border: Border.all(color: AppColors.error),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusSM),
+                  ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: _options(context, theme, optionsError, needCorrect),
             ),
           ),
-          const SizedBox(height: 8),
-          for (var i = 0; i < e.options.length; i++)
-            Padding(
-              key: ObjectKey(e.options[i]),
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip:
-                            'Chọn ${_QuestionEditor.keyOf(i)} là đáp án đúng',
-                        onPressed: () {
-                          e.correct = i;
-                          onChanged();
-                        },
-                        icon: Icon(
-                          e.correct == i ? AppIcons.success : AppIcons.radioOff,
-                          color: e.correct == i
-                              ? AppColors.success
-                              : AppColors.textTertiary,
-                        ),
-                      ),
-                      Expanded(
-                        child: AppTextField(
-                          controller: e.options[i],
-                          label: 'Phương án ${_QuestionEditor.keyOf(i)}',
-                        ),
-                      ),
-                      IconButton(
-                        tooltip:
-                            'Ảnh cho phương án ${_QuestionEditor.keyOf(i)}',
-                        icon: Icon(
-                          e.optionMedia[i] == null
-                              ? AppIcons.photos
-                              : AppIcons.photosFill,
-                          color: e.optionMedia[i] == null
-                              ? AppColors.textTertiary
-                              : AppColors.primary600,
-                        ),
-                        onPressed: () => _setOptionImage(context, i),
-                      ),
-                      if (e.options.length > SubmissionLimits.minOptions)
-                        IconButton(
-                          tooltip: 'Bỏ phương án ${_QuestionEditor.keyOf(i)}',
-                          icon: const Icon(AppIcons.close, size: 18),
-                          onPressed: () {
-                            e.removeOption(i);
-                            onChanged();
-                          },
-                        ),
-                    ],
-                  ),
-                  if (e.optionMedia[i] case final url?)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 48, top: 6),
-                      child: _Thumb(
-                        url: url,
-                        onRemove: () {
-                          e.optionMedia[i] = null;
-                          onChanged();
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          if (e.options.length < SubmissionLimits.maxOptions)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () {
-                  e.addOption();
-                  onChanged();
-                },
-                icon: const Icon(AppIcons.add, size: 18),
-                label: const Text('Thêm phương án'),
-              ),
-            ),
           const SizedBox(height: 8),
           AppTextField(
             controller: e.explanation,
@@ -585,6 +639,7 @@ class _QuestionCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Độ tự tin: ${level.value} - ${level.label}',
+            key: e.confidenceKey,
             style: theme.textTheme.labelLarge?.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -601,6 +656,10 @@ class _QuestionCard extends StatelessWidget {
               onChanged();
             },
           ),
+          if (_errorOf(DraftField.confidence) case final m?) ...[
+            _ErrorLine(m),
+            const SizedBox(height: 6),
+          ],
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -619,6 +678,124 @@ class _QuestionCard extends StatelessWidget {
       ),
     );
   }
+
+  /// Nhóm phương án: chọn đáp án đúng, nội dung, ảnh, thêm / bớt.
+  List<Widget> _options(
+    BuildContext context,
+    ThemeData theme,
+    String? groupError,
+    bool needCorrect,
+  ) {
+    final e = editor;
+    return [
+      Text(
+        'Phương án (chạm vòng tròn để chọn đáp án đúng)',
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: AppColors.textSecondary,
+        ),
+      ),
+      if (groupError != null) ...[
+        const SizedBox(height: 4),
+        _ErrorLine(groupError),
+      ],
+      const SizedBox(height: 8),
+      for (var i = 0; i < e.options.length; i++)
+        Padding(
+          key: ObjectKey(e.options[i]),
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Chọn ${_QuestionEditor.keyOf(i)} là đáp án đúng',
+                    onPressed: () {
+                      e.correct = i;
+                      onChanged();
+                    },
+                    icon: Icon(
+                      e.correct == i ? AppIcons.success : AppIcons.radioOff,
+                      color: e.correct == i
+                          ? AppColors.success
+                          : needCorrect
+                          ? AppColors.error
+                          : AppColors.textTertiary,
+                    ),
+                  ),
+                  Expanded(
+                    child: AppTextField(
+                      controller: e.options[i],
+                      label: 'Phương án ${_QuestionEditor.keyOf(i)}',
+                      errorText: _errorOf(DraftField.options, option: i),
+                      onChanged: (_) => onEdited(),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Ảnh cho phương án ${_QuestionEditor.keyOf(i)}',
+                    icon: Icon(
+                      e.optionMedia[i] == null
+                          ? AppIcons.photos
+                          : AppIcons.photosFill,
+                      color: e.optionMedia[i] == null
+                          ? AppColors.textTertiary
+                          : AppColors.primary600,
+                    ),
+                    onPressed: () => _setOptionImage(context, i),
+                  ),
+                  if (e.options.length > SubmissionLimits.minOptions)
+                    IconButton(
+                      tooltip: 'Bỏ phương án ${_QuestionEditor.keyOf(i)}',
+                      icon: const Icon(AppIcons.close, size: 18),
+                      onPressed: () {
+                        e.removeOption(i);
+                        onChanged();
+                      },
+                    ),
+                ],
+              ),
+              if (e.optionMedia[i] case final url?)
+                Padding(
+                  padding: const EdgeInsets.only(left: 48, top: 6),
+                  child: _Thumb(
+                    url: url,
+                    onRemove: () {
+                      e.optionMedia[i] = null;
+                      onChanged();
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      if (e.options.length < SubmissionLimits.maxOptions)
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () {
+              e.addOption();
+              onChanged();
+            },
+            icon: const Icon(AppIcons.add, size: 18),
+            label: const Text('Thêm phương án'),
+          ),
+        ),
+    ];
+  }
+}
+
+/// Dòng báo lỗi đỏ ngay dưới ô nhập (cùng kiểu chữ lỗi của TextField).
+class _ErrorLine extends StatelessWidget {
+  final String message;
+  const _ErrorLine(this.message);
+
+  @override
+  Widget build(BuildContext context) => Text(
+    message,
+    style: Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: AppColors.error),
+  );
 }
 
 /// Hàng ảnh minh hoạ của câu hỏi + ô "Thêm ảnh".
@@ -629,7 +806,12 @@ class _ImageStrip extends StatelessWidget {
   final VoidCallback? onAdd;
   final ValueChanged<int> onRemove;
 
-  const _ImageStrip({required this.urls, this.onAdd, required this.onRemove});
+  const _ImageStrip({
+    super.key,
+    required this.urls,
+    this.onAdd,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {

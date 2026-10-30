@@ -23,57 +23,147 @@ class SubmissionLimits {
   static const int maxImagesPerQuestion = 4;
 }
 
+/// Ô bị lỗi trong form đề xuất.
+enum DraftField {
+  subject,
+  title,
+  source,
+
+  /// Số câu của phiên (chưa có câu nào / quá nhiều câu).
+  questions,
+  content,
+  images,
+
+  /// Một phương án ([DraftIssue.option]) hoặc cả nhóm phương án (thiếu / thừa).
+  options,
+  correct,
+  confidence,
+}
+
+/// Lỗi nhập liệu đầu tiên của phiên, kèm vị trí để form viền đỏ và cuộn tới.
+class DraftIssue extends Equatable {
+  final String message;
+  final DraftField field;
+
+  /// Chỉ số câu hỏi (từ 0), null nếu lỗi ở phần thông tin phiên.
+  final int? question;
+
+  /// Chỉ số phương án (từ 0), chỉ có khi lỗi ở một phương án cụ thể.
+  final int? option;
+
+  const DraftIssue(this.message, this.field, {this.question, this.option});
+
+  /// Cùng một ô (nội dung lỗi có thể khác).
+  bool sameSpot(DraftIssue? o) =>
+      o != null &&
+      o.field == field &&
+      o.question == question &&
+      o.option == option;
+
+  @override
+  List<Object?> get props => [message, field, question, option];
+}
+
 /// Kiểm tra phiên trước khi gửi. Trả về câu báo lỗi đầu tiên, hoặc null nếu
 /// hợp lệ. Tách khỏi Cubit để test không cần dựng widget.
-String? validateSessionDraft(SessionDraft d) {
-  if (d.subjectId <= 0) return 'Hãy chọn môn học.';
+String? validateSessionDraft(SessionDraft d) => checkSessionDraft(d)?.message;
+
+/// Như [validateSessionDraft] nhưng cho biết lỗi nằm ở ô nào.
+DraftIssue? checkSessionDraft(SessionDraft d) {
+  if (d.subjectId <= 0) {
+    return const DraftIssue('Hãy chọn môn học.', DraftField.subject);
+  }
   final title = d.title.trim();
-  if (title.isEmpty) return 'Hãy nhập tiêu đề phiên.';
+  if (title.isEmpty) {
+    return const DraftIssue('Hãy nhập tiêu đề phiên.', DraftField.title);
+  }
   if (title.length > SubmissionLimits.maxTitleLength) {
-    return 'Tiêu đề tối đa ${SubmissionLimits.maxTitleLength} ký tự.';
+    return const DraftIssue(
+      'Tiêu đề tối đa ${SubmissionLimits.maxTitleLength} ký tự.',
+      DraftField.title,
+    );
   }
   final url = d.sourceUrl?.trim() ?? '';
   if (url.isNotEmpty && !RegExp(r'^https?://\S+$').hasMatch(url)) {
-    return 'Link nguồn phải bắt đầu bằng http:// hoặc https://';
+    return const DraftIssue(
+      'Link nguồn phải bắt đầu bằng http:// hoặc https://',
+      DraftField.source,
+    );
   }
-  if (d.questions.isEmpty) return 'Phiên phải có ít nhất một câu hỏi.';
+  if (d.questions.isEmpty) {
+    return const DraftIssue(
+      'Phiên phải có ít nhất một câu hỏi.',
+      DraftField.questions,
+    );
+  }
   if (d.questions.length > SubmissionLimits.maxQuestions) {
-    return 'Mỗi phiên tối đa ${SubmissionLimits.maxQuestions} câu hỏi.';
+    return const DraftIssue(
+      'Mỗi phiên tối đa ${SubmissionLimits.maxQuestions} câu hỏi.',
+      DraftField.questions,
+    );
   }
   for (var i = 0; i < d.questions.length; i++) {
     final q = d.questions[i];
     final n = 'Câu ${i + 1}';
-    if (q.content.trim().isEmpty) return '$n: hãy nhập nội dung câu hỏi.';
+    DraftIssue at(String m, DraftField f, {int? option}) =>
+        DraftIssue('$n: $m', f, question: i, option: option);
+
+    if (q.content.trim().isEmpty) {
+      return at('hãy nhập nội dung câu hỏi.', DraftField.content);
+    }
     if (Validators.wordCount(q.content) > SubmissionLimits.maxWords) {
-      return '$n: nội dung tối đa ${SubmissionLimits.maxWords} từ.';
+      return at(
+        'nội dung tối đa ${SubmissionLimits.maxWords} từ.',
+        DraftField.content,
+      );
     }
     if (q.mediaUrls.length > SubmissionLimits.maxImagesPerQuestion) {
-      return '$n: tối đa ${SubmissionLimits.maxImagesPerQuestion} ảnh.';
+      return at(
+        'tối đa ${SubmissionLimits.maxImagesPerQuestion} ảnh.',
+        DraftField.images,
+      );
     }
     if (q.options.length < SubmissionLimits.minOptions) {
-      return '$n: cần ít nhất ${SubmissionLimits.minOptions} phương án.';
+      return at(
+        'cần ít nhất ${SubmissionLimits.minOptions} phương án.',
+        DraftField.options,
+      );
     }
     if (q.options.length > SubmissionLimits.maxOptions) {
-      return '$n: tối đa ${SubmissionLimits.maxOptions} phương án.';
+      return at(
+        'tối đa ${SubmissionLimits.maxOptions} phương án.',
+        DraftField.options,
+      );
     }
-    for (final o in q.options) {
+    for (var j = 0; j < q.options.length; j++) {
+      final o = q.options[j];
       if (o.text.trim().isEmpty && o.mediaUrl == null) {
-        return '$n: phương án ${o.key} đang để trống.';
+        return at(
+          'phương án ${o.key} đang để trống.',
+          DraftField.options,
+          option: j,
+        );
       }
     }
     // Phương án chỉ có ảnh (text rỗng) không tính là trùng nhau
-    final texts = [
-      for (final o in q.options)
-        if (o.text.trim().isNotEmpty) o.text.trim().toLowerCase(),
-    ];
-    if (texts.toSet().length != texts.length) {
-      return '$n: có hai phương án trùng nhau.';
+    final seen = <String>{};
+    for (var j = 0; j < q.options.length; j++) {
+      final t = q.options[j].text.trim().toLowerCase();
+      if (t.isNotEmpty && !seen.add(t)) {
+        return at(
+          'có hai phương án trùng nhau.',
+          DraftField.options,
+          option: j,
+        );
+      }
     }
     final correct = q.options.where((o) => o.isCorrect == true).length;
-    if (correct != 1) return '$n: hãy chọn đúng một đáp án đúng.';
+    if (correct != 1) {
+      return at('hãy chọn đúng một đáp án đúng.', DraftField.correct);
+    }
     final c = q.confidence;
     if (c != null && (c < 0 || c > 4)) {
-      return '$n: độ tự tin phải trong khoảng 0 - 4.';
+      return at('độ tự tin phải trong khoảng 0 - 4.', DraftField.confidence);
     }
   }
   return null;

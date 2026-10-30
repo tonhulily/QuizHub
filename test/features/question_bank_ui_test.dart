@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quizhub/core/config/app_config.dart';
+import 'package:quizhub/core/design_system/app_icons.dart';
 import 'package:quizhub/core/design_system/app_theme.dart';
 import 'package:quizhub/core/network/api_exception.dart';
 import 'package:quizhub/data/models/cursor_page.dart';
@@ -247,6 +248,63 @@ void main() {
     });
   });
 
+  group('checkSessionDraft: chỉ ra ô bị lỗi', () {
+    test('lỗi thông tin phiên không gắn với câu nào', () {
+      final i = checkSessionDraft(_draft(title: ' '))!;
+      expect(i.field, DraftField.title);
+      expect(i.question, isNull);
+    });
+
+    test('phương án trống / trùng chỉ đúng phương án đó', () {
+      final empty = checkSessionDraft(
+        _draft(
+          questions: [
+            _q(),
+            _q(
+              options: const [
+                QuestionOption(key: 'A', text: 'x', isCorrect: true),
+                QuestionOption(key: 'B', text: ' '),
+              ],
+            ),
+          ],
+        ),
+      )!;
+      expect(empty.field, DraftField.options);
+      expect((empty.question, empty.option), (1, 1));
+
+      final dup = checkSessionDraft(
+        _draft(
+          questions: [
+            _q(
+              options: const [
+                QuestionOption(key: 'A', text: 'O(1)', isCorrect: true),
+                QuestionOption(key: 'B', text: 'O(n)'),
+                QuestionOption(key: 'C', text: 'o(1)'),
+              ],
+            ),
+          ],
+        ),
+      )!;
+      expect((dup.field, dup.option), (DraftField.options, 2));
+    });
+
+    test('chưa chọn đáp án đúng thì báo ở nhóm phương án', () {
+      final i = checkSessionDraft(
+        _draft(
+          questions: [
+            _q(
+              options: const [
+                QuestionOption(key: 'A', text: 'x'),
+                QuestionOption(key: 'B', text: 'y'),
+              ],
+            ),
+          ],
+        ),
+      )!;
+      expect((i.field, i.question, i.option), (DraftField.correct, 0, null));
+    });
+  });
+
   // QH-QA-001: rời màn hình trước khi tải xong thì không emit sau close()
   group('LoadCubit', () {
     test('tải xong sau khi đã đóng thì bỏ qua, không ném lỗi', () async {
@@ -366,6 +424,14 @@ void main() {
 
       expect(find.text('Hãy chọn môn học.'), findsOneWidget);
       expect(submissions.proposed, isEmpty);
+    });
+
+    testWidgets('form: câu mới không chọn sẵn đáp án đúng', (tester) async {
+      await tester.pumpWidget(app(const SubmissionFormView()));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Chọn A là đáp án đúng'), findsOneWidget);
+      expect(find.byIcon(AppIcons.success), findsNothing);
     });
 
     testWidgets('luyện tập: chọn, nộp rồi thấy kết quả và lời giải', (
