@@ -11,8 +11,11 @@ import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../data/models/exam_models.dart';
+import '../../../data/models/subject_model.dart';
 import '../../../data/repositories/exam_repository.dart';
+import '../../../data/repositories/subject_repository.dart';
 import '../../../di/locator.dart';
+import '../../question_bank/cubit/load_cubit.dart';
 import '../../question_bank/widgets/qbank_widgets.dart';
 import '../widgets/exam_widgets.dart';
 
@@ -25,17 +28,41 @@ class MyExamsView extends StatefulWidget {
 }
 
 class _MyExamsViewState extends State<MyExamsView> {
+  /// Môn đang lọc; null = tất cả.
+  int? _subjectId;
+
   late final PagedCubit<ExamSummary> _cubit = PagedCubit<ExamSummary>(
     (after) => getIt<ExamRepository>().myExams(
       after: after,
       limit: ExamRepository.maxPageSize,
+      subjectId: _subjectId,
     ),
   )..load();
+
+  /// Chip lọc: các môn mình dạy ít nhất một lớp (như màn Sinh đề).
+  late final LoadCubit<List<SubjectModel>> _subjects = LoadCubit(() async {
+    final r = await Future.wait<Object>([
+      getIt<SubjectRepository>().all(),
+      getIt<ExamRepository>().myClasses(),
+    ]);
+    final classes = r[1] as List<CourseClassModel>;
+    return [
+      for (final s in r[0] as List<SubjectModel>)
+        if (classes.any((c) => c.subjectId == s.subjectId)) s,
+    ];
+  })..load();
 
   @override
   void dispose() {
     _cubit.close();
+    _subjects.close();
     super.dispose();
+  }
+
+  void _filter(int? subjectId) {
+    if (subjectId == _subjectId) return;
+    setState(() => _subjectId = subjectId);
+    _cubit.load();
   }
 
   Future<void> _generate() async {
@@ -46,8 +73,11 @@ class _MyExamsViewState extends State<MyExamsView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _cubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _cubit),
+        BlocProvider.value(value: _subjects),
+      ],
       child: Scaffold(
         backgroundColor: AppColors.backgroundSecondary,
         appBar: AppBar(title: const Text('Đề thi của tôi')),
@@ -61,12 +91,16 @@ class _MyExamsViewState extends State<MyExamsView> {
         body: PagedListView<ExamSummary>(
           padding: const EdgeInsets.only(bottom: 88),
           itemSpacing: ComponentTokens.postGap,
-          emptyView: const EmptyView(
+          header: _SubjectFilter(selected: _subjectId, onSelected: _filter),
+          emptyView: EmptyView(
             icon: AppIcons.exam,
-            title: 'Chưa có đề thi nào',
+            title: _subjectId == null
+                ? 'Chưa có đề thi nào'
+                : 'Chưa có đề thi của môn này',
             message:
                 'Bấm "Sinh đề" để bốc câu hỏi đã duyệt trong ngân hàng thành '
                 'một đề thi.',
+            compact: true,
           ),
           itemBuilder: (context, e) => _ExamTile(
             exam: e,
@@ -76,6 +110,63 @@ class _MyExamsViewState extends State<MyExamsView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Hàng chip lọc theo môn: "Tất cả" + các môn mình dạy.
+class _SubjectFilter extends StatelessWidget {
+  final int? selected;
+  final ValueChanged<int?> onSelected;
+
+  const _SubjectFilter({required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return BlocBuilder<
+      LoadCubit<List<SubjectModel>>,
+      LoadState<List<SubjectModel>>
+    >(
+      builder: (context, state) {
+        final subjects = state.data ?? const <SubjectModel>[];
+        // Lỗi / chưa dạy môn nào thì không cần lọc
+        if (subjects.isEmpty) return const SizedBox.shrink();
+        Widget chip(String label, int? id, {String? tooltip}) => Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: ChoiceChip(
+            label: Text(label),
+            tooltip: tooltip,
+            selected: selected == id,
+            showCheckmark: false,
+            selectedColor: AppColors.primary50,
+            labelStyle: theme.textTheme.labelLarge?.copyWith(
+              color: selected == id
+                  ? AppColors.primary700
+                  : AppColors.textPrimary,
+            ),
+            onSelected: (_) => onSelected(id),
+          ),
+        );
+        return Container(
+          color: AppColors.white,
+          margin: const EdgeInsets.only(bottom: ComponentTokens.postGap),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignTokens.spacingMD,
+            vertical: 10,
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                chip('Tất cả', null),
+                for (final s in subjects)
+                  chip(s.code, s.subjectId, tooltip: s.name),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

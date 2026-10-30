@@ -853,8 +853,14 @@ class PreviewQbank {
       return _examDetail(exam);
     }
     if (path == '/exams/my-exams') {
-      final list = _exams.values.toList()
-        ..sort((a, b) => (b['exam_id'] as int).compareTo(a['exam_id'] as int));
+      final subjectId = J.asInt(q['subject_id']);
+      final list =
+          _exams.values
+              .where((e) => subjectId == null || e['subject_id'] == subjectId)
+              .toList()
+            ..sort(
+              (a, b) => (b['exam_id'] as int).compareTo(a['exam_id'] as int),
+            );
       return {
         'items': [for (final e in list) _examItem(e)],
         'pagination': {'after': null, 'has_next': false},

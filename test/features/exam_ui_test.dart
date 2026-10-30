@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quizhub/core/design_system/app_theme.dart';
 import 'package:quizhub/core/network/api_exception.dart';
 import 'package:quizhub/core/widgets/app_button.dart';
+import 'package:quizhub/data/models/cursor_page.dart';
 import 'package:quizhub/data/models/exam_models.dart';
 import 'package:quizhub/data/models/question_models.dart';
 import 'package:quizhub/data/models/session_models.dart';
@@ -14,6 +15,7 @@ import 'package:quizhub/data/models/auth_session.dart';
 import 'package:quizhub/features/exam/cubit/exam_generator_cubit.dart';
 import 'package:quizhub/features/exam/view/exam_detail_view.dart';
 import 'package:quizhub/features/exam/view/exam_generator_view.dart';
+import 'package:quizhub/features/exam/view/my_exams_view.dart';
 import 'package:quizhub/features/question_bank/cubit/load_cubit.dart';
 import 'package:quizhub/features/question_bank/cubit/submission_form_cubit.dart';
 
@@ -65,6 +67,26 @@ class _FakeExams implements ExamRepository {
   Future<ExamDetail> generate(GenerateExamInput input) async {
     generated.add(input);
     return _exam;
+  }
+
+  /// subject_id của từng lần gọi danh sách đề
+  final List<int?> listedSubjects = [];
+
+  @override
+  Future<CursorPage<ExamSummary>> myExams({
+    String? after,
+    int limit = ExamRepository.maxPageSize,
+    int? subjectId,
+  }) async {
+    listedSubjects.add(subjectId);
+    return CursorPage(
+      items: [
+        if (subjectId == null || subjectId == 10)
+          const ExamSummary(examId: 1, title: 'Đề CTDL', subjectName: 'CTDL'),
+        if (subjectId == null || subjectId == 11)
+          const ExamSummary(examId: 2, title: 'Đề HĐH', subjectName: 'HĐH'),
+      ],
+    );
   }
 
   @override
@@ -217,6 +239,29 @@ void main() {
       await tester.pump();
       expect(find.text('Hãy chọn môn học.'), findsOneWidget);
       expect(exams.generated, isEmpty);
+    });
+
+    testWidgets('đề của tôi: lọc theo môn mình dạy', (tester) async {
+      await tester.pumpWidget(
+        app(const MyExamsView(), role: UserRole.lecturer),
+      );
+      await tester.pumpAndSettle();
+
+      // Chỉ dạy lớp của IT3011 nên không có chip IT3070
+      expect(find.widgetWithText(ChoiceChip, 'Tất cả'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'IT3011'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'IT3070'), findsNothing);
+      expect(find.text('Đề HĐH'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'IT3011'));
+      await tester.pumpAndSettle();
+      expect(exams.listedSubjects.last, 10);
+      expect(find.text('Đề CTDL'), findsOneWidget);
+      expect(find.text('Đề HĐH'), findsNothing);
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Tất cả'));
+      await tester.pumpAndSettle();
+      expect(exams.listedSubjects.last, isNull);
     });
 
     testWidgets('chi tiết đề: sinh viên không có nút AI gợi ý', (tester) async {
