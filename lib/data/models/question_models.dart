@@ -124,6 +124,66 @@ class QuestionOption extends Equatable {
   List<Object?> get props => [key, text, isCorrect, mediaUrl, mediaId];
 }
 
+/// Một câu hỏi trong kết quả `GET /search?type=QUESTION`
+/// (`QuestionSearchResultDto`).
+class QuestionHit extends Equatable {
+  final int questionId;
+  final String? questionCode;
+  final String content;
+  final int? subjectId;
+  final String? subjectName;
+  final Difficulty difficulty;
+  final List<QuestionOption> options;
+
+  /// Phiên chứa câu hỏi. Swagger CHƯA có trường này (API_CONTRACT mục 6);
+  /// backend trả thì bấm vào câu mở được phiên, không thì chỉ xem trước.
+  final int? sessionId;
+  final int ratingCount;
+  final int commentCount;
+
+  const QuestionHit({
+    required this.questionId,
+    this.questionCode,
+    required this.content,
+    this.subjectId,
+    this.subjectName,
+    this.difficulty = Difficulty.unclassified,
+    this.options = const [],
+    this.sessionId,
+    this.ratingCount = 0,
+    this.commentCount = 0,
+  });
+
+  factory QuestionHit.fromJson(Map<String, dynamic> json) => QuestionHit(
+    questionId: J.intOr(json['question_id'] ?? json['id']),
+    questionCode: J.asString(json['question_code']),
+    content: J.stringOr(json['content']),
+    subjectId: J.asInt(json['subject_id']),
+    subjectName: J.asString(json['subject_name']),
+    difficulty: Difficulty.parse(json['difficulty']),
+    options: J.list(json['options'], QuestionOption.fromJson),
+    sessionId: J.asInt(
+      json['session_id'] ?? J.asMap(json['session'])?['session_id'],
+    ),
+    ratingCount: J.intOr(json['rating_count']),
+    commentCount: J.intOr(json['comment_count']),
+  );
+
+  @override
+  List<Object?> get props => [
+    questionId,
+    questionCode,
+    content,
+    subjectId,
+    subjectName,
+    difficulty,
+    options,
+    sessionId,
+    ratingCount,
+    commentCount,
+  ];
+}
+
 /// Câu hỏi để luyện tập (`PracticeQuestionDto` trong
 /// `GET /sessions/{id}/questions`).
 ///

@@ -24,12 +24,23 @@ import '../widgets/rating_sheet.dart';
 /// giải, sau đó có thể đánh giá câu hỏi và xem thống kê.
 class PracticeView extends StatelessWidget {
   final int sessionId;
-  const PracticeView({super.key, required this.sessionId});
+
+  /// Mở thẳng câu này (từ kết quả tìm câu hỏi).
+  final int? focusQuestionId;
+
+  const PracticeView({
+    super.key,
+    required this.sessionId,
+    this.focusQuestionId,
+  });
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) =>
-        PracticeCubit(getIt<QuestionBankRepository>(), sessionId)..load(),
+    create: (_) => PracticeCubit(
+      getIt<QuestionBankRepository>(),
+      sessionId,
+      focusQuestionId: focusQuestionId,
+    )..load(),
     child: const _PracticeBody(),
   );
 }

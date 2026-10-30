@@ -605,6 +605,55 @@ class PreviewQbank {
         q,
       );
     }
+    if (path == '/search' &&
+        J.stringOr(q['type']).toUpperCase() == 'QUESTION') {
+      final keyword = J.stringOr(q['query']).toLowerCase().trim();
+      final list = _questions.values.where((x) {
+        final s = _sessions[x['session_id']];
+        if (s == null || s['status'] != 'RESOLVED') return false;
+        if (keyword.isEmpty) return true;
+        final subject = _subject(x['subject_id'] as int);
+        return '${x['content']} ${subject['name']} ${subject['code']}'
+            .toLowerCase()
+            .contains(keyword);
+      }).toList();
+      return {
+        'items': [
+          for (final x in list)
+            {
+              'type': 'QUESTION',
+              'relevance_score': 1.0,
+              'question': {
+                'question_id': x['question_id'],
+                'question_code': x['question_code'],
+                'subject_id': x['subject_id'],
+                'subject_name': _subject(x['subject_id'] as int)['name'],
+                'status': 'APPROVED',
+                'difficulty': x['difficulty'],
+                'content': x['content'],
+                // Kết quả tìm kiếm không lộ đáp án
+                'options': [
+                  for (final o in J.asList(x['options']))
+                    {'key': J.asMap(o)?['key'], 'text': J.asMap(o)?['text']},
+                ],
+                'rating_count': (_ratings[x['question_id']] ?? const []).length,
+                'comment_count': 0,
+                'created_at': x['created_at'],
+                // Swagger chưa có; giả lập backend đã bổ sung để thử luồng mở
+                // phiên từ câu hỏi
+                'session_id': x['session_id'],
+              },
+            },
+        ],
+        'pagination': {
+          'before': null,
+          'after': null,
+          'has_prev': false,
+          'has_next': false,
+        },
+        'total_hits': list.length,
+      };
+    }
     if (path == '/search' && J.stringOr(q['type']).toUpperCase() == 'SESSION') {
       final keyword = J.stringOr(q['query']).toLowerCase().trim();
       final list = _sessions.values.where((s) {

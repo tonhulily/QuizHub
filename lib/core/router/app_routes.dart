@@ -23,7 +23,9 @@ class AppRoutes {
   static const qbankSubmission = '/qbank/submission';
   // arguments: SubmissionDetail? (null = tạo mới); pop -> true nếu đã lưu
   static const qbankSubmissionForm = '/qbank/submission/form';
-  static const qbankPractice = '/qbank/practice'; // arguments: int sessionId
+  // arguments: int sessionId, hoặc ({int sessionId, int questionId}) để mở
+  // thẳng một câu
+  static const qbankPractice = '/qbank/practice';
   // arguments: ({int questionId, List<String> correctKeys})
   static const qbankQuestionStats = '/qbank/question/stats';
   // arguments: AiRefineArgs; pop -> true nếu đã lưu bản AI

@@ -98,7 +98,11 @@ class PracticeCubit extends Cubit<PracticeState> {
   final QuestionBankRepository _repo;
   final int sessionId;
 
-  PracticeCubit(this._repo, this.sessionId) : super(const PracticeState());
+  /// Mở phiên từ kết quả tìm câu hỏi: lần tải đầu nhảy tới câu này.
+  final int? focusQuestionId;
+
+  PracticeCubit(this._repo, this.sessionId, {this.focusQuestionId})
+    : super(const PracticeState());
 
   Future<void> load({bool silent = false}) async {
     if (!silent) emit(const PracticeState());
@@ -111,7 +115,7 @@ class PracticeCubit extends Cubit<PracticeState> {
           status: LoadStatus.loaded,
           session: s,
           questions: s.questions,
-          index: silent ? index : _firstUnanswered(s.questions),
+          index: silent ? index : _startIndex(s.questions),
           clearError: true,
         ),
       );
@@ -121,8 +125,11 @@ class PracticeCubit extends Cubit<PracticeState> {
     }
   }
 
-  /// Mở lại phiên đã làm dở thì nhảy tới câu đầu tiên chưa làm.
-  static int _firstUnanswered(List<PracticeQuestion> qs) {
+  /// Câu cần mở ([focusQuestionId]) nếu có trong phiên; không thì mở lại phiên
+  /// làm dở ở câu đầu tiên chưa làm.
+  int _startIndex(List<PracticeQuestion> qs) {
+    final focus = qs.indexWhere((q) => q.questionId == focusQuestionId);
+    if (focus >= 0) return focus;
     final i = qs.indexWhere((q) => !q.answered);
     return i < 0 ? 0 : i;
   }

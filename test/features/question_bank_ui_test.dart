@@ -340,6 +340,16 @@ void main() {
       expect(cubit.state.answeredCount, 1);
     });
 
+    test('mở từ kết quả tìm câu hỏi thì nhảy tới câu đó', () async {
+      final cubit = PracticeCubit(
+        _FakeBank([_practice(1), _practice(2), _practice(3)]),
+        7,
+        focusQuestionId: 3,
+      );
+      await cubit.load();
+      expect(cubit.state.index, 2);
+    });
+
     test('chưa chọn đáp án thì không gọi API', () async {
       final bank = _FakeBank([_practice(1)]);
       final cubit = PracticeCubit(bank, 7);

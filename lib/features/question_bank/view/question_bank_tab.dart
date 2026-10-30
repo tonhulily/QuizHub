@@ -12,6 +12,7 @@ import '../../../core/widgets/fb_widgets.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../data/models/auth_session.dart';
+import '../../../data/models/question_models.dart';
 import '../../../data/models/session_models.dart';
 import '../../../data/models/subject_model.dart';
 import '../../../data/repositories/question_bank_repository.dart';
@@ -33,14 +34,24 @@ class QuestionBankTab extends StatefulWidget {
   State<QuestionBankTab> createState() => _QuestionBankTabState();
 }
 
+/// Nhóm kết quả khi đang tìm kiếm.
+enum SearchGroup { sessions, questions }
+
 class _QuestionBankTabState extends State<QuestionBankTab> {
   final _search = TextEditingController();
   String _query = '';
+  SearchGroup _group = SearchGroup.sessions;
 
   late final PagedCubit<SubmissionSummary> _sessions = PagedCubit(
     (after) =>
         getIt<QuestionBankRepository>().searchSessions(_query, after: after),
   )..load();
+
+  /// Chỉ tải khi có từ khoá (danh sách mặc định là các phiên đã duyệt).
+  late final PagedCubit<QuestionHit> _questionHits = PagedCubit(
+    (after) =>
+        getIt<QuestionBankRepository>().searchQuestions(_query, after: after),
+  );
 
   late final LoadCubit<List<SubjectModel>> _subjects = LoadCubit(
     () => getIt<SubjectRepository>().enrolled(),
@@ -50,6 +61,7 @@ class _QuestionBankTabState extends State<QuestionBankTab> {
   void dispose() {
     _search.dispose();
     _sessions.close();
+    _questionHits.close();
     _subjects.close();
     super.dispose();
   }
@@ -57,8 +69,30 @@ class _QuestionBankTabState extends State<QuestionBankTab> {
   void _runSearch(String q) {
     final next = q.trim();
     if (next == _query) return;
-    setState(() => _query = next);
+    setState(() {
+      _query = next;
+      if (next.isEmpty) _group = SearchGroup.sessions;
+    });
     _sessions.load();
+    if (next.isNotEmpty) _questionHits.load();
+  }
+
+  /// Câu hỏi nằm trong phiên nào thì mở phiên đó, nhảy thẳng tới câu. Backend
+  /// chưa trả phiên của câu (thiếu `session_id`) thì chỉ xem trước nội dung.
+  void _openHit(QuestionHit h) {
+    final sessionId = h.sessionId;
+    if (sessionId != null) {
+      Navigator.of(context).pushNamed(
+        AppRoutes.qbankPractice,
+        arguments: (sessionId: sessionId, questionId: h.questionId),
+      );
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _QuestionPreviewSheet(hit: h),
+    );
   }
 
   void _pickSubject(SubjectModel s) {
@@ -84,40 +118,60 @@ class _QuestionBankTabState extends State<QuestionBankTab> {
     final role = context.select<ProfileCubit, UserRole?>(
       (c) => c.state.profile?.role,
     );
+    final header = _Header(
+      search: _search,
+      query: _query,
+      group: _group,
+      isLecturer: role == UserRole.lecturer,
+      onSearch: _runSearch,
+      onPickSubject: _pickSubject,
+      onPropose: _propose,
+      onGroup: (g) => setState(() => _group = g),
+    );
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _sessions),
+        BlocProvider.value(value: _questionHits),
         BlocProvider.value(value: _subjects),
       ],
-      child: PagedListView<SubmissionSummary>(
-        padding: EdgeInsets.zero,
-        itemSpacing: ComponentTokens.postGap,
-        header: _Header(
-          search: _search,
-          query: _query,
-          isLecturer: role == UserRole.lecturer,
-          onSearch: _runSearch,
-          onPickSubject: _pickSubject,
-          onPropose: _propose,
-        ),
-        emptyView: EmptyView(
-          icon: AppIcons.quizActive,
-          title: _query.isEmpty
-              ? 'Chưa có phiên câu hỏi nào'
-              : 'Không tìm thấy phiên phù hợp',
-          message: _query.isEmpty
-              ? 'Các phiên đã được giảng viên duyệt sẽ hiện ở đây.'
-              : 'Thử từ khoá khác hoặc bỏ lọc môn học.',
-          compact: true,
-        ),
-        itemBuilder: (context, s) => SessionTile(
-          session: s,
-          showStatus: false,
-          onTap: () => Navigator.of(
-            context,
-          ).pushNamed(AppRoutes.qbankPractice, arguments: s.sessionId),
-        ),
-      ),
+      child: _query.isNotEmpty && _group == SearchGroup.questions
+          ? PagedListView<QuestionHit>(
+              key: const ValueKey(SearchGroup.questions),
+              padding: EdgeInsets.zero,
+              itemSpacing: ComponentTokens.postGap,
+              header: header,
+              emptyView: const EmptyView(
+                icon: AppIcons.quizActive,
+                title: 'Không tìm thấy câu hỏi phù hợp',
+                message: 'Thử từ khoá khác hoặc bỏ lọc môn học.',
+                compact: true,
+              ),
+              itemBuilder: (context, h) =>
+                  _QuestionHitTile(hit: h, onTap: () => _openHit(h)),
+            )
+          : PagedListView<SubmissionSummary>(
+              key: const ValueKey(SearchGroup.sessions),
+              padding: EdgeInsets.zero,
+              itemSpacing: ComponentTokens.postGap,
+              header: header,
+              emptyView: EmptyView(
+                icon: AppIcons.quizActive,
+                title: _query.isEmpty
+                    ? 'Chưa có phiên câu hỏi nào'
+                    : 'Không tìm thấy phiên phù hợp',
+                message: _query.isEmpty
+                    ? 'Các phiên đã được giảng viên duyệt sẽ hiện ở đây.'
+                    : 'Thử từ khoá khác hoặc bỏ lọc môn học.',
+                compact: true,
+              ),
+              itemBuilder: (context, s) => SessionTile(
+                session: s,
+                showStatus: false,
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(AppRoutes.qbankPractice, arguments: s.sessionId),
+              ),
+            ),
     );
   }
 }
@@ -130,18 +184,22 @@ class _Header extends StatelessWidget {
 
   final TextEditingController search;
   final String query;
+  final SearchGroup group;
   final bool isLecturer;
   final ValueChanged<String> onSearch;
   final ValueChanged<SubjectModel> onPickSubject;
   final VoidCallback onPropose;
+  final ValueChanged<SearchGroup> onGroup;
 
   const _Header({
     required this.search,
     required this.query,
+    required this.group,
     required this.isLecturer,
     required this.onSearch,
     required this.onPickSubject,
     required this.onPropose,
+    required this.onGroup,
   });
 
   @override
@@ -197,7 +255,7 @@ class _Header extends StatelessWidget {
                 textInputAction: TextInputAction.search,
                 onSubmitted: onSearch,
                 decoration: InputDecoration(
-                  hintText: 'Tìm phiên theo tên, môn học...',
+                  hintText: 'Tìm phiên, câu hỏi theo nội dung, môn học...',
                   prefixIcon: const Icon(AppIcons.search),
                   suffixIcon: query.isEmpty
                       ? null
@@ -270,11 +328,159 @@ class _Header extends StatelessWidget {
         Container(
           color: AppColors.white,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-          child: QbankSectionTitle(
-            query.isEmpty ? 'Phiên câu hỏi đã duyệt' : 'Kết quả cho "$query"',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              QbankSectionTitle(
+                query.isEmpty
+                    ? 'Phiên câu hỏi đã duyệt'
+                    : 'Kết quả cho "$query"',
+              ),
+              if (query.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                SegmentedButton<SearchGroup>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: SearchGroup.sessions,
+                      icon: Icon(AppIcons.inbox, size: 18),
+                      label: Text('Phiên'),
+                    ),
+                    ButtonSegment(
+                      value: SearchGroup.questions,
+                      icon: Icon(AppIcons.quiz, size: 18),
+                      label: Text('Câu hỏi'),
+                    ),
+                  ],
+                  selected: {group},
+                  onSelectionChanged: (v) => onGroup(v.first),
+                ),
+              ],
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Một câu hỏi trong kết quả tìm kiếm.
+class _QuestionHitTile extends StatelessWidget {
+  final QuestionHit hit;
+  final VoidCallback onTap;
+
+  const _QuestionHitTile({required this.hit, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final h = hit;
+    final meta = [
+      '${h.options.length} phương án',
+      if (h.ratingCount > 0) '${h.ratingCount} đánh giá',
+      if (h.sessionId == null) 'Chỉ xem trước',
+    ].join(' · ');
+    return Material(
+      color: AppColors.white,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(DesignTokens.spacingMD),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (h.subjectName != null)
+                    QbankChip(
+                      label: h.subjectName!,
+                      icon: AppIcons.subject,
+                      color: AppColors.primary700,
+                      background: AppColors.primary50,
+                    ),
+                  if (h.difficulty != Difficulty.unclassified)
+                    QbankChip(label: h.difficulty.label),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                h.content,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      meta,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    AppIcons.chevronRight,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Xem trước câu hỏi khi chưa biết câu thuộc phiên nào.
+class _QuestionPreviewSheet extends StatelessWidget {
+  final QuestionHit hit;
+  const _QuestionPreviewSheet({required this.hit});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              hit.questionCode ?? 'Câu hỏi',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(hit.content, style: theme.textTheme.bodyLarge),
+            const SizedBox(height: 12),
+            for (final o in hit.options)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text('${o.key}. ${o.text}'),
+              ),
+            const SizedBox(height: 8),
+            const ExplanationBox(
+              title: 'Chưa mở được phiên chứa câu này',
+              text:
+                  'Máy chủ chưa cho biết câu hỏi thuộc phiên nào. Hãy tìm '
+                  'theo tên phiên ở nhóm "Phiên" để luyện tập.',
+              icon: AppIcons.info,
+              color: AppColors.infoDark,
+              background: AppColors.infoLight,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

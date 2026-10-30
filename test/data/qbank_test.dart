@@ -253,6 +253,45 @@ void main() {
       ai = AiRepository(api);
     });
 
+    test('searchQuestions gửi type=QUESTION, đọc phiên nếu có', () async {
+      backend.routes['GET /search'] = (o) => _ok({
+        'items': [
+          {
+            'type': 'QUESTION',
+            'question': {
+              'question_id': 88,
+              'content': 'LINQ là gì?',
+              'subject_name': 'C#',
+              'difficulty': 'MEDIUM',
+              'options': [
+                {'key': 'A', 'text': 'x'},
+              ],
+              'session_id': 14,
+            },
+          },
+          {
+            'type': 'QUESTION',
+            'question': {'question_id': 89, 'content': 'Không có phiên'},
+          },
+          // Loại khác lẫn vào thì bỏ qua
+          {
+            'type': 'SESSION',
+            'session': {'session_id': 1},
+          },
+        ],
+        'pagination': {'after': '10', 'has_next': true},
+      });
+      final page = await bank.searchQuestions(' linq ');
+      final query = backend.requests.single.queryParameters;
+      expect(query['type'], 'QUESTION');
+      expect(query['query'], 'linq');
+      expect(page.items.map((h) => h.questionId), [88, 89]);
+      expect(page.items.first.sessionId, 14);
+      expect(page.items.first.difficulty, Difficulty.medium);
+      expect(page.items.last.sessionId, isNull);
+      expect(page.hasNext, isTrue);
+    });
+
     test('mySubmissions gửi bộ lọc và bỏ tham số rỗng', () async {
       backend.routes['GET /sessions/my-submissions'] = (o) => _ok({
         'contents': [
@@ -380,6 +419,11 @@ void main() {
       found.items.every((s) => s.status == SessionStatus.resolved),
       isTrue,
     );
+
+    final hits = await bank.searchQuestions('AVL');
+    expect(hits.items, isNotEmpty);
+    expect(hits.items.first.sessionId, isNotNull);
+    expect(hits.items.first.options.every((o) => o.isCorrect == null), isTrue);
 
     final session = await bank.sessionQuestions(found.items.first.sessionId);
     final q = session.questions.first;
