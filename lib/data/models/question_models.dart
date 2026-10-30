@@ -4,8 +4,7 @@ import '../../core/utils/json_utils.dart';
 
 /// Danh sách chuỗi (URL ảnh...), bỏ phần tử rỗng.
 List<String> jsonStrings(dynamic v) => [
-  for (final x in J.asList(v))
-    ?J.asString(x),
+  for (final x in J.asList(v)) ?J.asString(x),
 ];
 
 /// Nguồn gốc câu hỏi. Backend gọi câu người tự soạn là `HOMO_SAPIENS`.
@@ -354,8 +353,10 @@ class QuestionStatistics extends Equatable {
   factory QuestionStatistics.fromJson(Map<String, dynamic> json) {
     final options =
         J.asMap(json['option_distribution']) ?? const <String, dynamic>{};
-    final summary = J.asMap(json['rating_summary']) ?? const <String, dynamic>{};
-    final ratings = J.asMap(summary['distribution']) ?? const <String, dynamic>{};
+    final summary =
+        J.asMap(json['rating_summary']) ?? const <String, dynamic>{};
+    final ratings =
+        J.asMap(summary['distribution']) ?? const <String, dynamic>{};
     return QuestionStatistics(
       totalAnswers: J.intOr(json['total_answer'] ?? json['total_answers']),
       correctRate: J.asDouble(json['correct_rate']) ?? 0,
@@ -365,8 +366,7 @@ class QuestionStatistics extends Equatable {
       avgRating: J.asDouble(summary['avg_rating']) ?? 0,
       totalRatings: J.intOr(summary['total_ratings']),
       ratingDistribution: {
-        for (final e in ratings.entries)
-          ?int.tryParse(e.key): J.intOr(e.value),
+        for (final e in ratings.entries) ?int.tryParse(e.key): J.intOr(e.value),
       },
     );
   }

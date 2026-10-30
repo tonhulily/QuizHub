@@ -130,5 +130,10 @@ class AiApplyResult extends Equatable {
   );
 
   @override
-  List<Object?> get props => [questionId, status, confidenceScore, hallucination];
+  List<Object?> get props => [
+    questionId,
+    status,
+    confidenceScore,
+    hallucination,
+  ];
 }

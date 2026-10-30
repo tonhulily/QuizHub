@@ -36,11 +36,10 @@ class SubmissionRepository {
 
   /// `GET /sessions/my-submissions/{id}` - có đủ đáp án đúng, độ tự tin,
   /// người duyệt.
-  Future<SubmissionDetail> detail(int sessionId) =>
-      _api.get<SubmissionDetail>(
-        ApiEndpoints.mySubmission(sessionId),
-        parser: (d) => SubmissionDetail.fromJson(J.asMap(d) ?? const {}),
-      );
+  Future<SubmissionDetail> detail(int sessionId) => _api.get<SubmissionDetail>(
+    ApiEndpoints.mySubmission(sessionId),
+    parser: (d) => SubmissionDetail.fromJson(J.asMap(d) ?? const {}),
+  );
 
   /// `POST /sessions/propose` - phiên mới ở trạng thái `PENDING`.
   Future<ProposeResult> propose(SessionDraft draft) => _api.post<ProposeResult>(

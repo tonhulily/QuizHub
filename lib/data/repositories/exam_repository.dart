@@ -24,12 +24,11 @@ class ExamRepository {
 
   /// `POST /exams/generate` - bốc ngẫu nhiên câu `APPROVED` theo môn, số
   /// lượng, tỉ lệ độ khó, trọng số chủ đề. 400 nếu ngân hàng môn đó trống.
-  Future<ExamDetail> generate(GenerateExamInput input) =>
-      _api.post<ExamDetail>(
-        ApiEndpoints.examGenerate,
-        body: input.toJson(),
-        parser: (d) => ExamDetail.fromJson(J.asMap(d) ?? const {}),
-      );
+  Future<ExamDetail> generate(GenerateExamInput input) => _api.post<ExamDetail>(
+    ApiEndpoints.examGenerate,
+    body: input.toJson(),
+    parser: (d) => ExamDetail.fromJson(J.asMap(d) ?? const {}),
+  );
 
   /// `GET /exams/my-exams`
   Future<CursorPage<ExamSummary>> myExams({

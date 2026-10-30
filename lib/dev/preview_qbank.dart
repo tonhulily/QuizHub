@@ -22,11 +22,7 @@ class PreviewQbank {
       'name': 'Cấu trúc dữ liệu và thuật toán',
     },
     {'subject_id': 11, 'code': 'IT3070', 'name': 'Nguyên lý hệ điều hành'},
-    {
-      'subject_id': 12,
-      'code': 'IT3180',
-      'name': 'Nhập môn công nghệ phần mềm',
-    },
+    {'subject_id': 12, 'code': 'IT3180', 'name': 'Nhập môn công nghệ phần mềm'},
   ];
   static const Set<int> _enrolledIds = {10, 11};
 
@@ -157,7 +153,8 @@ class PreviewQbank {
         },
         {
           'question_id': 202,
-          'content': 'Quantum quá lớn khiến Round Robin gần giống thuật toán nào?',
+          'content':
+              'Quantum quá lớn khiến Round Robin gần giống thuật toán nào?',
           'options': [
             opt('A', 'FCFS', true),
             opt('B', 'SJF'),
@@ -289,10 +286,8 @@ class PreviewQbank {
     };
   }
 
-  static String _ago(int days) => DateTime.now()
-      .toUtc()
-      .subtract(Duration(days: days))
-      .toIso8601String();
+  static String _ago(int days) =>
+      DateTime.now().toUtc().subtract(Duration(days: days)).toIso8601String();
 
   static String _now() => DateTime.now().toUtc().toIso8601String();
 
@@ -343,8 +338,7 @@ class PreviewQbank {
   );
 
   List<Map<String, dynamic>> _questionsOf(dynamic ids) => [
-    for (final id in J.asList(ids))
-      ?_questions[id],
+    for (final id in J.asList(ids)) ?_questions[id],
   ];
 
   List<String> _correctKeys(Map<String, dynamic> q) => [
@@ -386,7 +380,8 @@ class PreviewQbank {
             .where((s) => subjectId == null || s['subject_id'] == subjectId)
             .toList()
           ..sort(
-            (a, b) => (b['session_id'] as int).compareTo(a['session_id'] as int),
+            (a, b) =>
+                (b['session_id'] as int).compareTo(a['session_id'] as int),
           );
     return {
       'contents': [for (final s in list) _summary(s)],
@@ -669,110 +664,119 @@ class PreviewQbank {
       final question = _questions[id];
       if (id == null || question == null) return null;
       switch (seg[3]) {
-        case 'answer': {
-          final selected = [
-            for (final k in J.asList(body['selected_options'])) J.stringOr(k),
-          ];
-          _answers[id] = selected;
-          final correct = _correctKeys(question);
-          return {
-            'is_correct':
-                selected.length == correct.length &&
-                selected.toSet().containsAll(correct),
-            'correct_answer': correct.join(','),
-            'explanation': question['explanation'],
-          };
-        }
-        case 'rate': {
-          final list = _ratings.putIfAbsent(id, () => []);
-          final isError = J.asBool(body['is_error']);
-          list.removeWhere((r) => r['user_id'] == _meId);
-          list.insert(0, {
-            'user_id': _meId,
-            'rating': isError ? 0 : J.intOr(body['rating']),
-            'is_error': isError,
-            'comment': J.asString(body['comment']),
-            'created_at': _now(),
-          });
-          final sum = list.fold<num>(0, (a, r) => a + (r['rating'] as num));
-          return {
-            'new_avg_rating': sum / list.length,
-            'new_rating_count': list.length,
-          };
-        }
-        case 'ratings': {
-          return {
-            'items': _ratings[id] ?? const [],
-            'pagination': {'after': null, 'has_next': false},
-          };
-        }
-        case 'statistics': {
-          final ratings = _ratings[id] ?? const <Map<String, dynamic>>[];
-          final correct = _correctKeys(question);
-          final picks = {
-            for (final o in J.asList(question['options']))
-              J.stringOr(o['key']): correct.contains(o['key']) ? 30 : 7,
-          };
-          final total = picks.values.fold<int>(0, (a, b) => a + b);
-          final right = picks.entries
-              .where((e) => correct.contains(e.key))
-              .fold<int>(0, (a, e) => a + e.value);
-          final sum = ratings.fold<num>(0, (a, r) => a + (r['rating'] as num));
-          return {
-            'total_answer': total,
-            'correct_rate': total == 0 ? 0 : right / total,
-            'option_distribution': picks,
-            'rating_summary': {
-              'avg_rating': ratings.isEmpty ? 0 : sum / ratings.length,
-              'total_ratings': ratings.length,
-              'distribution': {
-                for (var i = 0; i <= 4; i++)
-                  '$i': ratings.where((r) => r['rating'] == i).length,
-              },
-            },
-          };
-        }
-        case 'ai-refine': {
-          final logId = _nextId++;
-          final base =
-              J.asString(question['explanation']) ??
-              'đối chiếu từng phương án với định nghĩa trong giáo trình.';
-          final suggestion = <String, dynamic>{
-            'content': 'Chọn đáp án đúng: ${question['content']}',
-            'options': question['options'],
-            'explanation': 'Giải thích do AI viết lại: $base',
-          };
-          _aiLogs[logId] = suggestion;
-          return {
-            'edit_log_id': logId,
-            'suggested_question': {...suggestion, 'refusal_reason': null},
-            'hallucination_audit': {
-              'is_hallucinated': false,
-              'confidence_score': 0.92,
-              'belief_tree_depth': 3,
-              'violations': const [],
-            },
-            'ai_metadata': {
-              'model': 'preview-model',
-              'tokens_used': 380,
-              'processing_time_ms': 1200,
-            },
-          };
-        }
-        case 'ai-apply': {
-          final approve = J.asBool(body['approve']);
-          final log = _aiLogs.remove(J.asInt(body['edit_log_id']));
-          if (approve && log != null) {
-            question.addAll(log);
-            question['updated_at'] = _now();
+        case 'answer':
+          {
+            final selected = [
+              for (final k in J.asList(body['selected_options'])) J.stringOr(k),
+            ];
+            _answers[id] = selected;
+            final correct = _correctKeys(question);
+            return {
+              'is_correct':
+                  selected.length == correct.length &&
+                  selected.toSet().containsAll(correct),
+              'correct_answer': correct.join(','),
+              'explanation': question['explanation'],
+            };
           }
-          return {
-            'question_id': id,
-            'status': approve ? 'APPLIED' : 'DISCARDED',
-            'confidence_score': 0.92,
-            'hallucination': false,
-          };
-        }
+        case 'rate':
+          {
+            final list = _ratings.putIfAbsent(id, () => []);
+            final isError = J.asBool(body['is_error']);
+            list.removeWhere((r) => r['user_id'] == _meId);
+            list.insert(0, {
+              'user_id': _meId,
+              'rating': isError ? 0 : J.intOr(body['rating']),
+              'is_error': isError,
+              'comment': J.asString(body['comment']),
+              'created_at': _now(),
+            });
+            final sum = list.fold<num>(0, (a, r) => a + (r['rating'] as num));
+            return {
+              'new_avg_rating': sum / list.length,
+              'new_rating_count': list.length,
+            };
+          }
+        case 'ratings':
+          {
+            return {
+              'items': _ratings[id] ?? const [],
+              'pagination': {'after': null, 'has_next': false},
+            };
+          }
+        case 'statistics':
+          {
+            final ratings = _ratings[id] ?? const <Map<String, dynamic>>[];
+            final correct = _correctKeys(question);
+            final picks = {
+              for (final o in J.asList(question['options']))
+                J.stringOr(o['key']): correct.contains(o['key']) ? 30 : 7,
+            };
+            final total = picks.values.fold<int>(0, (a, b) => a + b);
+            final right = picks.entries
+                .where((e) => correct.contains(e.key))
+                .fold<int>(0, (a, e) => a + e.value);
+            final sum = ratings.fold<num>(
+              0,
+              (a, r) => a + (r['rating'] as num),
+            );
+            return {
+              'total_answer': total,
+              'correct_rate': total == 0 ? 0 : right / total,
+              'option_distribution': picks,
+              'rating_summary': {
+                'avg_rating': ratings.isEmpty ? 0 : sum / ratings.length,
+                'total_ratings': ratings.length,
+                'distribution': {
+                  for (var i = 0; i <= 4; i++)
+                    '$i': ratings.where((r) => r['rating'] == i).length,
+                },
+              },
+            };
+          }
+        case 'ai-refine':
+          {
+            final logId = _nextId++;
+            final base =
+                J.asString(question['explanation']) ??
+                'đối chiếu từng phương án với định nghĩa trong giáo trình.';
+            final suggestion = <String, dynamic>{
+              'content': 'Chọn đáp án đúng: ${question['content']}',
+              'options': question['options'],
+              'explanation': 'Giải thích do AI viết lại: $base',
+            };
+            _aiLogs[logId] = suggestion;
+            return {
+              'edit_log_id': logId,
+              'suggested_question': {...suggestion, 'refusal_reason': null},
+              'hallucination_audit': {
+                'is_hallucinated': false,
+                'confidence_score': 0.92,
+                'belief_tree_depth': 3,
+                'violations': const [],
+              },
+              'ai_metadata': {
+                'model': 'preview-model',
+                'tokens_used': 380,
+                'processing_time_ms': 1200,
+              },
+            };
+          }
+        case 'ai-apply':
+          {
+            final approve = J.asBool(body['approve']);
+            final log = _aiLogs.remove(J.asInt(body['edit_log_id']));
+            if (approve && log != null) {
+              question.addAll(log);
+              question['updated_at'] = _now();
+            }
+            return {
+              'question_id': id,
+              'status': approve ? 'APPLIED' : 'DISCARDED',
+              'confidence_score': 0.92,
+              'hallucination': false,
+            };
+          }
       }
     }
 

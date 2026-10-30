@@ -27,10 +27,7 @@ class AiRepository {
     String? chatSessionId,
   }) => _api.post<AiRefineResult>(
     ApiEndpoints.questionAiRefine(questionId),
-    body: {
-      'prompt': prompt.trim(),
-      'chat_session_id': ?chatSessionId,
-    },
+    body: {'prompt': prompt.trim(), 'chat_session_id': ?chatSessionId},
     parser: (d) => AiRefineResult.fromJson(J.asMap(d) ?? const {}),
   );
 
