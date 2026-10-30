@@ -7,10 +7,12 @@ import '../../core/bloc/paged_cubit.dart';
 import '../../core/design_system/app_colors.dart';
 import '../../core/design_system/component_tokens.dart';
 import '../../core/services/post_events.dart';
+import '../../core/router/app_routes.dart';
 import '../../core/utils/time_format.dart';
 import '../../core/widgets/paged_list.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/models/feed_item.dart';
+import '../../data/models/post_model.dart';
 import '../../data/repositories/feed_repository.dart';
 import '../../di/locator.dart';
 import '../../shared/post/post_card.dart';
@@ -32,6 +34,7 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   late final PagedCubit<FeedItem> _feed;
   StreamSubscription<dynamic>? _sub;
+  StreamSubscription<PostModel>? _updatedSub;
 
   @override
   void initState() {
@@ -44,13 +47,39 @@ class _HomeTabState extends State<HomeTab> {
     _sub = getIt<PostEvents>().onPublished.listen(
       (post) => _feed.insertFirst(FeedItem.fromPost(post)),
     );
+    _updatedSub = getIt<PostEvents>().onUpdated.listen((post) {
+      final matches = _feed.state.items.where(
+        (item) => item.postId == post.postId,
+      );
+      if (matches.isNotEmpty) {
+        _feed.replaceWhere(
+          (item) => item.postId == post.postId,
+          matches.first.copyWith(localPost: post),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _updatedSub?.cancel();
     _feed.close();
     super.dispose();
+  }
+
+  Future<void> _openPostDetail(int postId) async {
+    await Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.postDetail, arguments: postId);
+    if (mounted) await _feed.refresh();
+  }
+
+  Future<void> _editPost(PostModel post) async {
+    final updated = await Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.editPost, arguments: post);
+    if (updated is PostModel && mounted) await _feed.refresh();
   }
 
   @override
@@ -77,6 +106,8 @@ class _HomeTabState extends State<HomeTab> {
                 (x) =>
                     x.targetType == item.targetType && x.targetId == p.postId,
               ),
+              onEdit: _editPost,
+              onTap: (p) => _openPostDetail(p.postId),
             );
           }
           return _ActivityTile(item: item);

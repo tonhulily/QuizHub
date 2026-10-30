@@ -434,6 +434,18 @@ class PreviewBackend implements HttpClientAdapter {
       };
       return _posts[id];
     }
+    if (path.startsWith('/posts/') && m == 'PUT') {
+      final id = int.tryParse(path.split('/').last);
+      final post = id == null ? null : _posts[id];
+      if (post == null) return null;
+      post.addAll({
+        if (body.containsKey('content')) 'content': body['content'],
+        if (body.containsKey('media_urls')) 'media_urls': body['media_urls'],
+        if (body.containsKey('visibility')) 'visibility': body['visibility'],
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+      return post;
+    }
     if (path.startsWith('/posts/') && m == 'GET') {
       return _posts[int.tryParse(path.split('/').last)];
     }

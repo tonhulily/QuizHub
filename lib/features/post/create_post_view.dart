@@ -27,8 +27,13 @@ import '../../core/design_system/app_icons.dart';
 class CreatePostView extends StatefulWidget {
   /// Mở ngay thư viện ảnh khi vào màn (bấm icon ảnh ở thanh composer).
   final bool pickImagesOnOpen;
+  final PostModel? initialPost;
 
-  const CreatePostView({super.key, this.pickImagesOnOpen = false});
+  const CreatePostView({
+    super.key,
+    this.pickImagesOnOpen = false,
+    this.initialPost,
+  });
 
   @override
   State<CreatePostView> createState() => _CreatePostViewState();
@@ -38,12 +43,21 @@ class _CreatePostViewState extends State<CreatePostView> {
   final _text = TextEditingController();
   final _focus = FocusNode();
   final List<File> _images = [];
+  final List<MediaItem> _existingMedia = [];
   PostVisibility _visibility = PostVisibility.public;
   bool _posting = false;
+
+  bool get _isEditing => widget.initialPost != null;
 
   @override
   void initState() {
     super.initState();
+    final post = widget.initialPost;
+    if (post != null) {
+      _text.text = post.content;
+      _visibility = post.visibility;
+      _existingMedia.addAll(post.media);
+    }
     _text.addListener(() => setState(() {}));
     if (widget.pickImagesOnOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _pickFromGallery());
@@ -57,14 +71,41 @@ class _CreatePostViewState extends State<CreatePostView> {
     super.dispose();
   }
 
-  bool get _dirty => _text.text.trim().isNotEmpty || _images.isNotEmpty;
+  bool get _dirty {
+    final original = widget.initialPost;
+    if (original == null) {
+      return _text.text.trim().isNotEmpty || _images.isNotEmpty;
+    }
+    return _text.text != original.content ||
+        _visibility != original.visibility ||
+        _images.isNotEmpty ||
+        !_sameMedia(_existingMedia, original.media);
+  }
+
+  static bool _sameMedia(List<MediaItem> a, List<MediaItem> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  int get _imageCount =>
+      _existingMedia.where((media) => media.isImage).length + _images.length;
+
   int get _words => Validators.wordCount(_text.text);
   bool get _tooLong => _words > ComponentTokens.maxPostWords;
-  bool get _canPost => _dirty && !_tooLong && !_posting;
+  bool get _canPost =>
+      _dirty &&
+      (_text.text.trim().isNotEmpty ||
+          _existingMedia.isNotEmpty ||
+          _images.isNotEmpty) &&
+      !_tooLong &&
+      !_posting;
 
   // ---------------- Ảnh ----------------
   Future<void> _pickFromGallery() async {
-    final remaining = ComponentTokens.maxImagesPerPost - _images.length;
+    final remaining = ComponentTokens.maxImagesPerPost - _imageCount;
     if (remaining <= 0) {
       AppFeedback.info(
         context,
@@ -99,7 +140,7 @@ class _CreatePostViewState extends State<CreatePostView> {
   }
 
   Future<void> _takePhoto() async {
-    if (_images.length >= ComponentTokens.maxImagesPerPost) {
+    if (_imageCount >= ComponentTokens.maxImagesPerPost) {
       AppFeedback.info(
         context,
         'Mỗi bài viết tối đa ${ComponentTokens.maxImagesPerPost} ảnh.',
@@ -186,8 +227,8 @@ class _CreatePostViewState extends State<CreatePostView> {
     _focus.unfocus();
     setState(() => _posting = true);
     try {
-      final created = await AppFeedback.withLoading(() async {
-        final media = <MediaItem>[];
+      final saved = await AppFeedback.withLoading(() async {
+        final media = List<MediaItem>.of(_existingMedia);
         for (final f in _images) {
           final up = await getIt<MediaRepository>().uploadImage(
             f,
@@ -196,6 +237,25 @@ class _CreatePostViewState extends State<CreatePostView> {
           media.add(up.toMediaItem());
         }
         final repo = getIt<PostRepository>();
+        final original = widget.initialPost;
+        if (original != null) {
+          await repo.update(
+            original.postId,
+            content: _text.text.trim(),
+            media: media,
+            visibility: _visibility,
+          );
+          try {
+            return await repo.getById(original.postId);
+          } on ApiException {
+            return original.copyWith(
+              content: _text.text.trim(),
+              media: media,
+              visibility: _visibility,
+              updatedAt: DateTime.now(),
+            );
+          }
+        }
         final post = await repo.create(
           content: _text.text.trim(),
           media: media,
@@ -209,9 +269,16 @@ class _CreatePostViewState extends State<CreatePostView> {
         }
       });
       if (!mounted) return;
-      getIt<PostEvents>().publish(created);
-      AppFeedback.success(context, 'Đã đăng bài viết');
-      Navigator.of(context).pop(created);
+      if (_isEditing) {
+        getIt<PostEvents>().update(saved);
+      } else {
+        getIt<PostEvents>().publish(saved);
+      }
+      AppFeedback.success(
+        context,
+        _isEditing ? 'Đã lưu thay đổi' : 'Đã đăng bài viết',
+      );
+      Navigator.of(context).pop(saved);
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _posting = false);
@@ -221,12 +288,15 @@ class _CreatePostViewState extends State<CreatePostView> {
   }
 
   Future<bool> _confirmDiscard() async {
-    if (!_dirty || _posting) return true;
+    if (_posting) return false;
+    if (!_dirty) return true;
     final ok = await showConfirmDialog(
       context,
-      title: 'Bỏ bài viết?',
-      message: 'Nội dung bạn đã nhập sẽ bị mất.',
-      confirmLabel: 'Bỏ bài viết',
+      title: _isEditing ? 'Bỏ thay đổi?' : 'Bỏ bài viết?',
+      message: _isEditing
+          ? 'Các thay đổi bạn vừa thực hiện sẽ bị mất.'
+          : 'Nội dung bạn đã nhập sẽ bị mất.',
+      confirmLabel: _isEditing ? 'Bỏ thay đổi' : 'Bỏ bài viết',
       cancelLabel: 'Tiếp tục viết',
       destructive: true,
     );
@@ -238,10 +308,10 @@ class _CreatePostViewState extends State<CreatePostView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final me = context.watch<ProfileCubit>().state.profile;
-    final short = _text.text.length < 120 && _images.isEmpty;
+    final short = _text.text.length < 120 && _imageCount == 0;
 
     return PopScope(
-      canPop: !_dirty || _posting,
+      canPop: !_dirty && !_posting,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final navigator = Navigator.of(context);
@@ -255,7 +325,7 @@ class _CreatePostViewState extends State<CreatePostView> {
             icon: const Icon(AppIcons.close),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
-          title: const Text('Tạo bài viết'),
+          title: Text(_isEditing ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'),
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 12),
@@ -274,7 +344,7 @@ class _CreatePostViewState extends State<CreatePostView> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('ĐĂNG'),
+                child: Text(_isEditing ? 'LƯU' : 'ĐĂNG'),
               ),
             ),
           ],
@@ -361,10 +431,13 @@ class _CreatePostViewState extends State<CreatePostView> {
                         ),
                       ),
                     ),
-                  if (_images.isNotEmpty)
+                  if (_existingMedia.isNotEmpty || _images.isNotEmpty)
                     _ImagePreviews(
+                      media: _existingMedia,
                       images: _images,
-                      onRemove: (i) => setState(() => _images.removeAt(i)),
+                      onRemoveExisting: (i) =>
+                          setState(() => _existingMedia.removeAt(i)),
+                      onRemoveImage: (i) => setState(() => _images.removeAt(i)),
                     ),
                 ],
               ),
@@ -372,7 +445,7 @@ class _CreatePostViewState extends State<CreatePostView> {
             _Toolbar(
               onGallery: _pickFromGallery,
               onCamera: _takePhoto,
-              imageCount: _images.length,
+              imageCount: _imageCount,
             ),
           ],
         ),
@@ -422,53 +495,95 @@ class _VisibilityChip extends StatelessWidget {
 }
 
 class _ImagePreviews extends StatelessWidget {
+  final List<MediaItem> media;
   final List<File> images;
-  final ValueChanged<int> onRemove;
+  final ValueChanged<int> onRemoveExisting;
+  final ValueChanged<int> onRemoveImage;
 
-  const _ImagePreviews({required this.images, required this.onRemove});
+  const _ImagePreviews({
+    required this.media,
+    required this.images,
+    required this.onRemoveExisting,
+    required this.onRemoveImage,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final count = media.length + images.length;
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: images.length,
+      itemCount: count,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: images.length == 1 ? 1 : 2,
+        crossAxisCount: count == 1 ? 1 : 2,
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
-        childAspectRatio: images.length == 1 ? 1.4 : 1,
+        childAspectRatio: count == 1 ? 1.4 : 1,
       ),
-      itemBuilder: (context, i) => ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.file(images[i], fit: BoxFit.cover),
-            Positioned(
-              top: 6,
-              right: 6,
-              child: InkWell(
-                onTap: () => onRemove(i),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Color(0xAA000000),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    AppIcons.close,
-                    size: 20,
-                    color: AppColors.white,
+      itemBuilder: (context, i) {
+        final isExisting = i < media.length;
+        final item = isExisting ? media[i] : null;
+        final Widget preview;
+        if (item == null) {
+          preview = Image.file(images[i - media.length], fit: BoxFit.cover);
+        } else if (item.isImage) {
+          preview = Image.network(
+            item.url,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) =>
+                const _MediaPlaceholder(icon: AppIcons.imageBroken),
+          );
+        } else {
+          preview = _MediaPlaceholder(
+            icon: item.isVideo ? AppIcons.playCircle : AppIcons.article,
+          );
+        }
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              preview,
+              Positioned(
+                top: 6,
+                right: 6,
+                child: InkWell(
+                  onTap: () => isExisting
+                      ? onRemoveExisting(i)
+                      : onRemoveImage(i - media.length),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Color(0xAA000000),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      AppIcons.close,
+                      size: 20,
+                      color: AppColors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
+}
+
+class _MediaPlaceholder extends StatelessWidget {
+  final IconData icon;
+
+  const _MediaPlaceholder({required this.icon});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    color: AppColors.chip,
+    child: Icon(icon, size: 40, color: AppColors.textSecondary),
+  );
 }
 
 class _Toolbar extends StatelessWidget {

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
+import '../../data/models/post_model.dart';
 import '../../features/post/create_post_view.dart';
+import '../../features/post/post_detail_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
 import '../../data/models/profile_model.dart';
 import '../../features/profile/view/about_profile_view.dart';
@@ -52,6 +54,14 @@ class AppRouter {
         page = EditProfileView(forceComplete: args == true);
       case AppRoutes.createPost:
         page = CreatePostView(pickImagesOnOpen: args == true);
+      case AppRoutes.editPost:
+        page = args is PostModel
+            ? CreatePostView(initialPost: args)
+            : _NotFoundView(name: settings.name);
+      case AppRoutes.postDetail:
+        page = args is int && args > 0
+            ? PostDetailView(postId: args)
+            : _NotFoundView(name: settings.name);
       case AppRoutes.changePassword:
         page = const ChangePasswordView();
       default:
@@ -74,7 +84,9 @@ class AppRouter {
     }
     return MaterialPageRoute<dynamic>(
       settings: settings,
-      fullscreenDialog: settings.name == AppRoutes.createPost,
+      fullscreenDialog:
+          settings.name == AppRoutes.createPost ||
+          settings.name == AppRoutes.editPost,
       builder: (_) => page,
     );
   }

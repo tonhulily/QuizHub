@@ -20,4 +20,6 @@ class AppRoutes {
   // Social (module khác sẽ bổ sung)
   static const postDetail = '/post/detail'; // arguments: int postId
   static const createPost = '/post/create'; // pop -> PostModel? (bài vừa đăng)
+  static const editPost =
+      '/post/edit'; // arguments: PostModel; pop -> PostModel?
 }

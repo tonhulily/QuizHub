@@ -39,17 +39,22 @@ class _MyProfileViewState extends State<MyProfileView> {
     (after) => getIt<PostRepository>().myPosts(after: after),
   )..load();
   late final StreamSubscription<PostModel> _sub;
+  late final StreamSubscription<PostModel> _updatedSub;
 
   @override
   void initState() {
     super.initState();
     // Bài vừa đăng (từ màn Tạo bài viết) tự chèn lên đầu danh sách
     _sub = getIt<PostEvents>().onPublished.listen(_posts.insertFirst);
+    _updatedSub = getIt<PostEvents>().onUpdated.listen(
+      (post) => _posts.replaceWhere((item) => item.postId == post.postId, post),
+    );
   }
 
   @override
   void dispose() {
     _sub.cancel();
+    _updatedSub.cancel();
     _posts.close();
     super.dispose();
   }
@@ -59,6 +64,22 @@ class _MyProfileViewState extends State<MyProfileView> {
       context.read<ProfileCubit>().load(silent: true),
       _posts.refresh(),
     ]);
+  }
+
+  Future<void> _openPostDetail(int postId) async {
+    await Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.postDetail, arguments: postId);
+    if (mounted) await _posts.refresh();
+  }
+
+  Future<void> _editPost(PostModel post) async {
+    final updated = await Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.editPost, arguments: post);
+    if (updated is PostModel && mounted) {
+      _posts.replaceWhere((item) => item.postId == updated.postId, updated);
+    }
   }
 
   void _openMenu() {
@@ -189,6 +210,8 @@ class _MyProfileViewState extends State<MyProfileView> {
                       _posts.replaceWhere((x) => x.postId == p.postId, p),
                   onDeleted: (p) =>
                       _posts.removeWhere((x) => x.postId == p.postId),
+                  onEdit: _editPost,
+                  onTap: (p) => _openPostDetail(p.postId),
                 ),
               );
             },

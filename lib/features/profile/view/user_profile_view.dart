@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/bloc/paged_cubit.dart';
 import '../../../core/design_system/component_tokens.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/fb_widgets.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/state_views.dart';
@@ -85,6 +86,22 @@ class _UserProfileViewState extends State<UserProfileView> {
     await _posts.refresh();
   }
 
+  Future<void> _openPostDetail(int postId) async {
+    await Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.postDetail, arguments: postId);
+    if (mounted) await _posts.refresh();
+  }
+
+  Future<void> _editPost(PostModel post) async {
+    final updated = await Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.editPost, arguments: post);
+    if (updated is PostModel && mounted) {
+      _posts.replaceWhere((item) => item.postId == updated.postId, updated);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final back = OverlayButton(
@@ -132,6 +149,8 @@ class _UserProfileViewState extends State<UserProfileView> {
               onChanged: (p) =>
                   _posts.replaceWhere((x) => x.postId == p.postId, p),
               onDeleted: (p) => _posts.removeWhere((x) => x.postId == p.postId),
+              onEdit: _editPost,
+              onTap: (p) => _openPostDetail(p.postId),
             ),
           ),
         ),
