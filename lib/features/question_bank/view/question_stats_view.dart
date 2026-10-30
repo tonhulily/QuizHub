@@ -239,14 +239,18 @@ class _Bar extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
+          // Đủ rộng cho nhãn dài nhất ("2 · Tác giả chưa vững"); chữ to thì
+          // xuống dòng thay vì bị cắt.
           SizedBox(
-            width: caption == null ? 24 : 132,
+            width: caption == null ? 24 : 172,
             child: Text(
               caption == null ? label : '$label · $caption',
-              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              softWrap: true,
               style: theme.textTheme.labelLarge,
             ),
           ),
+          if (caption != null) const SizedBox(width: 8),
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(DesignTokens.radiusFull),

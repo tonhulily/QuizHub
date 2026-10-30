@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quizhub/core/config/app_config.dart';
 import 'package:quizhub/core/design_system/app_icons.dart';
@@ -19,6 +20,7 @@ import 'package:quizhub/features/question_bank/cubit/load_cubit.dart';
 import 'package:quizhub/features/question_bank/cubit/practice_cubit.dart';
 import 'package:quizhub/features/question_bank/cubit/submission_form_cubit.dart';
 import 'package:quizhub/features/question_bank/view/practice_view.dart';
+import 'package:quizhub/features/question_bank/view/question_stats_view.dart';
 import 'package:quizhub/features/question_bank/view/submission_form_view.dart';
 
 import '../helpers/fake_profile.dart';
@@ -103,6 +105,26 @@ class _FakeBank implements QuestionBankRepository {
     bool isError = false,
     String? comment,
   }) async => const RateResult(avgRating: 3, ratingCount: 1);
+
+  List<RatingItem> ratingItems = const [];
+
+  @override
+  Future<QuestionStatistics> statistics(int questionId) async =>
+      const QuestionStatistics(
+        totalAnswers: 4,
+        correctRate: 0.5,
+        optionDistribution: {'A': 2, 'B': 2},
+        avgRating: 2,
+        totalRatings: 2,
+        ratingDistribution: {0: 1, 2: 1},
+      );
+
+  @override
+  Future<CursorPage<RatingItem>> ratings(
+    int questionId, {
+    String? after,
+    int limit = AppConfig.defaultPageSize,
+  }) async => CursorPage(items: ratingItems);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -442,6 +464,22 @@ void main() {
 
       expect(find.byTooltip('Chọn A là đáp án đúng'), findsOneWidget);
       expect(find.byIcon(AppIcons.success), findsNothing);
+    });
+
+    testWidgets('thống kê: nhãn mức đánh giá đúng và không bị cắt', (
+      tester,
+    ) async {
+      getIt.registerSingleton<QuestionBankRepository>(_FakeBank(const []));
+      await tester.pumpWidget(
+        app(const QuestionStatsView(questionId: 1, correctKeys: ['A'])),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('0 · Hoàn toàn sai'), findsOneWidget);
+      final shaky = find.text('2 · Tác giả chưa vững');
+      expect(shaky, findsOneWidget);
+      final text = tester.renderObject<RenderParagraph>(shaky);
+      expect(text.didExceedMaxLines, isFalse);
     });
 
     testWidgets('luyện tập: chọn, nộp rồi thấy kết quả và lời giải', (

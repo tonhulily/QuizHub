@@ -67,8 +67,10 @@ enum Difficulty {
 
 /// Thang 0-4 của backend, dùng chung cho "độ tự tin" khi đề xuất và "đánh
 /// giá" câu hỏi của người khác.
+///
+/// Nhãn theo đúng Swagger (`POST /questions/{id}/rate`): 0 là "Hoàn toàn sai".
 enum RatingLevel {
-  wrong(0, 'Sai hoàn toàn'),
+  wrong(0, 'Hoàn toàn sai'),
   hallucinated(1, 'LLM bịa'),
   shaky(2, 'Tác giả chưa vững'),
   basic(3, 'Cơ bản'),
