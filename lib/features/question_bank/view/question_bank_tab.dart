@@ -123,6 +123,11 @@ class _QuestionBankTabState extends State<QuestionBankTab> {
 }
 
 class _Header extends StatelessWidget {
+  static final _pill = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+    borderSide: BorderSide.none,
+  );
+
   final TextEditingController search;
   final String query;
   final bool isLecturer;
@@ -207,11 +212,17 @@ class _Header extends StatelessWidget {
                   filled: true,
                   fillColor: AppColors.backgroundSecondary,
                   isDense: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      DesignTokens.radiusFull,
+                  // Theme chung đặt enabledBorder / focusedBorder (viền vuông
+                  // của ô nhập) đè lên `border`, nên khai báo đủ ở đây để ô
+                  // tìm kiếm luôn bo tròn kiểu pill.
+                  border: _pill,
+                  enabledBorder: _pill,
+                  disabledBorder: _pill,
+                  focusedBorder: _pill.copyWith(
+                    borderSide: const BorderSide(
+                      color: AppColors.primary600,
+                      width: 1.4,
                     ),
-                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
