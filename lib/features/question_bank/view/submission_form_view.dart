@@ -636,6 +636,27 @@ class _QuestionCard extends StatelessWidget {
               onChanged();
             },
           ),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                AppIcons.lock,
+                size: 14,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Giảng viên không thấy nguồn này (để duyệt và chấm khách '
+                  'quan). Hãy chọn đúng: câu do AI sinh thì chọn "AI sinh".',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           Text(
             'Độ tự tin: ${level.value} - ${level.label}',

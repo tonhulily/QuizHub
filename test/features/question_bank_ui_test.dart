@@ -55,8 +55,13 @@ SessionDraft _draft({
   questions: questions ?? [_q()],
 );
 
-PracticeQuestion _practice(int id, {bool answered = false}) => PracticeQuestion(
+PracticeQuestion _practice(
+  int id, {
+  bool answered = false,
+  QuestionSource source = QuestionSource.human,
+}) => PracticeQuestion(
   questionId: id,
+  source: source,
   content: 'Câu $id',
   updatedAtRaw: '2026-10-20T08:00:00Z',
   answered: answered,
@@ -542,6 +547,34 @@ void main() {
       expect(find.text('Trần Thị B'), findsOneWidget);
       expect(find.text('Người dùng #5'), findsNothing);
       expect(find.text('Người dùng #6'), findsOneWidget);
+    });
+
+    for (final (role, visible) in [
+      (UserRole.student, true),
+      (UserRole.lecturer, false),
+    ]) {
+      testWidgets('luyện tập: nguồn câu hỏi ${visible ? 'hiện' : 'ẩn'} với '
+          '${role.name}', (tester) async {
+        getIt.registerSingleton<QuestionBankRepository>(
+          _FakeBank([_practice(1, source: QuestionSource.llm)]),
+        );
+        await tester.pumpWidget(
+          app(const PracticeView(sessionId: 7), role: role),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('AI sinh'), visible ? findsOneWidget : findsNothing);
+      });
+    }
+
+    testWidgets('form: báo cho sinh viên giảng viên không thấy nguồn', (
+      tester,
+    ) async {
+      await tester.pumpWidget(app(const SubmissionFormView()));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Giảng viên không thấy nguồn này'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('luyện tập: chọn, nộp rồi thấy kết quả và lời giải', (

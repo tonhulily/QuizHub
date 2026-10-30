@@ -202,6 +202,9 @@ class _QuestionPage extends StatelessWidget {
     final cubit = context.read<PracticeCubit>();
     final correct = state.correctKeysOf(q);
     final result = state.results[q.questionId];
+    final role = context.select<ProfileCubit, UserRole?>(
+      (c) => c.state.profile?.role,
+    );
 
     return ListView(
       key: ValueKey(q.questionId),
@@ -233,13 +236,9 @@ class _QuestionPage extends StatelessWidget {
                     ),
                   ],
                   const Spacer(),
-                  SourceChip(source: q.source),
+                  if (showsQuestionSource(role)) SourceChip(source: q.source),
                   // Giảng viên sửa câu ngay khi xem (ghi đè câu trong ngân hàng)
-                  if (canApplyAi(
-                    context.select<ProfileCubit, UserRole?>(
-                      (c) => c.state.profile?.role,
-                    ),
-                  ))
+                  if (canApplyAi(role))
                     TextButton.icon(
                       onPressed: () => _aiRefine(context, q),
                       icon: const Icon(AppIcons.bolt, size: 16),

@@ -5,6 +5,7 @@ import '../../../core/design_system/app_icons.dart';
 import '../../../core/design_system/design_tokens.dart';
 import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/fb_widgets.dart';
+import '../../../data/models/auth_session.dart';
 import '../../../data/models/media_item.dart';
 import '../../../data/models/question_models.dart';
 import '../../../data/models/session_models.dart';
@@ -91,6 +92,11 @@ class QuestionStatusChip extends StatelessWidget {
 }
 
 /// Nhãn "AI sinh" cho câu do LLM tạo; câu tự soạn không cần nhãn.
+/// Nguồn câu hỏi (AI sinh / tự soạn) bị ẩn với giảng viên và người kiểm
+/// duyệt, để việc chấm / duyệt không bị ảnh hưởng (yêu cầu "Bẫy Privacy").
+bool showsQuestionSource(UserRole? role) =>
+    role != UserRole.lecturer && role != UserRole.admin;
+
 class SourceChip extends StatelessWidget {
   final QuestionSource source;
   const SourceChip({super.key, required this.source});
