@@ -222,6 +222,13 @@ class AiRefineCubit extends Cubit<AiRefineState> {
     }
   }
 
+  static QuestionOption? _oldOption(QuestionDraft q, String key) {
+    for (final o in q.options) {
+      if (o.key == key) return o;
+    }
+    return null;
+  }
+
   /// Phiên hiện tại, thay câu đang chỉnh bằng bản AI (giữ ảnh, nguồn, độ tự
   /// tin của tác giả).
   SessionDraft _draftWith(AiRefineResult r) {
@@ -233,7 +240,17 @@ class AiRefineCubit extends Cubit<AiRefineState> {
       questionId: old.questionId,
       content: r.content,
       mediaUrls: old.mediaUrls,
-      options: r.options,
+      // AI chỉ trả chữ: giữ ảnh của từng phương án cũ (cùng khoá A, B, ...)
+      options: [
+        for (final o in r.options)
+          QuestionOption(
+            key: o.key,
+            text: o.text,
+            isCorrect: o.isCorrect,
+            mediaUrl: o.mediaUrl ?? _oldOption(old, o.key)?.mediaUrl,
+            mediaId: o.mediaId ?? _oldOption(old, o.key)?.mediaId,
+          ),
+      ],
       explanation: r.explanation,
       source: old.source,
       confidence: old.confidence,
