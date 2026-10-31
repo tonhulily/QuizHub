@@ -387,6 +387,7 @@ class _FormState extends State<_Form> {
                   canRemove: _questions.length > 1,
                   onRemove: () => _removeQuestion(i),
                   onChanged: () {
+                    if (!mounted) return;
                     setState(() {});
                     _edited();
                   },
@@ -524,7 +525,7 @@ class _QuestionCard extends StatelessWidget {
 
   Future<void> _addQuestionImage(BuildContext context) async {
     final r = await pickAndUploadImage(context, purpose: MediaPurpose.question);
-    if (r == null) return;
+    if (r == null || !context.mounted) return;
     editor.mediaUrls.add(r.url);
     onChanged();
   }
@@ -532,7 +533,9 @@ class _QuestionCard extends StatelessWidget {
   Future<void> _setOptionImage(BuildContext context, int i) async {
     final r = await pickAndUploadImage(context, purpose: MediaPurpose.question);
     // Phương án có thể đã bị xoá trong lúc đang upload
-    if (r == null || i >= editor.optionMedia.length) return;
+    if (r == null || !context.mounted || i >= editor.optionMedia.length) {
+      return;
+    }
     editor.optionMedia[i] = r.url;
     onChanged();
   }
