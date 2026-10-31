@@ -96,6 +96,9 @@ class AppIcons {
   static const exam = PhosphorIconsFill.fileText;
   static const bolt = PhosphorIconsFill.lightning;
 
+  /// So sánh hai bản đặt cạnh nhau
+  static const compare = PhosphorIconsRegular.columns;
+
   // ---- Trạng thái ----
   static const success = PhosphorIconsFill.checkCircle;
   static const error = PhosphorIconsFill.warningCircle;
