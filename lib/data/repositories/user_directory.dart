@@ -16,6 +16,8 @@ class UserDirectory {
   Future<ProfileModel?> lookup(int userId) =>
       _cache.putIfAbsent(userId, () => _fetch(userId));
 
+  void clear() => _cache.clear();
+
   Future<ProfileModel?> _fetch(int userId) async {
     try {
       return await _users.getUser(userId);

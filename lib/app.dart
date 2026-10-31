@@ -11,6 +11,7 @@ import 'core/router/app_navigator.dart';
 import 'core/router/app_router.dart';
 import 'core/router/app_routes.dart';
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/user_directory.dart';
 import 'data/repositories/user_repository.dart';
 import 'di/locator.dart';
 import 'features/auth/cubit/auth_cubit.dart';
@@ -41,6 +42,7 @@ class QuizHubApp extends StatelessWidget {
             curr.status == AuthStatus.unauthenticated,
         listener: (context, state) {
           context.read<ProfileCubit>().clear();
+          getIt<UserDirectory>().clear();
           AppNavigator.toLogin();
         },
         child: MaterialApp(
