@@ -267,18 +267,6 @@ class _QuestionBlock extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               DifficultyChip(difficulty: q.difficulty),
-              if (q.topic != null) ...[
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    q.topic!,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ),
-              ],
               const Spacer(),
               if (onAiRefine != null)
                 TextButton.icon(
@@ -288,6 +276,15 @@ class _QuestionBlock extends StatelessWidget {
                 ),
             ],
           ),
+          if (q.topic != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              q.topic!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           QuestionBody(content: q.content, imageUrls: q.imageUrls),
           const SizedBox(height: 12),
