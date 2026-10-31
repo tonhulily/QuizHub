@@ -77,6 +77,7 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
             : PagedState(status: PagedStatus.loaded, items: initialItems),
       );
 
+  int _request = 0;
   /// Tải trang đầu. Nếu đã có dữ liệu (cache) thì không hiện loading toàn màn.
   Future<void> load() async {
     final hasData = state.items.isNotEmpty;
@@ -90,6 +91,11 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
     await _fetchFirst();
   }
 
+  void reset() {
+    _request++;
+    emit(PagedState<T>());
+  }
+
   /// Kéo để làm mới (pull-to-refresh) - giữ dữ liệu cũ khi đang tải.
   Future<void> refresh() async {
     emit(state.copyWith(refreshing: true, clearError: true));
@@ -97,8 +103,10 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
   }
 
   Future<void> _fetchFirst() async {
+    final request = ++_request;
     try {
       final page = await _loader(null);
+      if (isClosed || request != _request) return;
       emit(
         PagedState<T>(
           status: PagedStatus.loaded,
@@ -108,6 +116,7 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
         ),
       );
     } on ApiException catch (e) {
+      if (isClosed || request != _request) return;
       if (e.isNoMoreData) {
         emit(const PagedState(status: PagedStatus.loaded));
       } else if (state.items.isNotEmpty) {
@@ -126,9 +135,11 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
         state.status != PagedStatus.loaded) {
       return;
     }
+    final request = _request;
     emit(state.copyWith(loadingMore: true, clearError: true));
     try {
       final page = await _loader(state.after);
+      if (isClosed || request != _request) return;
       emit(
         state.copyWith(
           items: [...state.items, ...page.items],
@@ -138,6 +149,7 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
         ),
       );
     } on ApiException catch (e) {
+      if (isClosed || request != _request) return;
       emit(
         state.copyWith(
           loadingMore: false,
@@ -150,14 +162,24 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
 
   // ---- Chỉnh sửa danh sách cục bộ (sau khi sửa/xoá/đăng) ----
 
-  void replaceWhere(bool Function(T) test, T newItem) => emit(
-    state.copyWith(items: [for (final i in state.items) test(i) ? newItem : i]),
-  );
+  void replaceWhere(bool Function(T) test, T newItem) {
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        items: [for (final i in state.items) test(i) ? newItem : i],
+      ),
+    );
+  }
 
-  void removeWhere(bool Function(T) test) =>
-      emit(state.copyWith(items: state.items.where((i) => !test(i)).toList()));
+  void removeWhere(bool Function(T) test) {
+    if (isClosed) return;
+    emit(state.copyWith(items: state.items.where((i) => !test(i)).toList()));
+  }
 
-  void insertFirst(T item) => emit(
-    state.copyWith(items: [item, ...state.items], status: PagedStatus.loaded),
-  );
+  void insertFirst(T item) {
+    if (isClosed) return;
+    emit(
+      state.copyWith(items: [item, ...state.items], status: PagedStatus.loaded),
+    );
+  }
 }

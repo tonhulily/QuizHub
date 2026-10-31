@@ -73,8 +73,14 @@ class _QuestionBankTabState extends State<QuestionBankTab> {
       _query = next;
       if (next.isEmpty) _group = SearchGroup.sessions;
     });
-    _sessions.load();
-    if (next.isNotEmpty) _questionHits.load();
+    _sessions
+      ..reset()
+      ..load();
+    if (next.isNotEmpty) {
+      _questionHits
+        ..reset()
+        ..load();
+    }
   }
 
   /// Câu hỏi nằm trong phiên nào thì mở phiên đó, nhảy thẳng tới câu. Backend
@@ -257,16 +263,20 @@ class _Header extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: 'Tìm phiên, câu hỏi theo nội dung, môn học...',
                   prefixIcon: const Icon(AppIcons.search),
-                  suffixIcon: query.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: 'Xoá tìm kiếm',
-                          icon: const Icon(AppIcons.close, size: 18),
-                          onPressed: () {
-                            search.clear();
-                            onSearch('');
-                          },
-                        ),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: search,
+                    builder: (context, value, _) =>
+                        value.text.isEmpty && query.isEmpty
+                        ? const SizedBox.shrink()
+                        : IconButton(
+                            tooltip: 'Xoá tìm kiếm',
+                            icon: const Icon(AppIcons.close, size: 18),
+                            onPressed: () {
+                              search.clear();
+                              onSearch('');
+                            },
+                          ),
+                  ),
                   filled: true,
                   fillColor: AppColors.backgroundSecondary,
                   isDense: true,

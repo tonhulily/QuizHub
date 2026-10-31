@@ -62,7 +62,9 @@ class _MyExamsViewState extends State<MyExamsView> {
   void _filter(int? subjectId) {
     if (subjectId == _subjectId) return;
     setState(() => _subjectId = subjectId);
-    _cubit.load();
+    _cubit
+      ..reset()
+      ..load();
   }
 
   Future<void> _generate() async {
