@@ -309,66 +309,67 @@ class _RatingTileState extends State<_RatingTile> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              FutureBuilder<ProfileModel?>(
-                future: _author,
-                builder: (context, snap) {
-                  final p = snap.data;
-                  // Chưa tải xong hoặc lỗi thì hiện id
-                  final name = p?.fullName.trim().isNotEmpty == true
-                      ? p!.fullName
-                      : 'Người dùng #${item.userId}';
-                  return Flexible(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        UserAvatar(
-                          avatarUrl: p?.avatarUrl,
-                          frameUrl: p?.frameUrl,
-                          name: p?.fullName ?? '',
-                          size: ComponentTokens.avatarSM,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
+          FutureBuilder<ProfileModel?>(
+            future: _author,
+            builder: (context, snap) {
+              final p = snap.data;
+              final name = p?.fullName.trim().isNotEmpty == true
+                  ? p!.fullName
+                  : 'Người dùng #${item.userId}';
+              return Row(
+                children: [
+                  UserAvatar(
+                    avatarUrl: p?.avatarUrl,
+                    frameUrl: p?.frameUrl,
+                    name: p?.fullName ?? '',
+                    size: ComponentTokens.avatarSM,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(width: 8),
-              if (item.isError)
-                const QbankChip(
-                  label: 'Báo lỗi',
-                  icon: AppIcons.flag,
-                  color: AppColors.errorDark,
-                  background: AppColors.errorLight,
-                )
-              else if (level != null)
-                QbankChip(
-                  label: '${level.value} · ${level.label}',
-                  icon: AppIcons.points,
-                  color: AppColors.secondary800,
-                  background: AppColors.secondary100,
-                ),
-              const Spacer(),
-              Text(
-                TimeFormat.ago(item.createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    TimeFormat.ago(item.createdAt),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
+          if (item.isError || level != null) ...[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: ComponentTokens.avatarSM + 8,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: item.isError
+                    ? const QbankChip(
+                        label: 'Báo lỗi',
+                        icon: AppIcons.flag,
+                        color: AppColors.errorDark,
+                        background: AppColors.errorLight,
+                      )
+                    : QbankChip(
+                        label: '${level!.value} · ${level.label}',
+                        icon: AppIcons.points,
+                        color: AppColors.secondary800,
+                        background: AppColors.secondary100,
+                      ),
+              ),
+            ),
+          ],
           if (item.comment != null && item.comment!.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
             Padding(
