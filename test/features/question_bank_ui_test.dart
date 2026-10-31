@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:quizhub/core/config/app_config.dart';
 import 'package:quizhub/core/design_system/app_icons.dart';
 import 'package:quizhub/core/design_system/app_theme.dart';
 import 'package:quizhub/core/network/api_exception.dart';
+import 'package:quizhub/core/storage/local_storage.dart';
 import 'package:quizhub/data/models/cursor_page.dart';
 import 'package:quizhub/data/models/question_models.dart';
 import 'package:quizhub/data/models/session_models.dart';
@@ -21,6 +23,7 @@ import 'package:quizhub/di/locator.dart';
 import 'package:quizhub/data/models/comment_model.dart';
 import 'package:quizhub/data/models/react_result.dart';
 import 'package:quizhub/data/repositories/comment_repository.dart';
+import 'package:quizhub/data/repositories/like_state_store.dart';
 import 'package:quizhub/data/repositories/reaction_repository.dart';
 import 'package:quizhub/features/question_bank/view/submission_detail_view.dart';
 import 'package:quizhub/data/models/auth_session.dart';
@@ -538,11 +541,15 @@ void main() {
   group('màn hình', () {
     late _FakeSubmissions submissions;
 
-    setUp(() {
-      getIt.reset();
+    setUp(() async {
+      await getIt.reset();
       submissions = _FakeSubmissions();
       getIt.registerSingleton<SubmissionRepository>(submissions);
       getIt.registerSingleton<SubjectRepository>(_FakeSubjects());
+      SharedPreferences.setMockInitialValues({});
+      getIt.registerSingleton<LikeStateStore>(
+        LikeStateStore(LocalStorage(await SharedPreferences.getInstance())),
+      );
     });
 
     tearDown(getIt.reset);
@@ -684,6 +691,43 @@ void main() {
       expect(find.text('Chính xác!'), findsOneWidget);
       expect(find.text('Vì A đúng.'), findsOneWidget);
       expect(find.text('Đánh giá'), findsOneWidget);
+    });
+
+    testWidgets('luyện tập: có nút Thích và Bình luận cho từng câu', (
+      tester,
+    ) async {
+      getIt.registerSingleton<ReactionRepository>(_FakeReactions());
+      getIt.registerSingleton<CommentRepository>(_FakeComments());
+      getIt.registerSingleton<QuestionBankRepository>(
+        _FakeBank([_practice(1)]),
+      );
+      await tester.pumpWidget(app(const PracticeView(sessionId: 7)));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Thích'), findsOneWidget);
+      expect(find.text('Bình luận'), findsOneWidget);
+    });
+
+    testWidgets('thích: nhớ trên máy, mở lại màn vẫn hiện đã thích', (
+      tester,
+    ) async {
+      final reactions = _FakeReactions();
+      getIt.registerSingleton<ReactionRepository>(reactions);
+      getIt.registerSingleton<CommentRepository>(_FakeComments());
+      getIt.registerSingleton<QuestionBankRepository>(
+        _FakeBank([_practice(1)]),
+      );
+      await tester.pumpWidget(app(const PracticeView(sessionId: 7)));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(AppIcons.likeFill), findsNothing);
+
+      await tester.tap(find.text('Thích'));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(AppIcons.likeFill), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(app(const PracticeView(sessionId: 7)));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(AppIcons.likeFill), findsOneWidget);
     });
   });
 }

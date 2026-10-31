@@ -10,17 +10,15 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/fb_widgets.dart';
 import '../../../core/widgets/state_views.dart';
-import '../../../data/models/comment_model.dart';
 import '../../../data/models/question_models.dart';
 import '../../../data/models/session_models.dart';
-import '../../../data/repositories/reaction_repository.dart';
 import '../../../data/repositories/submission_repository.dart';
 import '../../../di/locator.dart';
-import '../../../shared/comment/comments_sheet.dart';
 import '../../../shared/widgets/link_text.dart';
 import '../cubit/ai_refine_cubit.dart';
 import '../cubit/load_cubit.dart';
 import '../widgets/qbank_widgets.dart';
+import '../widgets/question_social_bar.dart';
 
 /// Chi tiết một phiên CỦA TÔI: mọi câu kèm đáp án đúng, độ tự tin, người
 /// duyệt. Sửa / xoá chỉ khi phiên còn chờ duyệt.
@@ -325,134 +323,14 @@ class _QuestionBlock extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          _QuestionSocialBar(question: q),
+          QuestionSocialBar(
+            questionId: q.questionId,
+            reactCount: q.reactCount,
+            commentCount: q.commentCount,
+            reactedByMe: q.reactedByMe,
+          ),
         ],
       ),
-    );
-  }
-}
-
-/// Thích / Bình luận một câu hỏi (giống bài viết): số đếm lấy từ API, bình
-/// luận mở khung bình luận dùng chung của bài viết.
-class _QuestionSocialBar extends StatefulWidget {
-  final SubmissionQuestion question;
-  const _QuestionSocialBar({required this.question});
-
-  @override
-  State<_QuestionSocialBar> createState() => _QuestionSocialBarState();
-}
-
-class _QuestionSocialBarState extends State<_QuestionSocialBar> {
-  late bool _reacted = widget.question.reactedByMe;
-  late int _reacts = widget.question.reactCount;
-  late int _comments = widget.question.commentCount;
-  bool _likeBusy = false;
-
-  @override
-  void didUpdateWidget(covariant _QuestionSocialBar old) {
-    super.didUpdateWidget(old);
-    // Tải lại phiên (kéo để làm mới / sau khi sửa) thì lấy số mới
-    if (old.question != widget.question) {
-      _reacted = widget.question.reactedByMe;
-      _reacts = widget.question.reactCount;
-      _comments = widget.question.commentCount;
-    }
-  }
-
-  Future<void> _toggleLike() async {
-    if (_likeBusy) return;
-    _likeBusy = true;
-    final (wasReacted, wasCount) = (_reacted, _reacts);
-    // Đổi ngay trên màn hình, có kết quả thì lấy số của server
-    setState(() {
-      _reacted = !wasReacted;
-      _reacts = (wasCount + (_reacted ? 1 : -1)).clamp(0, 1 << 30);
-    });
-    try {
-      final r = await getIt<ReactionRepository>().toggleLike(
-        targetType: TargetType.question,
-        targetId: widget.question.questionId,
-      );
-      if (!mounted) return;
-      setState(() {
-        _reacted = r.reacted;
-        _reacts = r.totalCount;
-      });
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _reacted = wasReacted;
-        _reacts = wasCount;
-      });
-      AppFeedback.error(context, e);
-    } finally {
-      _likeBusy = false;
-    }
-  }
-
-  void _openComments() => showCommentsSheet(
-    context,
-    targetType: TargetType.question,
-    targetId: widget.question.questionId,
-    onCountChanged: (delta) {
-      if (mounted) {
-        setState(() => _comments = (_comments + delta).clamp(0, 1 << 30));
-      }
-    },
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final muted = theme.textTheme.bodySmall?.copyWith(
-      color: AppColors.textSecondary,
-    );
-    Widget action(IconData icon, String label, Color color, VoidCallback f) =>
-        Expanded(
-          child: TextButton.icon(
-            onPressed: f,
-            style: TextButton.styleFrom(foregroundColor: color),
-            icon: Icon(icon, size: 20),
-            label: Text(label),
-          ),
-        );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_reacts > 0 || _comments > 0) ...[
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              if (_reacts > 0) Text('$_reacts lượt thích', style: muted),
-              const Spacer(),
-              if (_comments > 0)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _openComments,
-                  child: Text('$_comments bình luận', style: muted),
-                ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 4),
-        const Divider(height: 1),
-        Row(
-          children: [
-            action(
-              _reacted ? AppIcons.likeFill : AppIcons.like,
-              'Thích',
-              _reacted ? AppColors.like : AppColors.textSecondary,
-              _toggleLike,
-            ),
-            action(
-              AppIcons.comment,
-              'Bình luận',
-              AppColors.textSecondary,
-              _openComments,
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

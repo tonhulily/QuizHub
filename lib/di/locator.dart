@@ -18,6 +18,7 @@ import '../data/repositories/feed_repository.dart';
 import '../data/repositories/friend_repository.dart';
 import '../data/repositories/media_repository.dart';
 import '../data/repositories/post_repository.dart';
+import '../data/repositories/like_state_store.dart';
 import '../data/repositories/question_bank_repository.dart';
 import '../data/repositories/reaction_repository.dart';
 import '../data/repositories/report_repository.dart';
@@ -125,5 +126,8 @@ Future<void> setupLocator({
   );
   getIt.registerLazySingleton<UserDirectory>(
     () => UserDirectory(getIt<UserRepository>()),
+  );
+  getIt.registerLazySingleton<LikeStateStore>(
+    () => LikeStateStore(getIt<LocalStorage>()),
   );
 }

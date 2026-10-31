@@ -18,6 +18,7 @@ import '../cubit/ai_refine_cubit.dart';
 import '../cubit/load_cubit.dart';
 import '../cubit/practice_cubit.dart';
 import '../widgets/qbank_widgets.dart';
+import '../widgets/question_social_bar.dart';
 import '../widgets/rating_sheet.dart';
 
 /// Luyện tập một phiên: từng câu một, nộp xong thấy ngay đúng / sai và lời
@@ -257,6 +258,11 @@ class _QuestionPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
               ],
+              QuestionSocialBar(
+                questionId: q.questionId,
+                reactCount: q.reactCount,
+                commentCount: q.commentCount,
+              ),
             ],
           ),
         ),
@@ -370,7 +376,7 @@ class _ActionBar extends StatelessWidget {
                   ),
                   Expanded(
                     child: AppButton(
-                      label: q.rated ? 'Đã đánh giá' : 'Đánh giá',
+                      label: q.rated ? 'Đã chấm' : 'Đánh giá',
                       icon: AppIcons.points,
                       small: true,
                       variant: AppButtonVariant.outline,
