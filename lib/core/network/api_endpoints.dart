@@ -76,12 +76,20 @@ class ApiEndpoints {
   static String questionRate(int id) => '/questions/$id/rate';
   static String questionRatings(int id) => '/questions/$id/ratings';
   static String questionStatistics(int id) => '/questions/$id/statistics';
+  static String mySubmission(int id) => '/sessions/my-submissions/$id';
+
+  // ---- 16. Course classes (giảng viên) ----
+  static const String lecturerMyClasses = '/lecturer/course-classes/my-classes';
 
   // ---- 20. Exams ----
   static const String examGenerate = '/exams/generate';
   static const String myExams = '/exams/my-exams';
   static String exam(int id) => '/exams/$id';
   static String examExport(int id) => '/exams/$id/export';
+
+  // ---- 24. AI ----
+  static String questionAiRefine(int id) => '/questions/$id/ai-refine';
+  static String questionAiApply(int id) => '/questions/$id/ai-apply';
 
   // ---- 21. Gamification ----
   static const String leaderboard = '/games/leaderboard';

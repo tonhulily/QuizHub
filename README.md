@@ -15,7 +15,8 @@ flutter run -d <id>          # id lấy từ: flutter devices
 ```
 Chưa có tài khoản thì chạy bản **xem trước** (dữ liệu mẫu, đã đăng nhập sẵn, mọi thao tác chỉ nằm
 trong RAM): `flutter run -d <id> -t lib/main_preview.dart`. Thêm dữ liệu mẫu cho API mới trong hàm
-`_route` của `lib/dev/preview_backend.dart`.
+`_route` của `lib/dev/preview_backend.dart`. Thử nhánh của giảng viên (Đề thi, áp dụng AI): thêm
+`--dart-define=PREVIEW_ROLE=LECTURER`.
 
 | Việc | Lệnh |
 |---|---|
@@ -33,9 +34,10 @@ trước khi dùng app.
 | Xong | Chưa làm |
 |---|---|
 | Đăng nhập (có lưu tài khoản), refresh token, đổi mật khẩu | Chat (WebSocket), Thông báo, Push (FCM) |
-| Hồ sơ: xem, sửa, ảnh, gỡ ảnh, trang Giới thiệu | Môn học, phiên đề xuất / câu hỏi / đánh giá, đề thi |
+| Hồ sơ: xem, sửa, ảnh, gỡ ảnh, trang Giới thiệu | Giảng viên duyệt phiên (approve / reject) |
 | Bài viết: bảng tin, đăng, xoá, ảnh; bình luận; Like | Gamification, huy hiệu, cosmetics (mới chỉ hiển thị) |
 | Bạn bè, theo dõi, chặn, báo cáo, tìm kiếm người dùng | Sửa / chia sẻ bài viết, video, tìm bài và câu hỏi |
+| Ngân hàng đề: đề xuất phiên (có ảnh), luyện tập, đánh giá, thống kê, AI tinh chỉnh; đề thi (giảng viên): sinh đề, xem, xuất PDF / Excel. Xem `docs/qbank/API_CONTRACT.md` | |
 
 Nút đã có giao diện nhưng chưa có chức năng gọi `showComingSoon(context, 'Tên')`; làm xong thì thay
 bằng điều hướng thật. Endpoint của mọi module đã khai báo sẵn trong `lib/core/network/api_endpoints.dart`.

@@ -29,6 +29,7 @@ class Validators {
     if (v.isEmpty || v.contains('@')) return v;
     return '$v$schoolEmailDomain';
   }
+
   static String? email(String? value) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return msgEmailRequired;

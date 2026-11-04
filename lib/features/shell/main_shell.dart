@@ -6,6 +6,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/widgets/fb_widgets.dart';
 import '../home/home_tab.dart';
 import '../menu/menu_tab.dart';
+import '../question_bank/view/question_bank_tab.dart';
 import '../friends/view/friends_tab.dart';
 import 'placeholder_tab.dart';
 import '../../core/design_system/app_icons.dart';
@@ -61,10 +62,7 @@ class MainShell extends StatefulWidget {
       title: 'Ngân hàng đề',
       icon: AppIcons.quiz,
       activeIcon: AppIcons.quizActive,
-      builder: (_) => const PlaceholderTab(
-        icon: AppIcons.quizActive,
-        message: 'Đề xuất, làm và đánh giá câu hỏi sẽ có ở đây.',
-      ),
+      builder: (_) => const QuestionBankTab(),
     ),
     ShellTab(
       label: 'Thông báo',

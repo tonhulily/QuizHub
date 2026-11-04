@@ -10,14 +10,21 @@ import '../core/services/social_events.dart';
 import '../core/storage/credential_storage.dart';
 import '../core/storage/local_storage.dart';
 import '../core/storage/token_storage.dart';
+import '../data/repositories/ai_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/comment_repository.dart';
+import '../data/repositories/exam_repository.dart';
 import '../data/repositories/feed_repository.dart';
 import '../data/repositories/friend_repository.dart';
 import '../data/repositories/media_repository.dart';
 import '../data/repositories/post_repository.dart';
+import '../data/repositories/like_state_store.dart';
+import '../data/repositories/question_bank_repository.dart';
 import '../data/repositories/reaction_repository.dart';
 import '../data/repositories/report_repository.dart';
+import '../data/repositories/subject_repository.dart';
+import '../data/repositories/user_directory.dart';
+import '../data/repositories/submission_repository.dart';
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/user_search_repository.dart';
 
@@ -99,5 +106,28 @@ Future<void> setupLocator({
   );
   getIt.registerLazySingleton<FeedRepository>(
     () => FeedRepository(getIt<ApiClient>(), getIt<LocalStorage>()),
+  );
+
+  // ---- Ngân hàng câu hỏi + Đề thi + AI (docs/qbank/API_CONTRACT.md) ----
+  getIt.registerLazySingleton<SubjectRepository>(
+    () => SubjectRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<SubmissionRepository>(
+    () => SubmissionRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<QuestionBankRepository>(
+    () => QuestionBankRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ExamRepository>(
+    () => ExamRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<AiRepository>(
+    () => AiRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<UserDirectory>(
+    () => UserDirectory(getIt<UserRepository>()),
+  );
+  getIt.registerLazySingleton<LikeStateStore>(
+    () => LikeStateStore(getIt<LocalStorage>()),
   );
 }

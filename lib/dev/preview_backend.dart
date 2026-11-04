@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../core/storage/token_storage.dart';
+import 'preview_qbank.dart';
 
 /// Token giả để vào thẳng app mà không cần đăng nhập (chỉ dùng cho preview).
 class PreviewTokens extends TokenStorage {
@@ -39,6 +40,13 @@ class PreviewTokens extends TokenStorage {
 ///
 /// Chỉ phục vụ giao diện: dữ liệu nằm trong RAM, mất khi thoát app.
 class PreviewBackend implements HttpClientAdapter {
+  /// Vai trò người dùng mẫu. Thử nhánh của giảng viên (Đề thi...):
+  /// `flutter run -t lib/main_preview.dart --dart-define=PREVIEW_ROLE=LECTURER`
+  static const _role = String.fromEnvironment(
+    'PREVIEW_ROLE',
+    defaultValue: 'STUDENT',
+  );
+
   static const _me = {
     'user_id': 1,
     'email': 'an.nv210001@sis.hust.edu.vn',
@@ -50,7 +58,7 @@ class PreviewBackend implements HttpClientAdapter {
     'major': 'Khoa học máy tính',
     'class_name': 'KHMT 02 - K66',
     'student_lecturer_code': '20210001',
-    'role': 'STUDENT',
+    'role': _role,
     'profile_completed': true,
     'verified': true,
     'total_proposed_questions': 12,
@@ -116,6 +124,9 @@ class PreviewBackend implements HttpClientAdapter {
   final Map<int, Map<String, dynamic>> _posts = {};
   final Map<String, bool> _liked = {};
   int _nextId = 100;
+
+  /// Module Ngân hàng câu hỏi + Đề thi + AI (dữ liệu mẫu riêng).
+  final PreviewQbank _qbank = PreviewQbank();
 
   PreviewBackend() {
     String ago(int minutes) => DateTime.now()
@@ -204,12 +215,15 @@ class PreviewBackend implements HttpClientAdapter {
       'pagination': {'after': null, 'has_next': false},
     };
 
+    final qbank = _qbank.route(m, path, q, body);
+    if (!identical(qbank, PreviewQbank.unhandled)) return qbank;
+
     if (path == '/auth/login' && m == 'POST') {
       // Chấp nhận mọi tài khoản trong bản xem trước (để thử luồng đăng nhập nhanh)
       return {
         'user_id': 1,
         'username': 'Nguyễn Văn An',
-        'role': 'STUDENT',
+        'role': _role,
         'access_token': 'preview-access',
         'refresh_token': 'preview-refresh',
         'avatar_url': _me['avatar_url'],
