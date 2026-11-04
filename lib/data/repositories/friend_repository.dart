@@ -48,14 +48,49 @@ class FriendRepository {
     parser: (d) => CursorPage.fromJson(d, FriendRequestModel.fromSentJson),
   );
 
+  /// `GET /follows/followers` - danh sách người theo dõi tài khoản hiện tại.
+  Future<CursorPage<RelationshipUserModel>> followers({
+    String? after,
+    int limit = AppConfig.defaultPageSize,
+  }) => _api.get<CursorPage<RelationshipUserModel>>(
+    ApiEndpoints.followers,
+    query: {'after': after, 'limit': limit},
+    parser: (d) => CursorPage.fromJson(d, RelationshipUserModel.fromJson),
+  );
+
+  /// `GET /follows/following` - danh sách tài khoản hiện tại đang theo dõi.
+  Future<CursorPage<RelationshipUserModel>> following({
+    String? after,
+    int limit = AppConfig.defaultPageSize,
+  }) => _api.get<CursorPage<RelationshipUserModel>>(
+    ApiEndpoints.following,
+    query: {'after': after, 'limit': limit},
+    parser: (d) => CursorPage.fromJson(d, RelationshipUserModel.fromJson),
+  );
+
+  /// `GET /blocks` - danh sách tài khoản đã chặn.
+  Future<CursorPage<RelationshipUserModel>> blockedUsers({
+    String? after,
+    int limit = AppConfig.defaultPageSize,
+  }) => _api.get<CursorPage<RelationshipUserModel>>(
+    ApiEndpoints.blocks,
+    query: {'after': after, 'limit': limit},
+    parser: (d) => CursorPage.fromJson(d, RelationshipUserModel.fromJson),
+  );
+
   /// `GET /blocks` - chỉ lấy id (dùng để loại khỏi gợi ý).
   Future<Set<int>> blockedIds({int limit = 50}) => _api.get<Set<int>>(
     ApiEndpoints.blocks,
     query: {'limit': limit},
-    parser: (d) => {
-      for (final raw in J.asList(J.asMap(d)?['items']))
-        if (J.asMap(raw) case final m?) J.intOr(m['user_id']),
-    },
+    parser: (d) => J
+        .asList(J.asMap(d)?['items'])
+        .map(
+          (raw) => RelationshipUserModel.fromJson(
+            J.asMap(raw) ?? const <String, dynamic>{},
+          ).userId,
+        )
+        .where((userId) => userId > 0)
+        .toSet(),
   );
 
   // ---------------- Hành động ----------------

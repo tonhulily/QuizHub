@@ -16,6 +16,9 @@ class AppRoutes {
 
   // Bạn bè / tìm kiếm
   static const searchUsers = '/search/users';
+  static const followers = '/relationships/followers';
+  static const following = '/relationships/following';
+  static const blockedUsers = '/relationships/blocked';
 
   // Ngân hàng câu hỏi
   static const qbankMySubmissions = '/qbank/my-submissions';

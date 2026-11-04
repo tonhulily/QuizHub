@@ -82,6 +82,11 @@ class _MyProfileViewState extends State<MyProfileView> {
     }
   }
 
+  Future<void> _openRelationshipList(String route) async {
+    await Navigator.of(context).pushNamed(route);
+    if (mounted) await context.read<ProfileCubit>().load(silent: true);
+  }
+
   void _openMenu() {
     showModalBottomSheet<void>(
       context: context,
@@ -103,6 +108,14 @@ class _MyProfileViewState extends State<MyProfileView> {
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.pushNamed(context, AppRoutes.changePassword);
+              },
+            ),
+            ListTile(
+              leading: const Icon(AppIcons.lock),
+              title: const Text('Người đã chặn'),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.pushNamed(context, AppRoutes.blockedUsers);
               },
             ),
             const Divider(indent: 16, endIndent: 16),
@@ -146,6 +159,10 @@ class _MyProfileViewState extends State<MyProfileView> {
 
               final header = ProfileHeader(
                 profile: profile,
+                onTapFollowers: () =>
+                    _openRelationshipList(AppRoutes.followers),
+                onTapFollowing: () =>
+                    _openRelationshipList(AppRoutes.following),
                 topLeft: !widget.showBackButton
                     ? null
                     : OverlayButton(

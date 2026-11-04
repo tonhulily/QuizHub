@@ -358,11 +358,38 @@ class PreviewBackend implements HttpClientAdapter {
       if (m == 'DELETE') _following.remove(id);
       return null;
     }
+    if (path == '/follows/following' && m == 'GET') {
+      return page([
+        for (final id in _following)
+          {
+            'user_id': id,
+            'full_name': _person(id)['full_name'],
+            'avatar_url': _person(id)['avatar_url'],
+            'avatar_frame_url': _person(id)['avatar_frame_url'],
+          },
+      ]);
+    }
+    if (path == '/follows/followers' && m == 'GET') {
+      return page([
+        for (final id in [2, 4, 5])
+          {
+            'user_id': id,
+            'full_name': _person(id)['full_name'],
+            'avatar_url': _person(id)['avatar_url'],
+            'avatar_frame_url': _person(id)['avatar_frame_url'],
+          },
+      ]);
+    }
     if (path == '/blocks' && m == 'GET') {
       return {
         ...page([
           for (final id in _blocked)
-            {'user_id': id, 'full_name': _person(id)['full_name']},
+            {
+              'user_id': id,
+              'full_name': _person(id)['full_name'],
+              'avatar_url': _person(id)['avatar_url'],
+              'avatar_frame_url': _person(id)['avatar_frame_url'],
+            },
         ]),
         'total_blocked': _blocked.length,
       };
