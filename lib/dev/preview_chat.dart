@@ -1,5 +1,11 @@
+import 'dart:async';
+import '../core/services/chat_realtime.dart';
+import '../core/network/api_exception.dart';
+import '../data/models/chat_models.dart';
+
 /// Dữ liệu chat trong RAM cho bản xem trước; không gọi backend thật.
 class PreviewChat {
+  late final realtime = PreviewChatRealtime(this);
   static const unhandled = Object();
   final Map<String, dynamic> Function(int) person;
   final Map<String, dynamic> me;
@@ -40,6 +46,28 @@ class PreviewChat {
   }
 
   Map<String, dynamic> _member(int id) => id == 1 ? me : person(id);
+
+  ChatMessage append(
+    int conversationId,
+    int senderId,
+    String content,
+    String type,
+    List<String> mediaUrls,
+  ) {
+    final message = <String, dynamic>{
+      'message_id': nextMessageId++,
+      'conversation_id': conversationId,
+      'sender_id': senderId,
+      'sender_name': _member(senderId)['full_name'],
+      'content': content,
+      'message_type': type,
+      'media_urls': mediaUrls,
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    };
+    messages.putIfAbsent(conversationId, () => []).add(message);
+    return ChatMessage.fromJson(message);
+  }
+
   Map<String, dynamic> _page(
     List<Map<String, dynamic>> all,
     Map<String, dynamic> query, {
@@ -126,5 +154,149 @@ class PreviewChat {
       return {'message_id': id, 'scope': body['scope']};
     }
     return unhandled;
+  }
+}
+
+class PreviewChatRealtime implements ChatRealtime {
+  final PreviewChat backend;
+  final _events = StreamController<ChatEvent>.broadcast(sync: true);
+  final _connections = StreamController<ChatConnection>.broadcast(sync: true);
+  final _timers = <Timer>[];
+  int _clients = 0;
+  ChatConnection _connection = ChatConnection.disconnected;
+  PreviewChatRealtime(this.backend);
+  @override
+  ChatConnection get connection => _connection;
+  @override
+  Stream<ChatEvent> get events => _events.stream;
+  @override
+  Stream<ChatConnection> get connections => _connections.stream;
+  void _set(ChatConnection value) {
+    _connection = value;
+    _connections.add(value);
+  }
+
+  @override
+  Future<void> acquire() async {
+    _clients++;
+    _set(ChatConnection.connected);
+  }
+
+  @override
+  void release() {
+    if (_clients > 0) _clients--;
+    if (_clients == 0) pause();
+  }
+
+  @override
+  void pause() {
+    for (final timer in _timers) {
+      timer.cancel();
+    }
+    _timers.clear();
+    _set(ChatConnection.disconnected);
+  }
+
+  @override
+  Future<void> resume() async {
+    if (_clients > 0) _set(ChatConnection.connected);
+  }
+
+  @override
+  Future<void> reconnect() => resume();
+  @override
+  void disconnect() {
+    _clients = 0;
+    pause();
+  }
+
+  @override
+  void send({
+    required int conversationId,
+    required String content,
+    String messageType = 'TEXT',
+    List<String> mediaUrls = const [],
+  }) {
+    if (connection != ChatConnection.connected) {
+      throw const ApiException(
+        type: ApiErrorType.noConnection,
+        message: 'Chưa kết nối tin nhắn.',
+      );
+    }
+    final peer = backend.peers[conversationId]!;
+    if (backend.isBlocked(peer)) {
+      throw const ApiException(
+        type: ApiErrorType.forbidden,
+        code: 'USER_BLOCKED',
+        message: 'Bạn đã chặn người này.',
+      );
+    }
+    final message = backend.append(
+      conversationId,
+      1,
+      content,
+      messageType,
+      mediaUrls,
+    );
+    _events.add(
+      ChatEvent(
+        ChatEventKind.message,
+        conversationId: conversationId,
+        message: message,
+      ),
+    );
+    _timers.add(
+      Timer(const Duration(milliseconds: 500), () {
+        if (backend.isBlocked(peer)) return;
+        _events.add(
+          ChatEvent(
+            ChatEventKind.typing,
+            conversationId: conversationId,
+            userId: peer,
+            isTyping: true,
+          ),
+        );
+      }),
+    );
+    _timers.add(
+      Timer(const Duration(milliseconds: 1200), () {
+        if (backend.isBlocked(peer)) return;
+        final reply = backend.append(
+          conversationId,
+          peer,
+          'Mình nhận được rồi nhé!',
+          'TEXT',
+          [],
+        );
+        _events.add(
+          ChatEvent(
+            ChatEventKind.message,
+            conversationId: conversationId,
+            message: reply,
+          ),
+        );
+        _events.add(
+          ChatEvent(
+            ChatEventKind.read,
+            conversationId: conversationId,
+            userId: peer,
+            readMessageId: message.messageId,
+          ),
+        );
+      }),
+    );
+  }
+
+  @override
+  void read(int conversationId, int messageId) {}
+  @override
+  void typing(int conversationId, bool value) {}
+  @override
+  void Function() watchTyping(int conversationId) => () {};
+  @override
+  Future<void> dispose() async {
+    disconnect();
+    await _events.close();
+    await _connections.close();
   }
 }

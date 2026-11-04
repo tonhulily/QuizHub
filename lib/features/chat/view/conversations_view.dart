@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +6,8 @@ import '../../../core/bloc/paged_cubit.dart';
 import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_icons.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/services/chat_realtime.dart';
+import '../widgets/connection_banner.dart';
 import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/state_views.dart';
@@ -19,13 +22,57 @@ class ConversationsView extends StatefulWidget {
   State<ConversationsView> createState() => _ConversationsViewState();
 }
 
-class _ConversationsViewState extends State<ConversationsView> {
+class _ConversationsViewState extends State<ConversationsView>
+    with WidgetsBindingObserver {
+  late final _live = getIt<ChatRealtime>();
+  final _subscriptions = <StreamSubscription<dynamic>>[];
+  Timer? _refresh;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _subscriptions.add(
+      _live.events.listen((event) {
+        if (event.kind == ChatEventKind.typing) return;
+        _refresh?.cancel();
+        _refresh = Timer(const Duration(milliseconds: 250), () {
+          if (mounted) _conversations.refresh();
+        });
+      }),
+    );
+    _subscriptions.add(
+      _live.connections.listen((connection) {
+        if (!mounted) return;
+        setState(() {});
+        if (connection == ChatConnection.connected) _conversations.refresh();
+      }),
+    );
+    _live.acquire();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _live.resume();
+      _conversations.refresh();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _live.pause();
+    }
+  }
+
   late final _conversations = PagedCubit<ChatConversation>(
     (after) => getIt<ChatRepository>().conversations(after: after),
   )..load();
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _refresh?.cancel();
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _live.release();
     _conversations.close();
     super.dispose();
   }
@@ -54,71 +101,82 @@ class _ConversationsViewState extends State<ConversationsView> {
           ),
         ],
       ),
-      body: PagedListView<ChatConversation>(
-        padding: EdgeInsets.zero,
-        itemSpacing: 0,
-        emptyView: EmptyView(
-          icon: AppIcons.messenger,
-          title: 'Chưa có cuộc trò chuyện',
-          message: 'Mở hồ sơ một người và chọn Nhắn tin.',
-          action: TextButton(
-            onPressed: _search,
-            child: const Text('Tìm người để nhắn tin'),
+      body: Column(
+        children: [
+          ChatConnectionBanner(
+            connection: _live.connection,
+            onRetry: () => _live.reconnect(),
           ),
-        ),
-        itemBuilder: (context, conversation) => ListTile(
-          key: ValueKey('conversation_${conversation.conversationId}'),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
-          leading: UserAvatar(
-            name: conversation.title,
-            avatarUrl: conversation.avatarUrl,
-            size: 52,
-          ),
-          title: Text(
-            conversation.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: conversation.unreadCount > 0
-                  ? FontWeight.w700
-                  : FontWeight.w500,
-            ),
-          ),
-          subtitle: Text(
-            conversation.lastMessage?.preview ?? 'Bắt đầu cuộc trò chuyện',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                TimeFormat.ago(conversation.updatedAt),
-                style: Theme.of(context).textTheme.labelSmall,
+          Expanded(
+            child: PagedListView<ChatConversation>(
+              padding: EdgeInsets.zero,
+              itemSpacing: 0,
+              emptyView: EmptyView(
+                icon: AppIcons.messenger,
+                title: 'Chưa có cuộc trò chuyện',
+                message: 'Mở hồ sơ một người và chọn Nhắn tin.',
+                action: TextButton(
+                  onPressed: _search,
+                  child: const Text('Tìm người để nhắn tin'),
+                ),
               ),
-              if (conversation.unreadCount > 0)
-                Container(
-                  margin: const EdgeInsets.only(top: 5),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary600,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${conversation.unreadCount}',
-                    style: const TextStyle(color: AppColors.white),
+              itemBuilder: (context, conversation) => ListTile(
+                key: ValueKey('conversation_${conversation.conversationId}'),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                leading: UserAvatar(
+                  name: conversation.title,
+                  avatarUrl: conversation.avatarUrl,
+                  size: 52,
+                ),
+                title: Text(
+                  conversation.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: conversation.unreadCount > 0
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                   ),
                 ),
-            ],
+                subtitle: Text(
+                  conversation.lastMessage?.preview ??
+                      'Bắt đầu cuộc trò chuyện',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      TimeFormat.ago(conversation.updatedAt),
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    if (conversation.unreadCount > 0)
+                      Container(
+                        margin: const EdgeInsets.only(top: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary600,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${conversation.unreadCount}',
+                          style: const TextStyle(color: AppColors.white),
+                        ),
+                      ),
+                  ],
+                ),
+                onTap: () => _open(conversation),
+              ),
+            ),
           ),
-          onTap: () => _open(conversation),
-        ),
+        ],
       ),
     ),
   );

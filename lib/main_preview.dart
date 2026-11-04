@@ -20,9 +20,11 @@ import 'di/locator.dart';
 /// trong RAM. Bản chạy thật vẫn là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final backend = PreviewBackend();
   await setupLocator(
     tokenStorage: PreviewTokens(),
-    httpAdapter: PreviewBackend(),
+    httpAdapter: backend,
+    chatRealtime: backend.chat.realtime,
   );
   AppFeedback.configureLoading();
 

@@ -7,6 +7,7 @@ import '../core/network/session_events.dart';
 import '../core/services/device_service.dart';
 import '../core/services/post_events.dart';
 import '../core/services/social_events.dart';
+import '../core/services/chat_realtime.dart';
 import '../core/storage/credential_storage.dart';
 import '../core/storage/local_storage.dart';
 import '../core/storage/token_storage.dart';
@@ -39,6 +40,7 @@ Future<void> setupLocator({
   TokenStorage? tokenStorage,
   CredentialStorage? credentialStorage,
   HttpClientAdapter? httpAdapter,
+  ChatRealtime? chatRealtime,
 }) async {
   // ---- Storage ----
   final prefs = await SharedPreferences.getInstance();
@@ -68,6 +70,16 @@ Future<void> setupLocator({
   );
 
   // ---- Repositories ----
+  getIt.registerLazySingleton<ChatRealtime>(
+    () =>
+        chatRealtime ??
+        StompChatRealtime(
+          getIt<ApiClient>(),
+          getIt<TokenStorage>(),
+          getIt<SessionEvents>(),
+        ),
+    dispose: (value) => value.dispose(),
+  );
   getIt.registerLazySingleton<ChatRepository>(
     () => ChatRepository(getIt<ApiClient>()),
   );
