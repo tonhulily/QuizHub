@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 
 import '../core/storage/token_storage.dart';
 import 'preview_qbank.dart';
+import 'preview_chat.dart';
 
 /// Token giả để vào thẳng app mà không cần đăng nhập (chỉ dùng cho preview).
 class PreviewTokens extends TokenStorage {
@@ -127,6 +128,11 @@ class PreviewBackend implements HttpClientAdapter {
 
   /// Module Ngân hàng câu hỏi + Đề thi + AI (dữ liệu mẫu riêng).
   final PreviewQbank _qbank = PreviewQbank();
+  late final PreviewChat chat = PreviewChat(
+    person: _person,
+    me: _me,
+    isBlocked: _blocked.contains,
+  );
 
   PreviewBackend() {
     String ago(int minutes) => DateTime.now()
@@ -208,7 +214,9 @@ class PreviewBackend implements HttpClientAdapter {
     final path = o.path;
     final q = o.queryParameters;
     final m = o.method;
-    final body = o.data is Map ? Map<String, dynamic>.from(o.data as Map) : {};
+    final body = o.data is Map
+        ? Map<String, dynamic>.from(o.data as Map)
+        : <String, dynamic>{};
 
     Map<String, dynamic> page(List<dynamic> items) => {
       'items': items,
@@ -217,6 +225,8 @@ class PreviewBackend implements HttpClientAdapter {
 
     final qbank = _qbank.route(m, path, q, body);
     if (!identical(qbank, PreviewQbank.unhandled)) return qbank;
+    final chatResult = chat.route(m, path, q, body);
+    if (!identical(chatResult, PreviewChat.unhandled)) return chatResult;
 
     if (path == '/auth/login' && m == 'POST') {
       // Chấp nhận mọi tài khoản trong bản xem trước (để thử luồng đăng nhập nhanh)

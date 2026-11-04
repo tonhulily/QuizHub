@@ -219,7 +219,8 @@ class _Header extends StatelessWidget {
           HeaderIconButton(
             icon: AppIcons.messenger,
             tooltip: 'Tin nhắn',
-            onTap: () => showComingSoon(context, 'Tin nhắn'),
+            onTap: () =>
+                Navigator.of(context).pushNamed(AppRoutes.conversations),
           ),
         ],
       ),

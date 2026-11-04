@@ -12,6 +12,7 @@ import '../core/storage/local_storage.dart';
 import '../core/storage/token_storage.dart';
 import '../data/repositories/ai_repository.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/chat_repository.dart';
 import '../data/repositories/comment_repository.dart';
 import '../data/repositories/exam_repository.dart';
 import '../data/repositories/feed_repository.dart';
@@ -67,6 +68,9 @@ Future<void> setupLocator({
   );
 
   // ---- Repositories ----
+  getIt.registerLazySingleton<ChatRepository>(
+    () => ChatRepository(getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(
       getIt<ApiClient>(),

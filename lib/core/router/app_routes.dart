@@ -20,6 +20,9 @@ class AppRoutes {
   static const following = '/relationships/following';
   static const blockedUsers = '/relationships/blocked';
 
+  static const conversations = '/chat';
+  static const chatDetail = '/chat/detail'; // arguments: ChatTarget
+
   // Ngân hàng câu hỏi
   static const qbankMySubmissions = '/qbank/my-submissions';
   // arguments: int sessionId, hoặc ({int id, SessionStatus status})

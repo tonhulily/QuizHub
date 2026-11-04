@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../data/models/chat_models.dart';
+import '../../features/chat/view/conversations_view.dart';
+import '../../features/chat/view/chat_detail_view.dart';
 
 import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
@@ -62,6 +65,12 @@ class AppRouter {
             : _NotFoundView(name: settings.name);
       case AppRoutes.searchUsers:
         page = const SearchUsersView();
+      case AppRoutes.conversations:
+        page = const ConversationsView();
+      case AppRoutes.chatDetail:
+        page = args is ChatTarget
+            ? ChatDetailView(target: args)
+            : _NotFoundView(name: settings.name);
       case AppRoutes.followers:
         page = const RelationshipUsersView(
           kind: RelationshipListKind.followers,
