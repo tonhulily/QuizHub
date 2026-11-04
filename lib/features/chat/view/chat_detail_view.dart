@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_icons.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/services/chat_realtime.dart';
+import '../../../core/services/social_events.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -35,6 +37,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
     target: widget.target,
     myId: _myId,
     realtime: getIt<ChatRealtime>(),
+    socialEvents: getIt<SocialEvents>(),
   )..load();
   final _scroll = ScrollController();
   final _draft = TextEditingController();
@@ -119,6 +122,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
       _draft.text,
       messageType: _attachment == null ? 'TEXT' : 'IMAGE',
       mediaUrls: _attachment == null ? const [] : [_attachment!.url],
+      allowRetry: _chat.state.unconfirmed,
     );
     if (!mounted) return;
     if (error != null) {
@@ -140,6 +144,8 @@ class _ChatDetailViewState extends State<ChatDetailView>
     final ready =
         state.connection == ChatConnection.connected &&
         !state.sending &&
+        !state.sendRestricted &&
+        !state.checkingAccess &&
         !_uploading;
     return SafeArea(
       top: false,
@@ -154,7 +160,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
               onTap: () => MediaViewer.open(context, [_attachment!]),
               trailing: IconButton(
                 tooltip: 'Gỡ ảnh',
-                onPressed: state.sending
+                onPressed: state.sending || state.unconfirmed
                     ? null
                     : () => setState(() => _attachment = null),
                 icon: const Icon(AppIcons.close),
@@ -176,7 +182,10 @@ class _ChatDetailViewState extends State<ChatDetailView>
                     minLines: 1,
                     maxLines: 4,
                     maxLength: 2000,
-                    readOnly: state.sending || state.unconfirmed,
+                    readOnly:
+                        state.sending ||
+                        state.unconfirmed ||
+                        state.sendRestricted,
                     onChanged: (value) {
                       _chat.inputChanged(value);
                       setState(() {});
@@ -301,11 +310,38 @@ class _ChatDetailViewState extends State<ChatDetailView>
                       connection: state.connection,
                       onRetry: () => getIt<ChatRealtime>().reconnect(),
                     ),
-                    if (state.error != null)
-                      ErrorView(
-                        error: state.error,
-                        compact: true,
-                        onRetry: _chat.load,
+                    if (state.sendRestricted)
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          state.restrictionMessage,
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    else if (state.checkingAccess)
+                      const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text('Đang kiểm tra quyền nhắn tin…'),
+                      ),
+                    if (state.error != null && !state.sendRestricted)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                state.error!.message,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Thử tải lại',
+                              onPressed: _chat.load,
+                              icon: const Icon(AppIcons.refresh),
+                            ),
+                          ],
+                        ),
                       ),
                     if (state.refreshing) const LinearProgressIndicator(),
                     Expanded(
@@ -385,6 +421,28 @@ class _MessageBubble extends StatelessWidget {
     required this.onLongPress,
   });
 
+  Future<void> _openMedia(BuildContext context, String url) async {
+    if (['IMAGE', 'VIDEO', 'GIF'].contains(message.messageType)) {
+      await MediaViewer.open(context, [
+        MediaItem(
+          url: url,
+          type: message.messageType == 'VIDEO'
+              ? MediaType.video
+              : MediaType.image,
+        ),
+      ]);
+      return;
+    }
+    final uri = Uri.tryParse(url);
+    final opened =
+        uri != null &&
+        ['http', 'https'].contains(uri.scheme) &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      AppFeedback.errorMessage(context, 'Không mở được tệp đính kèm.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Align(
     alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -430,16 +488,13 @@ class _MessageBubble extends StatelessWidget {
                         : AppIcons.photos,
                   ),
                   label: Text(
-                    message.messageType == 'VIDEO' ? 'Xem video' : 'Xem ảnh',
+                    message.messageType == 'VIDEO'
+                        ? 'Xem video'
+                        : ['IMAGE', 'GIF'].contains(message.messageType)
+                        ? 'Xem ảnh'
+                        : 'Mở tệp',
                   ),
-                  onPressed: () => MediaViewer.open(context, [
-                    MediaItem(
-                      url: url,
-                      type: message.messageType == 'VIDEO'
-                          ? MediaType.video
-                          : MediaType.image,
-                    ),
-                  ]),
+                  onPressed: () => _openMedia(context, url),
                 ),
             ],
             if (message.createdAt != null)

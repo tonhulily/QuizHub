@@ -9,6 +9,12 @@ class ChatRepository {
   final ApiClient _api;
   ChatRepository(this._api);
 
+  Future<bool> blockedWith(int userId) => _api.get(
+    ApiEndpoints.userRelationshipStats(userId),
+    parser: (d) =>
+        J.asBool(J.asMap(J.asMap(d)?['relationship_with_me'])?['blocked']),
+  );
+
   Future<CursorPage<ChatConversation>> conversations({String? after}) =>
       _api.get(
         ApiEndpoints.conversations,

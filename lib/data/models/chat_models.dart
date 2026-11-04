@@ -59,6 +59,16 @@ class ChatMessage extends Equatable {
           _ => 'Tệp đính kèm',
         };
 
+  ChatMessage asRevoked() => ChatMessage(
+    messageId: messageId,
+    conversationId: conversationId,
+    senderId: senderId,
+    senderName: senderName,
+    avatarUrl: avatarUrl,
+    createdAt: createdAt,
+    revoked: true,
+  );
+
   @override
   List<Object?> get props => [
     messageId,

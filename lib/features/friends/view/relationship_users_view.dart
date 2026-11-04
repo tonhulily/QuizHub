@@ -7,6 +7,7 @@ import '../../../core/design_system/app_icons.dart';
 import '../../../core/design_system/component_tokens.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/services/social_events.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/state_views.dart';
@@ -82,6 +83,7 @@ class _RelationshipUsersViewState extends State<RelationshipUsersView> {
       }
       if (!mounted) return;
       _users.removeWhere((item) => item.userId == user.userId);
+      getIt<SocialEvents>().notifyChanged();
       AppFeedback.success(
         context,
         isBlocked

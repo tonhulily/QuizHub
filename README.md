@@ -33,10 +33,11 @@ trước khi dùng app.
 
 | Xong | Chưa làm |
 |---|---|
-| Đăng nhập (có lưu tài khoản), refresh token, đổi mật khẩu | Chat (WebSocket), Thông báo, Push (FCM) |
+| Đăng nhập (có lưu tài khoản), refresh token, đổi mật khẩu | Thông báo, Push (FCM) |
 | Hồ sơ: xem, sửa, ảnh, gỡ ảnh, trang Giới thiệu | Giảng viên duyệt phiên (approve / reject) |
 | Bài viết: bảng tin, đăng, xoá, ảnh; bình luận; Like | Gamification, huy hiệu, cosmetics (mới chỉ hiển thị) |
-| Bạn bè, theo dõi, chặn, báo cáo, tìm kiếm người dùng | Sửa / chia sẻ bài viết, video, tìm bài và câu hỏi |
+| Bạn bè, theo dõi, chặn/bỏ chặn, báo cáo, followers/following, tìm kiếm người dùng | Chia sẻ bài viết, đăng video, tìm bài |
+| Bài viết: chi tiết và chỉnh sửa từ menu ba chấm; chat 1–1: hội thoại, lịch sử REST, gửi chữ/ảnh qua STOMP, typing/đã đọc, reconnect và khoá gửi khi chặn. Xem `docs/chat/API_CONTRACT.md`, `docs/qa/chat.md` để kiểm tra trên hai tài khoản thật | |
 | Ngân hàng đề: đề xuất phiên (có ảnh), luyện tập, đánh giá, thống kê, AI tinh chỉnh; đề thi (giảng viên): sinh đề, xem, xuất PDF / Excel. Xem `docs/qbank/API_CONTRACT.md` | |
 
 Nút đã có giao diện nhưng chưa có chức năng gọi `showComingSoon(context, 'Tên')`; làm xong thì thay

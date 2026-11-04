@@ -92,6 +92,21 @@ class PreviewChat {
     Map<String, dynamic> query,
     Map<String, dynamic> body,
   ) {
+    final relationship = RegExp(
+      r'^/users/(\d+)/relationship-stats$',
+    ).firstMatch(path);
+    if (relationship != null && method == 'GET') {
+      final id = int.parse(relationship[1]!);
+      return {
+        'user_id': id,
+        'counts': {
+          'friends_count': 45,
+          'followers_count': 9,
+          'following_count': 12,
+        },
+        'relationship_with_me': {'blocked': isBlocked(id)},
+      };
+    }
     if (path == '/conversations' && method == 'GET') {
       final rows = [
         for (final entry in peers.entries)

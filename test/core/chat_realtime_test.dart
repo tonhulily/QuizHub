@@ -190,7 +190,15 @@ void main() {
           hasLength(1),
         );
       }
-      live.disconnect();
+      sessions.notifySessionExpired();
+      await Future<void>.delayed(Duration.zero);
+      expect(live.connection, ChatConnection.disconnected);
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(
+        adapter.calls,
+        2,
+        reason: 'Phiên hết hạn không được tự kết nối lại',
+      );
       expect(
         () => live.send(conversationId: 1, content: 'offline'),
         throwsA(isA<Exception>()),

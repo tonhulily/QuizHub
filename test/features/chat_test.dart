@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quizhub/core/design_system/app_theme.dart';
 import 'package:quizhub/core/services/chat_realtime.dart';
+import 'package:quizhub/core/services/social_events.dart';
+import 'package:quizhub/dev/preview_chat.dart';
 import 'package:quizhub/data/models/auth_session.dart';
 import 'package:quizhub/data/models/chat_models.dart';
 import 'package:quizhub/data/repositories/chat_repository.dart';
@@ -11,6 +13,19 @@ import 'package:quizhub/features/chat/view/chat_detail_view.dart';
 import '../helpers/chat_fixture.dart';
 import '../helpers/fake_profile.dart';
 
+class _NoEcho extends PreviewChatRealtime {
+  _NoEcho(super.backend);
+  @override
+  void send({
+    required int conversationId,
+    required String content,
+    String messageType = 'TEXT',
+    List<String> mediaUrls = const [],
+  }) {
+    backend.append(conversationId, 1, content, messageType, mediaUrls);
+  }
+}
+
 void main() {
   late ChatFixture fixture;
   setUp(() {
@@ -19,6 +34,76 @@ void main() {
   tearDown(() async {
     await getIt.reset();
     await fixture.dispose();
+  });
+
+  test(
+    'block/unblock đang mở chat cập nhật quyền gửi mà không cần mở lại màn',
+    () async {
+      final social = SocialEvents();
+      final conversation = await fixture.repo.direct(2, myId: 1);
+      final cubit = ChatDetailCubit(
+        fixture.repo,
+        target: ChatTarget.conversation(conversation),
+        myId: 1,
+        realtime: fixture.data.realtime,
+        socialEvents: social,
+      );
+      await cubit.load();
+      fixture.blocked.add(2);
+      final restricted = cubit.stream.firstWhere((s) => s.sendRestricted);
+      social.notifyChanged();
+      await restricted;
+      final before = fixture.data.messages[1]!.length;
+      expect(await cubit.send('Không gửi khi bị chặn'), isNotNull);
+      expect(fixture.data.messages[1], hasLength(before));
+      fixture.blocked.clear();
+      final enabled = cubit.stream.firstWhere(
+        (s) => !s.sendRestricted && !s.checkingAccess,
+      );
+      social.notifyChanged();
+      await enabled;
+      expect(await cubit.send('Đã bỏ chặn'), isNull);
+      await cubit.close();
+      social.dispose();
+    },
+  );
+
+  test('snapshot REST cũ không khôi phục tin đã thu hồi', () {
+    const message = ChatMessage(
+      messageId: 5,
+      conversationId: 1,
+      content: 'Nội dung cũ',
+    );
+    final merged = ChatDetailCubit.mergeMessages(
+      [message.asRevoked()],
+      [message],
+    );
+    expect(merged.single.revoked, isTrue);
+    expect(merged.single.content, isEmpty);
+  });
+
+  test('thiếu echo không tự gửi lại; tải bù tìm đúng tin đã lưu', () async {
+    final live = _NoEcho(fixture.data);
+    final conversation = await fixture.repo.direct(2, myId: 1);
+    final cubit = ChatDetailCubit(
+      fixture.repo,
+      target: ChatTarget.conversation(conversation),
+      myId: 1,
+      realtime: live,
+      confirmationTimeout: const Duration(milliseconds: 20),
+    );
+    await cubit.load();
+    expect(await cubit.send('Chưa nhận echo'), isNotNull);
+    expect(cubit.state.unconfirmed, isTrue);
+    expect(await cubit.send('Chưa nhận echo'), isNotNull);
+    expect(await cubit.reconcilePending(), isTrue);
+    expect(cubit.state.unconfirmed, isFalse);
+    expect(
+      fixture.data.messages[1]!.where((m) => m['content'] == 'Chưa nhận echo'),
+      hasLength(1),
+    );
+    await cubit.close();
+    await live.dispose();
   });
 
   test(
@@ -82,6 +167,10 @@ void main() {
     (tester) async {
       getIt.registerSingleton<ChatRepository>(fixture.repo);
       getIt.registerSingleton<ChatRealtime>(fixture.data.realtime);
+      getIt.registerSingleton<SocialEvents>(
+        SocialEvents(),
+        dispose: (value) => value.dispose(),
+      );
       await tester.pumpWidget(
         withRole(
           UserRole.student,

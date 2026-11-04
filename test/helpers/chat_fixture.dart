@@ -8,11 +8,12 @@ import 'package:quizhub/dev/preview_backend.dart';
 import 'package:quizhub/dev/preview_chat.dart';
 
 class ChatFixture implements HttpClientAdapter {
+  final blocked = <int>{};
   final sessions = SessionEvents();
-  final data = PreviewChat(
+  late final data = PreviewChat(
     person: (id) => {'user_id': id, 'full_name': 'Bạn $id'},
     me: {'user_id': 1, 'full_name': 'Tôi'},
-    isBlocked: (_) => false,
+    isBlocked: blocked.contains,
   );
   late final repo = ChatRepository(
     ApiClient(tokens: PreviewTokens(), events: sessions, adapter: this),

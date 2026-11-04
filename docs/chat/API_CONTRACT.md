@@ -10,9 +10,14 @@ https://snsqb.duckdns.org/api/v1/docs/openapi.json
 | Lịch sử (có tác dụng đánh dấu đã đọc) | `GET /conversations/{id}/messages`; danh sách nằm trong `messages` |
 | Thành viên | `GET /conversations/{id}/members` |
 | Xoá/thu hồi | `DELETE /messages/{id}`, body `scope: ME/EVERYONE` |
+| Quyền gửi khi chặn | `GET /users/{id}/relationship-stats` → `relationship_with_me.blocked` |
 
-WebSocket: `wss://snsqb.duckdns.org/api/v1/ws`, xác thực ở STOMP CONNECT bằng
+WebSocket raw: `wss://snsqb.duckdns.org/api/v1/ws/websocket`, xác thực ở STOMP CONNECT bằng
 `Authorization: Bearer <access_token>`.
+
+Máy chủ bật SockJS: kiểm tra thực tế `/ws/info` trả cấu hình SockJS;
+handshake `/ws` trả 400, còn `/ws/websocket` trả 101. Client dùng raw STOMP trên
+đường dẫn đã kiểm chứng. Có thể override bằng `--dart-define=WS_URL=wss://...`.
 
 - Gửi: `/app/chat.send`, `conversation_id`, `content`, `message_type`, `media_urls`, `reply_to_message_id`.
 - Đã đọc: `/app/chat.read`, `conversation_id`, `message_id`.
