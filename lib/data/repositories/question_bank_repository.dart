@@ -46,6 +46,35 @@ class QuestionBankRepository {
     },
   );
 
+  /// `GET /search?type=QUESTION` - tìm từng câu hỏi (phân trang offset).
+  Future<CursorPage<QuestionHit>> searchQuestions(
+    String query, {
+    String? after,
+    int limit = AppConfig.defaultPageSize,
+  }) => _api.get<CursorPage<QuestionHit>>(
+    ApiEndpoints.search,
+    query: {
+      'query': query.trim(),
+      'type': 'QUESTION',
+      'after': after,
+      'limit': limit,
+    },
+    parser: (d) {
+      final map = J.asMap(d) ?? const <String, dynamic>{};
+      final pagination =
+          J.asMap(map['pagination']) ?? const <String, dynamic>{};
+      return CursorPage<QuestionHit>(
+        items: [
+          for (final raw in J.asList(map['items']))
+            if (J.asMap(J.asMap(raw)?['question']) case final q?)
+              QuestionHit.fromJson(q),
+        ],
+        after: J.asString(pagination['after']),
+        hasNext: J.asBool(pagination['has_next']),
+      );
+    },
+  );
+
   /// `GET /users/{id}/sessions` - xem người khác thì chỉ có phiên `RESOLVED`;
   /// lọc `status` chỉ có tác dụng khi xem chính mình.
   Future<CursorPage<SubmissionSummary>> sessionsOfUser(

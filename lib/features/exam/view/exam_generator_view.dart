@@ -56,6 +56,11 @@ class _GeneratorFormState extends State<_GeneratorForm> {
   int _easy = 30, _medium = 50, _hard = 20;
 
   int get _unclassified => 100 - _easy - _medium - _hard;
+  _Field? _issueField;
+  String? _issueMessage;
+  final _subjectKey = GlobalKey();
+  final _classesKey = GlobalKey();
+  final _countKey = GlobalKey();
 
   @override
   void dispose() {
@@ -64,7 +69,54 @@ class _GeneratorFormState extends State<_GeneratorForm> {
     super.dispose();
   }
 
+  String? _errorOf(_Field f) => _issueField == f ? _issueMessage : null;
+
+  void _clearIssue(_Field f) {
+    if (_issueField == f) {
+      setState(() {
+        _issueField = null;
+        _issueMessage = null;
+      });
+    }
+  }
+
+  void _showIssue(String message) {
+    final input = _input();
+    final field = input.subjectId <= 0
+        ? _Field.subject
+        : input.classIds.isEmpty
+        ? _Field.classes
+        : (input.questionCount < ExamLimits.minQuestions ||
+              input.questionCount > ExamLimits.maxQuestions)
+        ? _Field.count
+        : null;
+    if (field == null) {
+      AppFeedback.errorMessage(context, message);
+      return;
+    }
+    setState(() {
+      _issueField = field;
+      _issueMessage = message;
+    });
+    final key = switch (field) {
+      _Field.subject => _subjectKey,
+      _Field.classes => _classesKey,
+      _Field.count => _countKey,
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = key.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.2,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
   void _pickSubject(int? id, ExamGeneratorState state) {
+    _clearIssue(_Field.subject);
     setState(() {
       _subjectId = id;
       // Mặc định chọn sẵn mọi lớp của môn: thường đề dùng chung cho các lớp
@@ -93,6 +145,11 @@ class _GeneratorFormState extends State<_GeneratorForm> {
 
   Future<void> _generate() async {
     FocusScope.of(context).unfocus();
+    final invalid = validateExamInput(_input());
+    if (invalid != null) {
+      _showIssue(invalid);
+      return;
+    }
     final (exam, error) = await context.read<ExamGeneratorCubit>().generate(
       _input(),
     );
@@ -148,11 +205,13 @@ class _GeneratorFormState extends State<_GeneratorForm> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         DropdownButtonFormField<int>(
+                          key: _subjectKey,
                           initialValue: _subjectId,
                           isExpanded: true,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Môn học *',
-                            prefixIcon: Icon(AppIcons.subject),
+                            prefixIcon: const Icon(AppIcons.subject),
+                            errorText: _errorOf(_Field.subject),
                           ),
                           items: [
                             for (final s in state.teachingSubjects)
@@ -169,6 +228,7 @@ class _GeneratorFormState extends State<_GeneratorForm> {
                         if (_subjectId != null) ...[
                           const SizedBox(height: 16),
                           Text(
+                            key: _classesKey,
                             'Lớp học phần áp dụng *',
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: AppColors.textSecondary,
@@ -190,14 +250,26 @@ class _GeneratorFormState extends State<_GeneratorForm> {
                                     ].join(' · '),
                                   ),
                                   selected: _classIds.contains(c.courseClassId),
-                                  onSelected: (v) => setState(
-                                    () => v
-                                        ? _classIds.add(c.courseClassId)
-                                        : _classIds.remove(c.courseClassId),
-                                  ),
+                                  onSelected: (v) {
+                                    _clearIssue(_Field.classes);
+                                    setState(
+                                      () => v
+                                          ? _classIds.add(c.courseClassId)
+                                          : _classIds.remove(c.courseClassId),
+                                    );
+                                  },
                                 ),
                             ],
                           ),
+                          if (_errorOf(_Field.classes) case final m?) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              m,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ],
                         ],
                         const SizedBox(height: 16),
                         AppTextField(
@@ -207,7 +279,10 @@ class _GeneratorFormState extends State<_GeneratorForm> {
                         ),
                         const SizedBox(height: 12),
                         AppTextField(
+                          key: _countKey,
                           controller: _count,
+                          errorText: _errorOf(_Field.count),
+                          onChanged: (_) => _clearIssue(_Field.count),
                           label:
                               'Số câu (${ExamLimits.minQuestions} - '
                               '${ExamLimits.maxQuestions}) *',
@@ -310,6 +385,8 @@ class _GeneratorFormState extends State<_GeneratorForm> {
     );
   }
 }
+
+enum _Field { subject, classes, count }
 
 class _RatioSlider extends StatelessWidget {
   final Difficulty difficulty;

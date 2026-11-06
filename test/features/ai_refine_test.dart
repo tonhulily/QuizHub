@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quizhub/core/design_system/app_colors.dart';
 import 'package:quizhub/core/design_system/app_theme.dart';
 import 'package:quizhub/core/network/api_exception.dart';
 import 'package:quizhub/data/models/ai_models.dart';
@@ -265,5 +266,29 @@ void main() {
     await show(find.text('Không phát hiện ảo giác'));
     await show(find.text('Open addressing'));
     expect(find.text('Dùng bản gợi ý'), findsOneWidget);
+
+    // Chỗ AI sửa được tô màu (B: "Linear probing" -> "Open addressing")
+    final optionB = tester.widget<Text>(find.text('Open addressing'));
+    final added = (optionB.textSpan! as TextSpan).children!
+        .cast<TextSpan>()
+        .where((s) => s.style?.backgroundColor == AppColors.successLight)
+        .map((s) => s.text)
+        .join();
+    expect(added, 'Open addressing');
+    // Phương án A giữ nguyên thì không tô
+    final optionA = tester.widget<Text>(find.text('Separate chaining').last);
+    expect(
+      (optionA.textSpan! as TextSpan).children!.cast<TextSpan>().every(
+        (s) => s.style == null,
+      ),
+      isTrue,
+    );
+
+    // So sánh: hai bản cạnh nhau
+    await tester.tap(find.text('So sánh'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bản gốc'), findsOneWidget);
+    expect(find.text('Bản AI'), findsOneWidget);
+    expect(find.text('Linear probing'), findsWidgets);
   });
 }

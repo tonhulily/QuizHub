@@ -18,6 +18,7 @@ import '../../../shared/widgets/link_text.dart';
 import '../cubit/ai_refine_cubit.dart';
 import '../cubit/load_cubit.dart';
 import '../widgets/qbank_widgets.dart';
+import '../widgets/question_social_bar.dart';
 
 /// Chi tiết một phiên CỦA TÔI: mọi câu kèm đáp án đúng, độ tự tin, người
 /// duyệt. Sửa / xoá chỉ khi phiên còn chờ duyệt.
@@ -317,11 +318,16 @@ class _QuestionBlock extends StatelessWidget {
             [
               if (level != null) 'Độ tự tin: ${level.value} - ${level.label}',
               '${q.ratingCount} đánh giá',
-              '${q.commentCount} bình luận',
             ].join(' · '),
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
             ),
+          ),
+          QuestionSocialBar(
+            questionId: q.questionId,
+            reactCount: q.reactCount,
+            commentCount: q.commentCount,
+            reactedByMe: q.reactedByMe,
           ),
         ],
       ),

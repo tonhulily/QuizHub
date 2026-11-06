@@ -18,10 +18,12 @@ import '../data/repositories/feed_repository.dart';
 import '../data/repositories/friend_repository.dart';
 import '../data/repositories/media_repository.dart';
 import '../data/repositories/post_repository.dart';
+import '../data/repositories/like_state_store.dart';
 import '../data/repositories/question_bank_repository.dart';
 import '../data/repositories/reaction_repository.dart';
 import '../data/repositories/report_repository.dart';
 import '../data/repositories/subject_repository.dart';
+import '../data/repositories/user_directory.dart';
 import '../data/repositories/submission_repository.dart';
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/user_search_repository.dart';
@@ -121,5 +123,11 @@ Future<void> setupLocator({
   );
   getIt.registerLazySingleton<AiRepository>(
     () => AiRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<UserDirectory>(
+    () => UserDirectory(getIt<UserRepository>()),
+  );
+  getIt.registerLazySingleton<LikeStateStore>(
+    () => LikeStateStore(getIt<LocalStorage>()),
   );
 }

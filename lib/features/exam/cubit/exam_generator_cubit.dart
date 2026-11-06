@@ -93,6 +93,7 @@ class ExamGeneratorCubit extends Cubit<ExamGeneratorState> {
         _subjects.all(),
         _exams.myClasses(),
       ]);
+      if (isClosed) return;
       emit(
         ExamGeneratorState(
           status: LoadStatus.loaded,
@@ -101,6 +102,7 @@ class ExamGeneratorCubit extends Cubit<ExamGeneratorState> {
         ),
       );
     } on ApiException catch (e) {
+      if (isClosed) return;
       emit(ExamGeneratorState(status: LoadStatus.failure, error: e));
     }
   }
@@ -118,10 +120,10 @@ class ExamGeneratorCubit extends Cubit<ExamGeneratorState> {
     emit(state.copyWith(generating: true));
     try {
       final exam = await _exams.generate(input);
-      emit(state.copyWith(generating: false));
+      if (!isClosed) emit(state.copyWith(generating: false));
       return (exam, null);
     } on ApiException catch (e) {
-      emit(state.copyWith(generating: false));
+      if (!isClosed) emit(state.copyWith(generating: false));
       return (null, e);
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -89,8 +90,15 @@ class _BodyState extends State<_Body> {
           message: 'Máy chủ không trả về link tải file.',
         );
       }
-      // Link có hạn: mở ngay bằng trình duyệt / ứng dụng xem file
-      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      // Link có hạn: mở ngay bằng trình duyệt / ứng dụng xem file. Máy không
+      // có ứng dụng mở được link thì launchUrl ném PlatformException
+      // (vd ACTIVITY_NOT_FOUND trên Android) thay vì trả false.
+      bool opened;
+      try {
+        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } on PlatformException {
+        opened = false;
+      }
       if (!mounted) return;
       if (!opened) {
         AppFeedback.errorMessage(context, 'Không mở được file vừa xuất.');
@@ -259,18 +267,6 @@ class _QuestionBlock extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               DifficultyChip(difficulty: q.difficulty),
-              if (q.topic != null) ...[
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    q.topic!,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ),
-              ],
               const Spacer(),
               if (onAiRefine != null)
                 TextButton.icon(
@@ -280,6 +276,15 @@ class _QuestionBlock extends StatelessWidget {
                 ),
             ],
           ),
+          if (q.topic != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              q.topic!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           QuestionBody(content: q.content, imageUrls: q.imageUrls),
           const SizedBox(height: 12),

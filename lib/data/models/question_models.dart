@@ -4,8 +4,7 @@ import '../../core/utils/json_utils.dart';
 
 /// Danh sách chuỗi (URL ảnh...), bỏ phần tử rỗng.
 List<String> jsonStrings(dynamic v) => [
-  for (final x in J.asList(v))
-    ?J.asString(x),
+  for (final x in J.asList(v)) ?J.asString(x),
 ];
 
 /// Nguồn gốc câu hỏi. Backend gọi câu người tự soạn là `HOMO_SAPIENS`.
@@ -68,8 +67,10 @@ enum Difficulty {
 
 /// Thang 0-4 của backend, dùng chung cho "độ tự tin" khi đề xuất và "đánh
 /// giá" câu hỏi của người khác.
+///
+/// Nhãn theo đúng Swagger (`POST /questions/{id}/rate`): 0 là "Hoàn toàn sai".
 enum RatingLevel {
-  wrong(0, 'Sai hoàn toàn'),
+  wrong(0, 'Hoàn toàn sai'),
   hallucinated(1, 'LLM bịa'),
   shaky(2, 'Tác giả chưa vững'),
   basic(3, 'Cơ bản'),
@@ -123,6 +124,66 @@ class QuestionOption extends Equatable {
 
   @override
   List<Object?> get props => [key, text, isCorrect, mediaUrl, mediaId];
+}
+
+/// Một câu hỏi trong kết quả `GET /search?type=QUESTION`
+/// (`QuestionSearchResultDto`).
+class QuestionHit extends Equatable {
+  final int questionId;
+  final String? questionCode;
+  final String content;
+  final int? subjectId;
+  final String? subjectName;
+  final Difficulty difficulty;
+  final List<QuestionOption> options;
+
+  /// Phiên chứa câu hỏi. Swagger CHƯA có trường này (API_CONTRACT mục 6);
+  /// backend trả thì bấm vào câu mở được phiên, không thì chỉ xem trước.
+  final int? sessionId;
+  final int ratingCount;
+  final int commentCount;
+
+  const QuestionHit({
+    required this.questionId,
+    this.questionCode,
+    required this.content,
+    this.subjectId,
+    this.subjectName,
+    this.difficulty = Difficulty.unclassified,
+    this.options = const [],
+    this.sessionId,
+    this.ratingCount = 0,
+    this.commentCount = 0,
+  });
+
+  factory QuestionHit.fromJson(Map<String, dynamic> json) => QuestionHit(
+    questionId: J.intOr(json['question_id'] ?? json['id']),
+    questionCode: J.asString(json['question_code']),
+    content: J.stringOr(json['content']),
+    subjectId: J.asInt(json['subject_id']),
+    subjectName: J.asString(json['subject_name']),
+    difficulty: Difficulty.parse(json['difficulty']),
+    options: J.list(json['options'], QuestionOption.fromJson),
+    sessionId: J.asInt(
+      json['session_id'] ?? J.asMap(json['session'])?['session_id'],
+    ),
+    ratingCount: J.intOr(json['rating_count']),
+    commentCount: J.intOr(json['comment_count']),
+  );
+
+  @override
+  List<Object?> get props => [
+    questionId,
+    questionCode,
+    content,
+    subjectId,
+    subjectName,
+    difficulty,
+    options,
+    sessionId,
+    ratingCount,
+    commentCount,
+  ];
 }
 
 /// Câu hỏi để luyện tập (`PracticeQuestionDto` trong
@@ -354,8 +415,10 @@ class QuestionStatistics extends Equatable {
   factory QuestionStatistics.fromJson(Map<String, dynamic> json) {
     final options =
         J.asMap(json['option_distribution']) ?? const <String, dynamic>{};
-    final summary = J.asMap(json['rating_summary']) ?? const <String, dynamic>{};
-    final ratings = J.asMap(summary['distribution']) ?? const <String, dynamic>{};
+    final summary =
+        J.asMap(json['rating_summary']) ?? const <String, dynamic>{};
+    final ratings =
+        J.asMap(summary['distribution']) ?? const <String, dynamic>{};
     return QuestionStatistics(
       totalAnswers: J.intOr(json['total_answer'] ?? json['total_answers']),
       correctRate: J.asDouble(json['correct_rate']) ?? 0,
@@ -365,8 +428,7 @@ class QuestionStatistics extends Equatable {
       avgRating: J.asDouble(summary['avg_rating']) ?? 0,
       totalRatings: J.intOr(summary['total_ratings']),
       ratingDistribution: {
-        for (final e in ratings.entries)
-          ?int.tryParse(e.key): J.intOr(e.value),
+        for (final e in ratings.entries) ?int.tryParse(e.key): J.intOr(e.value),
       },
     );
   }

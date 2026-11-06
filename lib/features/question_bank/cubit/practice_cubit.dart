@@ -98,30 +98,38 @@ class PracticeCubit extends Cubit<PracticeState> {
   final QuestionBankRepository _repo;
   final int sessionId;
 
-  PracticeCubit(this._repo, this.sessionId) : super(const PracticeState());
+  /// Mở phiên từ kết quả tìm câu hỏi: lần tải đầu nhảy tới câu này.
+  final int? focusQuestionId;
+
+  PracticeCubit(this._repo, this.sessionId, {this.focusQuestionId})
+    : super(const PracticeState());
 
   Future<void> load({bool silent = false}) async {
     if (!silent) emit(const PracticeState());
     try {
       final s = await _repo.sessionQuestions(sessionId);
+      if (isClosed) return;
       final index = state.index < s.questions.length ? state.index : 0;
       emit(
         state.copyWith(
           status: LoadStatus.loaded,
           session: s,
           questions: s.questions,
-          index: silent ? index : _firstUnanswered(s.questions),
+          index: silent ? index : _startIndex(s.questions),
           clearError: true,
         ),
       );
     } on ApiException catch (e) {
-      if (silent && state.session != null) return;
+      if (isClosed || (silent && state.session != null)) return;
       emit(PracticeState(status: LoadStatus.failure, error: e));
     }
   }
 
-  /// Mở lại phiên đã làm dở thì nhảy tới câu đầu tiên chưa làm.
-  static int _firstUnanswered(List<PracticeQuestion> qs) {
+  /// Câu cần mở ([focusQuestionId]) nếu có trong phiên; không thì mở lại phiên
+  /// làm dở ở câu đầu tiên chưa làm.
+  int _startIndex(List<PracticeQuestion> qs) {
+    final focus = qs.indexWhere((q) => q.questionId == focusQuestionId);
+    if (focus >= 0) return focus;
     final i = qs.indexWhere((q) => !q.answered);
     return i < 0 ? 0 : i;
   }
@@ -156,6 +164,7 @@ class PracticeCubit extends Cubit<PracticeState> {
       _replace(q.withAnswer(r), result: r);
       return null;
     } on ApiException catch (e) {
+      if (isClosed) return e;
       emit(state.copyWith(submitting: false));
       // 409: đã trả lời ở thiết bị khác; 412: tác giả vừa sửa câu. Cả hai
       // trường hợp dữ liệu trên máy đã cũ nên tải lại phiên.
@@ -196,6 +205,7 @@ class PracticeCubit extends Cubit<PracticeState> {
   }
 
   void _replace(PracticeQuestion updated, {AnswerResult? result}) {
+    if (isClosed) return; // trả lời / đánh giá xong khi đã rời màn hình
     final list = [
       for (final x in state.questions)
         x.questionId == updated.questionId ? updated : x,

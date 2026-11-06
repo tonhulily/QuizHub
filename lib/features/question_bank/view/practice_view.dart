@@ -18,18 +18,30 @@ import '../cubit/ai_refine_cubit.dart';
 import '../cubit/load_cubit.dart';
 import '../cubit/practice_cubit.dart';
 import '../widgets/qbank_widgets.dart';
+import '../widgets/question_social_bar.dart';
 import '../widgets/rating_sheet.dart';
 
 /// Luyện tập một phiên: từng câu một, nộp xong thấy ngay đúng / sai và lời
 /// giải, sau đó có thể đánh giá câu hỏi và xem thống kê.
 class PracticeView extends StatelessWidget {
   final int sessionId;
-  const PracticeView({super.key, required this.sessionId});
+
+  /// Mở thẳng câu này (từ kết quả tìm câu hỏi).
+  final int? focusQuestionId;
+
+  const PracticeView({
+    super.key,
+    required this.sessionId,
+    this.focusQuestionId,
+  });
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) =>
-        PracticeCubit(getIt<QuestionBankRepository>(), sessionId)..load(),
+    create: (_) => PracticeCubit(
+      getIt<QuestionBankRepository>(),
+      sessionId,
+      focusQuestionId: focusQuestionId,
+    )..load(),
     child: const _PracticeBody(),
   );
 }
@@ -191,6 +203,9 @@ class _QuestionPage extends StatelessWidget {
     final cubit = context.read<PracticeCubit>();
     final correct = state.correctKeysOf(q);
     final result = state.results[q.questionId];
+    final role = context.select<ProfileCubit, UserRole?>(
+      (c) => c.state.profile?.role,
+    );
 
     return ListView(
       key: ValueKey(q.questionId),
@@ -222,13 +237,9 @@ class _QuestionPage extends StatelessWidget {
                     ),
                   ],
                   const Spacer(),
-                  SourceChip(source: q.source),
+                  if (showsQuestionSource(role)) SourceChip(source: q.source),
                   // Giảng viên sửa câu ngay khi xem (ghi đè câu trong ngân hàng)
-                  if (canApplyAi(
-                    context.select<ProfileCubit, UserRole?>(
-                      (c) => c.state.profile?.role,
-                    ),
-                  ))
+                  if (canApplyAi(role))
                     TextButton.icon(
                       onPressed: () => _aiRefine(context, q),
                       icon: const Icon(AppIcons.bolt, size: 16),
@@ -247,6 +258,11 @@ class _QuestionPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
               ],
+              QuestionSocialBar(
+                questionId: q.questionId,
+                reactCount: q.reactCount,
+                commentCount: q.commentCount,
+              ),
             ],
           ),
         ),
@@ -360,7 +376,7 @@ class _ActionBar extends StatelessWidget {
                   ),
                   Expanded(
                     child: AppButton(
-                      label: q.rated ? 'Đã đánh giá' : 'Đánh giá',
+                      label: q.rated ? 'Đã chấm' : 'Đánh giá',
                       icon: AppIcons.points,
                       small: true,
                       variant: AppButtonVariant.outline,

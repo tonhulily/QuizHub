@@ -99,9 +99,14 @@ class AppRouter {
           initial: args is SubmissionDetail ? args : null,
         );
       case AppRoutes.qbankPractice:
-        page = args is int
-            ? PracticeView(sessionId: args)
-            : _NotFoundView(name: settings.name);
+        page = switch (args) {
+          final int id => PracticeView(sessionId: id),
+          (:final int sessionId, :final int questionId) => PracticeView(
+            sessionId: sessionId,
+            focusQuestionId: questionId,
+          ),
+          _ => _NotFoundView(name: settings.name),
+        };
       case AppRoutes.qbankQuestionStats:
         page = switch (args) {
           (:final int questionId, :final List<String> correctKeys) =>

@@ -10,8 +10,11 @@ import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/fb_widgets.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../../core/widgets/user_avatar.dart';
+import '../../../data/models/profile_model.dart';
 import '../../../data/models/question_models.dart';
 import '../../../data/repositories/question_bank_repository.dart';
+import '../../../data/repositories/user_directory.dart';
 import '../../../di/locator.dart';
 import '../cubit/load_cubit.dart';
 import '../widgets/qbank_widgets.dart';
@@ -239,14 +242,18 @@ class _Bar extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
+          // Đủ rộng cho nhãn dài nhất ("2 · Tác giả chưa vững"); chữ to thì
+          // xuống dòng thay vì bị cắt.
           SizedBox(
-            width: caption == null ? 24 : 132,
+            width: caption == null ? 24 : 172,
             child: Text(
               caption == null ? label : '$label · $caption',
-              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              softWrap: true,
               style: theme.textTheme.labelLarge,
             ),
           ),
+          if (caption != null) const SizedBox(width: 8),
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
@@ -274,13 +281,24 @@ class _Bar extends StatelessWidget {
   }
 }
 
-class _RatingTile extends StatelessWidget {
+class _RatingTile extends StatefulWidget {
   final RatingItem item;
   const _RatingTile({required this.item});
 
   @override
+  State<_RatingTile> createState() => _RatingTileState();
+}
+
+class _RatingTileState extends State<_RatingTile> {
+  /// API danh sách đánh giá chỉ trả `user_id`: tra thêm tên / ảnh (có cache).
+  late final Future<ProfileModel?> _author = getIt<UserDirectory>().lookup(
+    widget.item.userId,
+  );
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final item = widget.item;
     final level = item.level;
     return Container(
       color: AppColors.white,
@@ -291,42 +309,75 @@ class _RatingTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              // Backend chỉ trả user_id, chưa có tên người đánh giá
-              Text(
-                'Người dùng #${item.userId}',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (item.isError)
-                const QbankChip(
-                  label: 'Báo lỗi',
-                  icon: AppIcons.flag,
-                  color: AppColors.errorDark,
-                  background: AppColors.errorLight,
-                )
-              else if (level != null)
-                QbankChip(
-                  label: '${level.value} · ${level.label}',
-                  icon: AppIcons.points,
-                  color: AppColors.secondary800,
-                  background: AppColors.secondary100,
-                ),
-              const Spacer(),
-              Text(
-                TimeFormat.ago(item.createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
+          FutureBuilder<ProfileModel?>(
+            future: _author,
+            builder: (context, snap) {
+              final p = snap.data;
+              final name = p?.fullName.trim().isNotEmpty == true
+                  ? p!.fullName
+                  : 'Người dùng #${item.userId}';
+              return Row(
+                children: [
+                  UserAvatar(
+                    avatarUrl: p?.avatarUrl,
+                    frameUrl: p?.frameUrl,
+                    name: p?.fullName ?? '',
+                    size: ComponentTokens.avatarSM,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    TimeFormat.ago(item.createdAt),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
+          if (item.isError || level != null) ...[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: ComponentTokens.avatarSM + 8,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: item.isError
+                    ? const QbankChip(
+                        label: 'Báo lỗi',
+                        icon: AppIcons.flag,
+                        color: AppColors.errorDark,
+                        background: AppColors.errorLight,
+                      )
+                    : QbankChip(
+                        label: '${level!.value} · ${level.label}',
+                        icon: AppIcons.points,
+                        color: AppColors.secondary800,
+                        background: AppColors.secondary100,
+                      ),
+              ),
+            ),
+          ],
           if (item.comment != null && item.comment!.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(item.comment!, style: theme.textTheme.bodyMedium),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: ComponentTokens.avatarSM + 8,
+              ),
+              child: Text(item.comment!, style: theme.textTheme.bodyMedium),
+            ),
           ],
         ],
       ),

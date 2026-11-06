@@ -23,7 +23,11 @@ class FakeUsers implements UserRepository {
 }
 
 /// Bọc [child] bằng `ProfileCubit` như ở gốc app, đã nạp sẵn hồ sơ có [role].
+///
+/// Key theo [role]: `pumpWidget` lại với vai trò khác thì provider được dựng
+/// lại (không có key, Flutter giữ cubit cũ và vai trò không đổi).
 Widget withRole(UserRole role, Widget child) => BlocProvider(
+  key: ValueKey(role),
   create: (_) => ProfileCubit(FakeUsers(role))..load(),
   child: child,
 );

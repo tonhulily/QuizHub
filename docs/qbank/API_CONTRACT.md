@@ -64,6 +64,7 @@ hạn lưu tạm (ảnh phải upload qua `/medias/...` ngay trước khi nộp)
 | Màn hình | Thao tác | Endpoint | Hàm |
 |---|---|---|---|
 | Question Bank Home | Tìm phiên (có `status`) | `GET /search?type=SESSION&query=` | `searchSessions()` |
+| Question Bank Home | Tìm câu hỏi (nhóm "Câu hỏi" trong kết quả) | `GET /search?type=QUESTION&query=` | `searchQuestions()` |
 | Trang cá nhân, Bank Home | Phiên của một người (người khác chỉ thấy `RESOLVED`) | `GET /users/{id}/sessions` | `sessionsOfUser()` |
 | Question Detail (trong phiên) | Mọi câu của phiên. Câu chưa trả lời thì **ẩn** `is_correct` và lời giải | `GET /sessions/{id}/questions` | `sessionQuestions()` |
 | Answer | Nộp đáp án, nhận đúng / sai + lời giải | `POST /questions/{id}/answer` | `answer()` |
@@ -124,15 +125,16 @@ hạn lưu tạm (ảnh phải upload qua `/medias/...` ngay trước khi nộp)
 | # | Vấn đề | Ảnh hưởng | Đề xuất / câu hỏi |
 |---|---|---|---|
 | 1 | **Không có API liệt kê ngân hàng câu hỏi theo môn.** Chỉ có `/search` (cần từ khoá, không lọc môn) và `/users/{id}/sessions` | Question Bank Home không có nguồn dữ liệu chuẩn | Xin backend `GET /sessions?subject_id=&status=RESOLVED` (phân trang con trỏ). Tạm thời dùng `/search?type=SESSION`; cần thử `query` rỗng có trả hết không |
-| 2 | **Không có `GET /questions/{id}`** | Question Detail không mở trực tiếp bằng id được (vd từ thông báo, tìm kiếm câu hỏi) | Tạm lấy từ `GET /sessions/{id}/questions`. Kết quả tìm kiếm QUESTION **không có `session_id`** nên chưa mở được |
+| 2 | **Không có `GET /questions/{id}`** | Question Detail không mở trực tiếp bằng id được (vd từ thông báo, tìm kiếm câu hỏi) | Tạm lấy từ `GET /sessions/{id}/questions`. Kết quả tìm kiếm QUESTION **không có `session_id`**: xin backend thêm `session_id` vào `QuestionSearchResultDto`. App đã đọc trường này nếu có (bấm câu thì mở phiên, nhảy tới câu); thiếu thì chỉ xem trước nội dung |
 | 3 | Swagger của **danh sách phiên** và **chi tiết phiên** không có trường `status`; câu hỏi trong chi tiết không có trạng thái duyệt | Không hiện được nhãn Chờ duyệt / Đã duyệt, không biết lúc nào cho sửa | Kiểm tra JSON thật. Model đã đọc `status` nếu có, thiếu thì là `unknown` (khoá sửa / xoá) |
 | 4 | `GET /sessions/{id}/questions` của phiên `RESOLVED` trả **mọi câu** hay **chỉ câu `APPROVED`**? | Người luyện tập có thể thấy câu bị từ chối | Hỏi backend |
 | 5 | `PUT` sửa phiên: câu **không gửi lên** thì bị xoá hay giữ nguyên? | Xoá một câu trong form có thể không có tác dụng | Hỏi backend |
 | 6 | Sinh viên gọi `ai-refine` được không? Refine chỉ dùng được cho câu **đã có id** | Không thể nhờ AI khi đang soạn câu mới (trước khi nộp) | Hỏi backend; nếu đúng thì nút AI chỉ có ở phiên đã nộp và còn `PENDING` |
 | 7 | Đánh giá lại lần hai được không (ghi đè hay 409)? | Màn Rating có cho sửa không | Thử bằng tài khoản test |
-| 8 | Danh sách đánh giá chỉ có `user_id`, **không có tên / ảnh** | Không hiện được người đánh giá | Xin thêm `author` như bình luận |
+| 8 | Danh sách đánh giá chỉ có `user_id`, **không có tên / ảnh** | Không hiện được người đánh giá | Xin thêm `author` như bình luận. Tạm thời app gọi `GET /users/{id}` cho từng người (`UserDirectory`, cache theo id), lỗi thì hiện "Người dùng #id" |
 | 9 | Giá trị `format` khi xuất: `excel` hay `xlsx`? | Có thể nhận lỗi 400 khi xuất Excel | Model đang gửi `excel`; thử cả hai |
 | 10 | Sinh đề cần `class_ids`, nhưng **sinh viên không có lớp dạy** | Bảng phân công ghi "Sinh đề" nhưng sinh viên bị 403 | Chốt với nhóm: nhánh Đề thi chỉ hiện cho giảng viên, test bằng tài khoản giảng viên hoặc bản xem trước |
+| 12 | Câu hỏi trong chi tiết phiên (`MySubmissionQuestionDto`) có `react_count`, `comment_count` nhưng **không có `reacted_by_me`** | Nút Thích dưới mỗi câu không biết mình đã thích chưa khi mở màn | Xin thêm `reacted_by_me` như `PostResponseDto`. App đã đọc nếu có; bấm Thích thì lấy trạng thái + số từ kết quả `POST /react` |
 | 11 | `GET /sessions/{id}` (bản cho giảng viên duyệt) **tự chuyển phiên sang `REVIEWING`** | Mở nhầm bằng tài khoản giảng viên làm đổi dữ liệu thật | Module này không gọi API đó; script lấy mẫu cũng đã bỏ |
 
 Câu trả lời của backend ghi thẳng vào bảng trên (thêm cột "Trả lời") để cả nhóm cùng tra.

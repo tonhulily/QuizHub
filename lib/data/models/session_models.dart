@@ -133,6 +133,10 @@ class SubmissionQuestion extends Equatable {
   final int commentCount;
   final int ratingCount;
 
+  /// Mình đã Thích câu này chưa. Swagger (`MySubmissionQuestionDto`) chưa có;
+  /// đọc `reacted_by_me` nếu backend trả, không thì coi như chưa.
+  final bool reactedByMe;
+
   const SubmissionQuestion({
     required this.questionId,
     required this.content,
@@ -145,6 +149,7 @@ class SubmissionQuestion extends Equatable {
     this.reactCount = 0,
     this.commentCount = 0,
     this.ratingCount = 0,
+    this.reactedByMe = false,
   });
 
   factory SubmissionQuestion.fromJson(Map<String, dynamic> json) =>
@@ -160,6 +165,7 @@ class SubmissionQuestion extends Equatable {
         reactCount: J.intOr(json['react_count']),
         commentCount: J.intOr(json['comment_count']),
         ratingCount: J.intOr(json['rating_count']),
+        reactedByMe: J.asBool(json['reacted_by_me']),
       );
 
   @override
@@ -172,6 +178,10 @@ class SubmissionQuestion extends Equatable {
     source,
     confidence,
     status,
+    reactCount,
+    commentCount,
+    ratingCount,
+    reactedByMe,
   ];
 }
 

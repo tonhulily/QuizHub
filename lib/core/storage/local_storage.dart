@@ -63,10 +63,20 @@ class LocalStorage {
   Future<void> setBool(String key, bool value) => _prefs.setBool(key, value);
   Future<void> remove(String key) => _prefs.remove(key);
 
+  Future<void> removeKeysStartingWith(String prefix) async {
+    for (final k
+        in _prefs.getKeys().where((k) => k.startsWith(prefix)).toList()) {
+      await _prefs.remove(k);
+    }
+  }
+
+  static const likeKeyPrefix = 'like_';
+
   /// Xoá dữ liệu gắn với user khi đăng xuất (giữ lại device_id).
   Future<void> clearUserData() async {
     await clearCachedUser();
     await clearHomeFeedCache();
+    await removeKeysStartingWith(likeKeyPrefix);
   }
 
   Map<String, dynamic>? _readJson(String key) {
