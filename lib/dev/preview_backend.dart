@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/storage/local_storage.dart';
 import '../core/storage/token_storage.dart';
 import 'preview_qbank.dart';
 import 'preview_chat.dart';
@@ -39,8 +42,13 @@ class PreviewTokens extends TokenStorage {
 /// Backend giả (trả dữ liệu mẫu) để xem & phát triển giao diện khi chưa có
 /// tài khoản / mạng tới server. Chạy: `flutter run -t lib/main_preview.dart`.
 ///
-/// Chỉ phục vụ giao diện: dữ liệu nằm trong RAM, mất khi thoát app.
+/// Bài viết được lưu trên máy khi truyền [preferences]; các module khác nằm
+/// trong RAM. Không truyền kho lưu trữ khi dùng làm fixture cho unit test.
 class PreviewBackend implements HttpClientAdapter {
+  static const _postsKey = 'preview_posts_v1';
+  final SharedPreferences? _preferences;
+  Future<void> _pendingRequest = Future<void>.value();
+
   /// Vai trò người dùng mẫu. Thử nhánh của giảng viên (Đề thi...):
   /// `flutter run -t lib/main_preview.dart --dart-define=PREVIEW_ROLE=LECTURER`
   static const _role = String.fromEnvironment(
@@ -134,7 +142,8 @@ class PreviewBackend implements HttpClientAdapter {
     isBlocked: _blocked.contains,
   );
 
-  PreviewBackend() {
+  PreviewBackend({SharedPreferences? preferences})
+    : _preferences = preferences {
     String ago(int minutes) => DateTime.now()
         .toUtc()
         .subtract(Duration(minutes: minutes))
@@ -198,6 +207,123 @@ class PreviewBackend implements HttpClientAdapter {
       'lecturer_note': 'Các em nhớ ôn kỹ chương cây nhị phân tìm kiếm nhé.',
       'noted_lecturer': _minh,
     };
+    _restorePosts();
+    if (preferences != null) {
+      // Trước khi preview có lưu trữ, ID đã xoá vẫn được LocalStorage nhớ lại.
+      // Không cấp lại các ID đó, nếu không bài mới sẽ bị bộ lọc xoá ẩn đi.
+      for (final id in LocalStorage(preferences).deletedPostIds) {
+        _posts.remove(id);
+        if (id >= _nextId) _nextId = id + 1;
+      }
+    }
+  }
+
+  Map<String, dynamic> _postSnapshot() => {
+    'version': 1,
+    'next_id': _nextId,
+    'posts': _posts.values.toList(),
+  };
+
+  void _restorePosts() {
+    final raw = _preferences?.get(_postsKey);
+    if (raw is! String) return;
+    try {
+      final snapshot = jsonDecode(raw);
+      if (snapshot is! Map<String, dynamic> || snapshot['version'] != 1) return;
+      final rows = snapshot['posts'];
+      if (rows is! List) return;
+      final restored = <int, Map<String, dynamic>>{};
+      var nextId = 100;
+      for (final row in rows) {
+        if (row is! Map<String, dynamic>) return;
+        final id = row['post_id'];
+        if (id is! int ||
+            id <= 0 ||
+            restored.containsKey(id) ||
+            row['content'] is! String ||
+            row['author'] is! Map<String, dynamic>) {
+          return;
+        }
+        restored[id] = row;
+        if (id >= nextId) nextId = id + 1;
+      }
+      final storedNext = snapshot['next_id'];
+      if (storedNext is int && storedNext > nextId) nextId = storedNext;
+      // Thay toàn bộ tập bài, kể cả tập rỗng, để bài đã xoá không xuất hiện lại.
+      _posts
+        ..clear()
+        ..addAll(restored);
+      _nextId = nextId;
+    } on FormatException {
+      // Dữ liệu cục bộ hỏng: dùng bộ mẫu, không làm app kẹt ở màn khởi động.
+    }
+  }
+
+  bool _changesPosts(RequestOptions o) =>
+      (o.path == '/posts' && o.method == 'POST') ||
+      (RegExp(r'^/posts/\d+$').hasMatch(o.path) &&
+          (o.method == 'PUT' || o.method == 'DELETE'));
+
+  static ResponseBody _response(
+    dynamic data, {
+    int status = 200,
+    String code = '0000',
+    String message = 'OK',
+  }) => ResponseBody.fromString(
+    jsonEncode({'code': code, 'message': message, 'data': data}),
+    status,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
+
+  Future<ResponseBody> _respond(RequestOptions options) async {
+    final persist = _preferences != null && _changesPosts(options);
+    // Giữ bản độc lập để hoàn tác nếu ghi xuống máy thất bại.
+    final previous = persist ? jsonEncode(_postSnapshot()) : null;
+    dynamic data;
+    try {
+      data = _route(options);
+    } on _PreviewPostNotFound {
+      return _response(
+        null,
+        status: 404,
+        code: '1012',
+        message: 'Bài viết không còn tồn tại.',
+      );
+    }
+    if (persist) {
+      try {
+        final saved = await _preferences.setString(
+          _postsKey,
+          jsonEncode(_postSnapshot()),
+        );
+        if (!saved) throw StateError('Could not save preview posts');
+      } catch (_) {
+        final old = jsonDecode(previous!) as Map<String, dynamic>;
+        _posts
+          ..clear()
+          ..addEntries([
+            for (final row in old['posts'] as List)
+              MapEntry(row['post_id'] as int, row as Map<String, dynamic>),
+          ]);
+        _nextId = old['next_id'] as int;
+        try {
+          // SharedPreferences cập nhật cache trước khi ghi native: hoàn tác
+          // cache nữa để mở lại backend không đọc nhầm lần lưu thất bại.
+          await _preferences.setString(_postsKey, previous);
+        } catch (_) {
+          // Vẫn báo lỗi lưu cho người dùng, không báo thành công giả.
+        }
+        return _response(
+          null,
+          status: 500,
+          code: '1001',
+          message: 'Không thể lưu bài viết trên máy. Vui lòng thử lại.',
+        );
+      }
+    }
+    return _response(data);
   }
 
   Map<String, dynamic> _feedOf(Map<String, dynamic> post) => {
@@ -488,7 +614,7 @@ class PreviewBackend implements HttpClientAdapter {
     if (path.startsWith('/posts/') && m == 'PUT') {
       final id = int.tryParse(path.split('/').last);
       final post = id == null ? null : _posts[id];
-      if (post == null) return null;
+      if (post == null) throw const _PreviewPostNotFound();
       post.addAll({
         if (body.containsKey('content')) 'content': body['content'],
         if (body.containsKey('media_urls')) 'media_urls': body['media_urls'],
@@ -498,10 +624,13 @@ class PreviewBackend implements HttpClientAdapter {
       return post;
     }
     if (path.startsWith('/posts/') && m == 'GET') {
-      return _posts[int.tryParse(path.split('/').last)];
+      final post = _posts[int.tryParse(path.split('/').last)];
+      if (post == null) throw const _PreviewPostNotFound();
+      return post;
     }
     if (path.startsWith('/posts/') && m == 'DELETE') {
-      _posts.remove(int.tryParse(path.split('/').last));
+      final post = _posts.remove(int.tryParse(path.split('/').last));
+      if (post == null) throw const _PreviewPostNotFound();
       return null;
     }
     if (path == '/comments' && m == 'GET') {
@@ -604,16 +733,22 @@ class PreviewBackend implements HttpClientAdapter {
   ) async {
     // Giả lập độ trễ mạng nhẹ
     await Future<void>.delayed(const Duration(milliseconds: 350));
-    final data = _route(options);
-    return ResponseBody.fromString(
-      jsonEncode({'code': '0000', 'message': 'OK', 'data': data}),
-      200,
-      headers: {
-        Headers.contentTypeHeader: [Headers.jsonContentType],
-      },
-    );
+    // Tuần tự cả đọc/ghi để request sau không thấy dữ liệu chưa ghi thành công.
+    final before = _pendingRequest;
+    final done = Completer<void>();
+    _pendingRequest = done.future;
+    await before;
+    try {
+      return await _respond(options);
+    } finally {
+      done.complete();
+    }
   }
 
   @override
   void close({bool force = false}) {}
+}
+
+class _PreviewPostNotFound implements Exception {
+  const _PreviewPostNotFound();
 }

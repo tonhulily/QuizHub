@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/storage/credential_storage.dart';
@@ -16,11 +17,12 @@ import 'di/locator.dart';
 /// flutter run -t lib/main_preview.dart --dart-define=SEED_SAVED_ACCOUNT=true
 /// ```
 ///
-/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Mọi thay đổi chỉ nằm
-/// trong RAM. Bản chạy thật vẫn là `lib/main.dart`.
+/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết được lưu trên
+/// máy qua các lần chạy; dữ liệu khác vẫn trong RAM. Bản thật là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final backend = PreviewBackend();
+  final preferences = await SharedPreferences.getInstance();
+  final backend = PreviewBackend(preferences: preferences);
   await setupLocator(
     tokenStorage: PreviewTokens(),
     httpAdapter: backend,

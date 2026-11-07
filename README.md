@@ -13,8 +13,10 @@ git clone https://github.com/tonhulily/QuizHub.git && cd QuizHub
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1   # Windows; Git Bash / macOS / Linux: bash scripts/setup.sh
 flutter run -d <id>          # id lấy từ: flutter devices
 ```
-Chưa có tài khoản thì chạy bản **xem trước** (dữ liệu mẫu, đã đăng nhập sẵn, mọi thao tác chỉ nằm
-trong RAM): `flutter run -d <id> -t lib/main_preview.dart`. Thêm dữ liệu mẫu cho API mới trong hàm
+Chưa có tài khoản thì chạy bản **xem trước** (dữ liệu mẫu, đã đăng nhập sẵn):
+`flutter run -d <id> -t lib/main_preview.dart`. Bài viết tạo/sửa/xoá được lưu trên máy qua các lần
+chạy; dữ liệu khác vẫn nằm trong RAM. Xem cách kiểm tra ở [docs/qa/post_preview.md](docs/qa/post_preview.md).
+Thêm dữ liệu mẫu cho API mới trong hàm
 `_route` của `lib/dev/preview_backend.dart`. Thử nhánh của giảng viên (Đề thi, áp dụng AI): thêm
 `--dart-define=PREVIEW_ROLE=LECTURER`.
 
