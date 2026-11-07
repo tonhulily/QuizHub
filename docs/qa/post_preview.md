@@ -2,7 +2,8 @@
 
 Chạy `flutter run -d <id> -t lib/main_preview.dart`. Bài viết được lưu riêng trong dữ liệu preview
 trên thiết bị, không gửi lên server thật. Nội dung, quyền xem, danh sách media và ID bài được giữ
-qua hot restart hoặc đóng/mở app. Dữ liệu của các module preview khác vẫn ở trong RAM.
+qua hot restart hoặc đóng/mở app. Reaction của bình luận mẫu được lưu riêng; dữ liệu preview
+khác vẫn ở trong RAM.
 
 1. Mở bài của Nguyễn Văn An → ba chấm → Chỉnh sửa. Đổi nội dung, quyền xem, bỏ ảnh hoặc thay ảnh,
    rồi bấm Lưu. Mở chi tiết và kéo làm mới để kiểm tra.

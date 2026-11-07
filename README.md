@@ -14,8 +14,9 @@ powershell -ExecutionPolicy Bypass -File scripts\setup.ps1   # Windows; Git Bash
 flutter run -d <id>          # id lấy từ: flutter devices
 ```
 Chưa có tài khoản thì chạy bản **xem trước** (dữ liệu mẫu, đã đăng nhập sẵn):
-`flutter run -d <id> -t lib/main_preview.dart`. Bài viết tạo/sửa/xoá được lưu trên máy qua các lần
-chạy; dữ liệu khác vẫn nằm trong RAM. Xem cách kiểm tra ở [docs/qa/post_preview.md](docs/qa/post_preview.md).
+`flutter run -d <id> -t lib/main_preview.dart`. Bài viết tạo/sửa/xoá và reaction bình luận mẫu
+được lưu trên máy qua các lần chạy; dữ liệu khác vẫn nằm trong RAM. Xem cách kiểm tra ở
+[docs/qa/post_preview.md](docs/qa/post_preview.md) và [docs/qa/comment_reactions.md](docs/qa/comment_reactions.md).
 Thêm dữ liệu mẫu cho API mới trong hàm
 `_route` của `lib/dev/preview_backend.dart`. Thử nhánh của giảng viên (Đề thi, áp dụng AI): thêm
 `--dart-define=PREVIEW_ROLE=LECTURER`.
@@ -51,6 +52,7 @@ bằng điều hướng thật. Endpoint của mọi module đã khai báo sẵn
   ≤ **4MB**, **không nhận GIF**; video ≤ **15MB** (`ComponentTokens`, `MediaRepository`).
 - Nội dung dài chỉ có "Xem thêm" (mở rộng, **không thu gọn lại**); ảnh luôn cắt theo **trung tâm**.
 - Chỉ có **một** cảm xúc là Like (bấm lại là gỡ).
+- Bình luận và phản hồi có Thích/bỏ thích, số lượt thích và hoàn tác khi API lỗi.
 - Bình luận **không sửa được**; chỉ chủ bình luận được xoá.
 - Chỉ kết bạn với người **cùng vai trò**; theo dõi thì không phân biệt.
 - **Validate bằng regex ở client trước** khi gọi API (`Validators`); mật khẩu mới 6-32 ký tự, chỉ chữ
@@ -59,6 +61,10 @@ bằng điều hướng thật. Endpoint của mọi module đã khai báo sẵn
 - Chỗ slide khác backend thật thì theo backend (mã thành công là `0000`, app chấp nhận cả `1000`).
 
 ### Giới hạn của backend (đã kiểm chứng, cần backend bổ sung)
+
+- Reaction bình luận: đặc tả `/react` mô tả COMMENT nhưng enum chưa liệt kê COMMENT;
+  `GET /comments` cũng chưa mô tả số reaction/trạng thái đã thích. FE đã nối request COMMENT,
+  cần xác nhận backend trước khi kết luận chạy được trên server thật. Xem `docs/qa/comment_reactions.md`.
 
 - Hồ sơ **không có** quyền riêng tư theo từng mục, không có học vấn / công việc / nơi sống. Chỉ bài
   viết có `visibility` (`PUBLIC`, `FRIENDS`, `ONLY_ME`). `GET /users/{id}` không trả email, ngày sinh.

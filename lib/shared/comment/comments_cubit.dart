@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../data/models/comment_model.dart';
+import '../../data/models/react_result.dart';
 import '../../data/repositories/comment_repository.dart';
+import '../../data/repositories/reaction_repository.dart';
 
 enum CommentsStatus { loading, loaded, failure }
 
@@ -54,6 +56,8 @@ class CommentsState extends Equatable {
 
   /// Tổng chênh lệch số bình luận so với lúc mở (để cập nhật PostCard)
   final int countDelta;
+  final Map<int, ReactResult> reactions;
+  final Set<int> reactingIds;
 
   const CommentsState({
     this.status = CommentsStatus.loading,
@@ -66,6 +70,8 @@ class CommentsState extends Equatable {
     this.replyingTo,
     this.threads = const {},
     this.countDelta = 0,
+    this.reactions = const {},
+    this.reactingIds = const {},
   });
 
   CommentsState copyWith({
@@ -81,6 +87,8 @@ class CommentsState extends Equatable {
     bool clearReplyingTo = false,
     Map<int, ReplyThread>? threads,
     int? countDelta,
+    Map<int, ReactResult>? reactions,
+    Set<int>? reactingIds,
   }) => CommentsState(
     status: status ?? this.status,
     items: items ?? this.items,
@@ -92,7 +100,19 @@ class CommentsState extends Equatable {
     replyingTo: clearReplyingTo ? null : (replyingTo ?? this.replyingTo),
     threads: threads ?? this.threads,
     countDelta: countDelta ?? this.countDelta,
+    reactions: reactions ?? this.reactions,
+    reactingIds: reactingIds ?? this.reactingIds,
   );
+
+  CommentModel withReaction(CommentModel comment) {
+    final reaction = reactions[comment.commentId];
+    return reaction == null
+        ? comment
+        : comment.copyWith(
+            reactCount: reaction.totalCount,
+            reactedByMe: reaction.reacted,
+          );
+  }
 
   @override
   List<Object?> get props => [
@@ -106,17 +126,79 @@ class CommentsState extends Equatable {
     replyingTo,
     threads,
     countDelta,
+    reactions,
+    reactingIds,
   ];
 }
 
 /// Logic bình luận dùng chung cho POST / SESSION / QUESTION.
 class CommentsCubit extends Cubit<CommentsState> {
   final CommentRepository _repo;
+  final ReactionRepository _reactions;
   final TargetType targetType;
   final int targetId;
 
-  CommentsCubit(this._repo, {required this.targetType, required this.targetId})
-    : super(const CommentsState());
+  CommentsCubit(
+    this._repo, {
+    required ReactionRepository reactions,
+    required this.targetType,
+    required this.targetId,
+  }) : _reactions = reactions,
+       super(const CommentsState());
+
+  Future<ApiException?> toggleLike(CommentModel comment) async {
+    final id = comment.commentId;
+    if (isClosed ||
+        comment.hidden ||
+        comment.author == null ||
+        state.reactingIds.contains(id)) {
+      return null;
+    }
+    final before = state.reactions[id];
+    final current = state.withReaction(comment);
+    final next = !current.reactedByMe;
+    emit(
+      state.copyWith(
+        reactions: {
+          ...state.reactions,
+          id: ReactResult(
+            myReaction: next ? 'LIKE' : null,
+            totalCount: (current.reactCount + (next ? 1 : -1)).clamp(
+              0,
+              1 << 30,
+            ),
+          ),
+        },
+        reactingIds: {...state.reactingIds, id},
+      ),
+    );
+    try {
+      final result = await _reactions.toggleLike(
+        targetType: TargetType.comment,
+        targetId: id,
+      );
+      if (isClosed) return null;
+      emit(
+        state.copyWith(
+          reactions: {...state.reactions, id: result},
+          reactingIds: {...state.reactingIds}..remove(id),
+        ),
+      );
+      return null;
+    } on ApiException catch (error) {
+      if (!isClosed) {
+        final restored = {...state.reactions}..remove(id);
+        if (before != null) restored[id] = before;
+        emit(
+          state.copyWith(
+            reactions: restored,
+            reactingIds: {...state.reactingIds}..remove(id),
+          ),
+        );
+      }
+      return error;
+    }
+  }
 
   Future<void> load() async {
     emit(const CommentsState());

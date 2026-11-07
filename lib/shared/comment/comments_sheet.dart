@@ -11,6 +11,7 @@ import '../../core/widgets/user_avatar.dart';
 import '../../data/models/comment_model.dart';
 import '../../data/repositories/comment_repository.dart';
 import '../../data/repositories/report_repository.dart';
+import '../../data/repositories/reaction_repository.dart';
 import '../../di/locator.dart';
 import '../../features/profile/cubit/profile_cubit.dart';
 import '../report/report_sheet.dart';
@@ -43,6 +44,7 @@ Future<void> showCommentsSheet(
     builder: (sheetContext) => BlocProvider(
       create: (_) => CommentsCubit(
         getIt<CommentRepository>(),
+        reactions: getIt<ReactionRepository>(),
         targetType: targetType,
         targetId: targetId,
       )..load(),
@@ -117,6 +119,11 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     );
     if (!ok || !mounted) return;
     final error = await context.read<CommentsCubit>().delete(c);
+    if (error != null && mounted) AppFeedback.error(context, error);
+  }
+
+  Future<void> _like(CommentModel comment) async {
+    final error = await context.read<CommentsCubit>().toggleLike(comment);
     if (error != null && mounted) AppFeedback.error(context, error);
   }
 
@@ -229,7 +236,10 @@ class _CommentsSheetState extends State<_CommentsSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CommentTile(
-              comment: c,
+              key: ValueKey('comment_${c.commentId}'),
+              comment: state.withReaction(c),
+              liking: state.reactingIds.contains(c.commentId),
+              onLike: () => _like(c),
               isMine: c.author?.userId == myId,
               onReply: () {
                 cubit.startReply(c);
@@ -250,7 +260,10 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                 children: [
                   for (final r in loadedReplies)
                     CommentTile(
-                      comment: r,
+                      key: ValueKey('comment_${r.commentId}'),
+                      comment: state.withReaction(r),
+                      liking: state.reactingIds.contains(r.commentId),
+                      onLike: () => _like(r),
                       isReply: true,
                       isMine: r.author?.userId == myId,
                       onReply: () {

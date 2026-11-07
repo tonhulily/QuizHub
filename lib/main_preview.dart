@@ -17,8 +17,9 @@ import 'di/locator.dart';
 /// flutter run -t lib/main_preview.dart --dart-define=SEED_SAVED_ACCOUNT=true
 /// ```
 ///
-/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết được lưu trên
-/// máy qua các lần chạy; dữ liệu khác vẫn trong RAM. Bản thật là `lib/main.dart`.
+/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết và reaction
+/// bình luận mẫu được lưu trên máy qua các lần chạy; dữ liệu khác trong RAM.
+/// Bản thật là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final preferences = await SharedPreferences.getInstance();

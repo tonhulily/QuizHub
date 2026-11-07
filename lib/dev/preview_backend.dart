@@ -42,11 +42,15 @@ class PreviewTokens extends TokenStorage {
 /// Backend giả (trả dữ liệu mẫu) để xem & phát triển giao diện khi chưa có
 /// tài khoản / mạng tới server. Chạy: `flutter run -t lib/main_preview.dart`.
 ///
-/// Bài viết được lưu trên máy khi truyền [preferences]; các module khác nằm
-/// trong RAM. Không truyền kho lưu trữ khi dùng làm fixture cho unit test.
+/// Bài viết và reaction bình luận mẫu được lưu trên máy khi truyền
+/// [preferences]; dữ liệu khác nằm trong RAM. Không truyền kho lưu trữ khi
+/// dùng làm fixture cho unit test.
 class PreviewBackend implements HttpClientAdapter {
   static const _postsKey = 'preview_posts_v1';
+  static const _commentReactionsKey = 'preview_comment_reactions_v1';
   final SharedPreferences? _preferences;
+  final Map<int, Map<String, dynamic>> _commentReactions = {};
+  int _nextCommentId = 1000000000;
   Future<void> _pendingRequest = Future<void>.value();
 
   /// Vai trò người dùng mẫu. Thử nhánh của giảng viên (Đề thi...):
@@ -208,6 +212,7 @@ class PreviewBackend implements HttpClientAdapter {
       'noted_lecturer': _minh,
     };
     _restorePosts();
+    _restoreCommentReactions();
     if (preferences != null) {
       // Trước khi preview có lưu trữ, ID đã xoá vẫn được LocalStorage nhớ lại.
       // Không cấp lại các ID đó, nếu không bài mới sẽ bị bộ lọc xoá ẩn đi.
@@ -223,6 +228,109 @@ class PreviewBackend implements HttpClientAdapter {
     'next_id': _nextId,
     'posts': _posts.values.toList(),
   };
+
+  void _restoreCommentReactions() {
+    final raw = _preferences?.get(_commentReactionsKey);
+    if (raw is! String) return;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return;
+      final restored = <int, Map<String, dynamic>>{};
+      for (final entry in decoded.entries) {
+        final id = int.tryParse(entry.key);
+        final fields = entry.value;
+        if (id == null ||
+            id <= 0 ||
+            fields is! Map<String, dynamic> ||
+            fields['reacted_by_me'] is! bool ||
+            fields['react_count'] is! int ||
+            (fields['react_count'] as int) < 0) {
+          return;
+        }
+        restored[id] = fields;
+      }
+      _commentReactions.addAll(restored);
+      for (final id in restored.keys) {
+        if (id >= _nextCommentId) _nextCommentId = id + 1;
+      }
+    } on FormatException {
+      // Bỏ qua dữ liệu demo hỏng; lần tương tác tiếp theo sẽ lưu lại.
+    }
+  }
+
+  String _encodedCommentReactions() => jsonEncode({
+    for (final entry in _commentReactions.entries) '${entry.key}': entry.value,
+  });
+
+  Map<String, dynamic> _commentReactionFields(int id) =>
+      _commentReactions[id] ?? {'reacted_by_me': false, 'react_count': 0};
+
+  // ID mẫu riêng cho mỗi bài/phiên/câu hỏi, để like một nơi không lan sang nơi
+  // khác. Bình luận tạo mới dùng dải ID riêng, tăng tiếp sau ID đã lưu reaction.
+  int _sampleCommentId(Map<String, dynamic> query, int slot) {
+    final targetId = int.tryParse('${query['target_id']}') ?? 0;
+    final type = switch (query['target_type']) {
+      'SESSION' => 1,
+      'QUESTION' => 2,
+      _ => 0,
+    };
+    return (targetId * 3 + type) * 3 + slot;
+  }
+
+  Future<ResponseBody> _reactToComment(Map body) async {
+    final id = int.tryParse('${body['target_id']}');
+    if (id == null || id <= 0) {
+      return _response(
+        null,
+        status: 400,
+        code: '1003',
+        message: 'ID bình luận không hợp lệ.',
+      );
+    }
+    final before = _commentReactions[id];
+    final current = _commentReactionFields(id);
+    final liked = current['reacted_by_me'] != true;
+    final count = ((current['react_count'] as int) + (liked ? 1 : -1)).clamp(
+      0,
+      1 << 30,
+    );
+    _commentReactions[id] = {'reacted_by_me': liked, 'react_count': count};
+    final preferences = _preferences;
+    if (preferences != null) {
+      try {
+        if (!await preferences.setString(
+          _commentReactionsKey,
+          _encodedCommentReactions(),
+        )) {
+          throw StateError('Could not save preview comment reaction');
+        }
+      } catch (_) {
+        if (before == null) {
+          _commentReactions.remove(id);
+        } else {
+          _commentReactions[id] = before;
+        }
+        try {
+          await preferences.setString(
+            _commentReactionsKey,
+            _encodedCommentReactions(),
+          );
+        } catch (_) {
+          // Trả lỗi; UI sẽ hoàn tác lượt thích vừa bấm.
+        }
+        return _response(
+          null,
+          status: 500,
+          code: '1001',
+          message: 'Không thể lưu lượt thích trên máy. Vui lòng thử lại.',
+        );
+      }
+    }
+    return _response({
+      'my_reaction': liked ? 'LIKE' : 'NONE',
+      'total_count': count,
+    });
+  }
 
   void _restorePosts() {
     final raw = _preferences?.get(_postsKey);
@@ -278,6 +386,12 @@ class PreviewBackend implements HttpClientAdapter {
   );
 
   Future<ResponseBody> _respond(RequestOptions options) async {
+    if (options.path == '/react' &&
+        options.method == 'POST' &&
+        options.data is Map &&
+        options.data['target_type'] == 'COMMENT') {
+      return _reactToComment(options.data as Map);
+    }
     final persist = _preferences != null && _changesPosts(options);
     // Giữ bản độc lập để hoàn tác nếu ghi xuống máy thất bại.
     final previous = persist ? jsonEncode(_postSnapshot()) : null;
@@ -635,10 +749,13 @@ class PreviewBackend implements HttpClientAdapter {
     }
     if (path == '/comments' && m == 'GET') {
       if (q['parent_comment_id'] != null) {
+        final parentId = int.tryParse('${q['parent_comment_id']}');
+        if (parentId != _sampleCommentId(q, 1)) return page([]);
         return page([
           {
-            'comment_id': 202,
-            'target_type': 'POST',
+            'comment_id': _sampleCommentId(q, 2),
+            ..._commentReactionFields(_sampleCommentId(q, 2)),
+            'target_type': q['target_type'],
             'target_id': q['target_id'],
             'parent_comment_id': q['parent_comment_id'],
             'content': 'Chọn nút kế nhiệm thì thường ít xoay hơn bạn nhé.',
@@ -652,8 +769,9 @@ class PreviewBackend implements HttpClientAdapter {
       }
       return page([
         {
-          'comment_id': 201,
-          'target_type': 'POST',
+          'comment_id': _sampleCommentId(q, 1),
+          ..._commentReactionFields(_sampleCommentId(q, 1)),
+          'target_type': q['target_type'],
           'target_id': q['target_id'],
           'content': 'Bạn thử vẽ cây ra giấy rồi so sánh từng bước xem.',
           'author': _minh,
@@ -664,8 +782,9 @@ class PreviewBackend implements HttpClientAdapter {
               .toIso8601String(),
         },
         {
-          'comment_id': 203,
-          'target_type': 'POST',
+          'comment_id': _sampleCommentId(q, 3),
+          ..._commentReactionFields(_sampleCommentId(q, 3)),
+          'target_type': q['target_type'],
           'target_id': q['target_id'],
           'content': 'Mình cũng đang thắc mắc đúng chỗ này 😅',
           'author': _lan,
@@ -678,7 +797,9 @@ class PreviewBackend implements HttpClientAdapter {
     }
     if (path == '/comments' && m == 'POST') {
       return {
-        'comment_id': _nextId++,
+        'comment_id': _nextCommentId++,
+        'react_count': 0,
+        'reacted_by_me': false,
         'target_type': body['target_type'],
         'target_id': body['target_id'],
         'parent_comment_id': body['parent_comment_id'],
