@@ -14,8 +14,9 @@ powershell -ExecutionPolicy Bypass -File scripts\setup.ps1   # Windows; Git Bash
 flutter run -d <id>          # id lấy từ: flutter devices
 ```
 Chưa có tài khoản thì chạy bản **xem trước** (dữ liệu mẫu, đã đăng nhập sẵn):
-`flutter run -d <id> -t lib/main_preview.dart`. Bài viết tạo/sửa/xoá, reaction bình luận và
-quan hệ bạn bè/theo dõi/chặn mẫu được lưu trên máy qua các lần chạy; dữ liệu khác vẫn nằm trong RAM.
+`flutter run -d <id> -t lib/main_preview.dart`. Bài viết tạo/sửa/xoá, reaction bình luận,
+quan hệ bạn bè/theo dõi/chặn và lịch sử chat mẫu được lưu trên máy qua các lần chạy;
+dữ liệu khác vẫn nằm trong RAM. Tin nhắn chỉ báo gửi thành công sau khi lưu xong.
 Xem cách kiểm tra ở [docs/qa/post_preview.md](docs/qa/post_preview.md),
 [docs/qa/comment_reactions.md](docs/qa/comment_reactions.md) và [docs/qa/relationships.md](docs/qa/relationships.md).
 Thêm dữ liệu mẫu cho API mới trong hàm

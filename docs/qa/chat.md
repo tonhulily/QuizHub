@@ -20,7 +20,8 @@ Mốc 1 chỉ kiểm tra danh sách/lịch sử; gửi tin nằm ở mốc 2.
 5. Mất mạng ngay sau gửi: nội dung được giữ nếu chưa xác nhận. Bấm gửi lại sẽ kiểm tra lịch sử trước và hỏi xác nhận nếu chưa thấy tin.
 6. Thu nhỏ rồi mở lại app: kết nối và danh sách tự cập nhật. Đăng xuất: kết nối phải dừng.
 
-Bản preview dùng realtime trong RAM và có phản hồi mẫu, phục vụ kiểm tra UI; không thay thế kiểm tra STOMP với hai tài khoản thật.
+Bản preview mô phỏng realtime và có phản hồi mẫu, phục vụ kiểm tra UI; hội thoại và lịch sử
+chữ/ảnh được lưu trên máy. Không thay thế kiểm tra STOMP với hai tài khoản thật.
 
 ## Mốc 3: quyền gửi và khôi phục kết nối
 
@@ -33,3 +34,33 @@ Bản preview dùng realtime trong RAM và có phản hồi mẫu, phục vụ k
 - Đăng xuất rồi đăng nhập tài khoản khác: không nhận sự kiện từ kết nối cũ.
 - Thu hồi một tin cũ đã tải qua phân trang: vẫn giữ chỗ Tin nhắn đã thu hồi.
 - Server đã lưu tin nhưng echo bị mất: kiểm tra lại lịch sử, xác nhận đúng tin và không gửi lại tự động.
+
+## Giao diện chat kiểu Messenger
+
+- Mở Tin nhắn: tìm theo tên hoặc nội dung tin cuối, chuyển Tất cả/Chưa đọc.
+  Khi lọc, các trang hội thoại cũ cũng được tải để tìm đủ kết quả; kéo làm mới giữ bộ lọc.
+- Danh sách hiển thị ảnh đại diện, tin cuối (có tiền tố Bạn cho tin gửi đi), giờ và số chưa đọc từ API.
+  Không suy diễn trạng thái online khi API chưa cung cấp.
+- Trong chat: tin mình nằm bên phải, tin nhận bên trái; tin liên tiếp cùng người gửi được gom,
+  có mốc thời gian và trạng thái Đã gửi/Đã xem. Nhấn giữ để sao chép, xoá hoặc thu hồi tin của mình.
+- Ảnh hiện trực tiếp trong bong bóng; bấm để xem toàn màn hình. Ảnh đang soạn có thumbnail và nút gỡ.
+  Nút thích khi ô soạn trống gửi emoji 👍 dưới dạng tin nhắn chữ.
+- Cuộn lên xem lịch sử rồi bấm nút mũi tên để về tin mới nhất. Tin đến không kéo người đang đọc tin cũ xuống.
+- Ngắt mạng khi tải lịch sử/kiểm tra quyền: hết vòng chờ, có Thử lại; không mở khoá gửi khi chưa xác nhận quyền.
+- Thu hồi/xoá một tin nằm ngoài trang đầu ở phiên khác, sau đó đồng bộ/reconnect: phần lịch sử đã tải cũng cập nhật.
+
+Các thao tác trên thuộc FE và dùng API/STOMP hiện có. Preview vẫn có phản hồi tự động,
+chưa mô phỏng hai tài khoản trên hai app cùng trao đổi dữ liệu.
+
+## Giữ tin nhắn preview khi thoát và mở lại
+
+- Gửi chữ và ảnh trong hội thoại có sẵn và hội thoại mới. Chờ xác nhận gửi, quay lại danh sách,
+  mở lại: tin còn đúng một bản, tin cuối trên danh sách khớp lịch sử.
+- Đóng hẳn app rồi mở lại hoặc hot restart: giữ nội dung, ảnh, hội thoại mới và con trỏ tải thêm;
+  gửi tiếp không trùng ID. Không xoá app/xoá dữ liệu trong bài kiểm tra này.
+- Xoá hoặc thu hồi tin, mở app lại: trạng thái vẫn giữ, nội dung đã gỡ không xuất hiện lại.
+- Nếu ghi bộ nhớ lỗi: không báo Đã gửi, giữ nội dung soạn để thử lại và không tạo tin ma trong
+  lịch sử. Chỉ xác nhận sau khi ghi hoàn tất; tải lại trong lúc ghi không đọc trạng thái chưa lưu.
+- Chặn/bỏ chặn chỉ ẩn/hiện hội thoại, không xoá lịch sử đã lưu. Các module khác vẫn giữ dữ liệu cũ.
+
+Phần lưu này chỉ dành cho dữ liệu preview của tài khoản mẫu và không thay đổi backend thật.

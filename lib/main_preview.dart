@@ -18,7 +18,7 @@ import 'di/locator.dart';
 /// ```
 ///
 /// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết, reaction
-/// bình luận và quan hệ xã hội được lưu trên máy; dữ liệu khác trong RAM.
+/// bình luận, quan hệ xã hội và lịch sử chat được lưu trên máy; dữ liệu khác trong RAM.
 /// Bản thật là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

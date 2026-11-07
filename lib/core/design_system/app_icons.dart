@@ -59,6 +59,7 @@ class AppIcons {
   static const dropdown = PhosphorIconsFill.caretDown;
   static const refresh = PhosphorIconsBold.arrowClockwise;
   static const edit = PhosphorIconsRegular.pencilSimple;
+  static const copy = PhosphorIconsRegular.copy;
   static const delete = PhosphorIconsRegular.trash;
   static const flag = PhosphorIconsRegular.flag;
   static const settings = PhosphorIconsFill.gear;

@@ -7,6 +7,7 @@ import '../../../core/services/chat_realtime.dart';
 import '../../../core/services/social_events.dart';
 import '../../../core/services/blocked_users.dart';
 import '../../../data/models/chat_models.dart';
+import '../../../data/models/cursor_page.dart';
 import '../../../data/repositories/chat_repository.dart';
 
 enum ChatStatus { loading, loaded, failure }
@@ -26,6 +27,7 @@ class ChatDetailState extends Equatable {
   final bool isTyping;
   final int lastReadMessageId;
   final bool checkingAccess;
+  final bool accessVerified;
   final bool sendRestricted;
   final String restrictionMessage;
 
@@ -44,6 +46,7 @@ class ChatDetailState extends Equatable {
     this.isTyping = false,
     this.lastReadMessageId = 0,
     this.checkingAccess = false,
+    this.accessVerified = false,
     this.sendRestricted = false,
     this.restrictionMessage =
         'Không thể nhắn tin khi một trong hai người chặn người còn lại.',
@@ -65,6 +68,7 @@ class ChatDetailState extends Equatable {
     bool? isTyping,
     int? lastReadMessageId,
     bool? checkingAccess,
+    bool? accessVerified,
     bool? sendRestricted,
     String? restrictionMessage,
   }) => ChatDetailState(
@@ -82,6 +86,7 @@ class ChatDetailState extends Equatable {
     isTyping: isTyping ?? this.isTyping,
     lastReadMessageId: lastReadMessageId ?? this.lastReadMessageId,
     checkingAccess: checkingAccess ?? this.checkingAccess,
+    accessVerified: accessVerified ?? this.accessVerified,
     sendRestricted: sendRestricted ?? this.sendRestricted,
     restrictionMessage: restrictionMessage ?? this.restrictionMessage,
   );
@@ -102,6 +107,7 @@ class ChatDetailState extends Equatable {
     isTyping,
     lastReadMessageId,
     checkingAccess,
+    accessVerified,
     sendRestricted,
     restrictionMessage,
   ];
@@ -193,11 +199,13 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
   Future<void> load() async {
     if (isClosed) return;
     final request = ++_request;
+    final previous = state.messages;
+    final previousIds = previous.map((m) => m.messageId).toSet();
     emit(
       state.copyWith(
         refreshing: state.status == ChatStatus.loaded,
         clearError: true,
-        checkingAccess: realtime != null,
+        checkingAccess: realtime != null && !state.accessVerified,
       ),
     );
     try {
@@ -206,18 +214,42 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
           await _repo.direct(target.user!.userId, myId: myId);
       if (isClosed || request != _request) return;
       emit(state.copyWith(conversation: conversation));
-      final page = await _repo.messages(conversation.conversationId);
+      var page = await _historyPage(conversation.conversationId);
       if (isClosed || request != _request) return;
-      final first = state.status != ChatStatus.loaded || state.messages.isEmpty;
+      final fresh = [...page.items];
+      final visited = <String>{};
+      // Đồng bộ tới tin cũ nhất đã xem để nhận cả thu hồi/xoá ngoài trang đầu.
+      while (previous.isNotEmpty &&
+          page.hasNext &&
+          !fresh.any((m) => _atOrBefore(m, previous.last))) {
+        final after = page.after;
+        if (after == null || !visited.add(after)) {
+          throw const ApiException(
+            type: ApiErrorType.server,
+            message: 'Không thể đồng bộ lịch sử. Vui lòng thử lại.',
+          );
+        }
+        page = await _historyPage(conversation.conversationId, after: after);
+        if (isClosed || request != _request) return;
+        fresh.addAll(page.items);
+      }
+      final freshIds = fresh.map((m) => m.messageId).toSet();
+      final retained = state.messages
+          .where(
+            (m) =>
+                freshIds.contains(m.messageId) ||
+                !previousIds.contains(m.messageId),
+          )
+          .toList();
       emit(
         state.copyWith(
           status: ChatStatus.loaded,
           conversation: conversation,
-          messages: mergeMessages(state.messages, page.items),
+          messages: mergeMessages(retained, fresh),
           refreshing: false,
           loadingMore: false,
-          after: first ? page.after : state.after,
-          hasNext: first ? page.hasNext : state.hasNext,
+          after: page.after,
+          hasNext: page.hasNext,
         ),
       );
       _watch(conversation.conversationId);
@@ -249,10 +281,30 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
               : ChatStatus.failure,
           error: e,
           refreshing: false,
+          loadingMore: false,
+          checkingAccess: false,
+          accessVerified: false,
         ),
       );
       _restrict(e);
     }
+  }
+
+  Future<CursorPage<ChatMessage>> _historyPage(int id, {String? after}) async {
+    try {
+      return await _repo.messages(id, after: after);
+    } on ApiException catch (e) {
+      if (e.isNoMoreData) return const CursorPage(items: [], hasNext: false);
+      rethrow;
+    }
+  }
+
+  bool _atOrBefore(ChatMessage message, ChatMessage boundary) {
+    if (message.createdAt != null && boundary.createdAt != null) {
+      final order = message.createdAt!.compareTo(boundary.createdAt!);
+      if (order != 0) return order < 0;
+    }
+    return message.messageId <= boundary.messageId;
   }
 
   void _watch(int id) {
@@ -330,6 +382,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
     if (!_active ||
         state.sendRestricted ||
         state.checkingAccess ||
+        !state.accessVerified ||
         state.messages.isEmpty ||
         state.connection != ChatConnection.connected) {
       return;
@@ -349,7 +402,12 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
       _lastTyping = null;
       return;
     }
-    if (state.sendRestricted || state.checkingAccess || !_active) return;
+    if (state.sendRestricted ||
+        state.checkingAccess ||
+        !state.accessVerified ||
+        !_active) {
+      return;
+    }
     final now = DateTime.now();
     if (_lastTyping == null ||
         now.difference(_lastTyping!) > const Duration(seconds: 2)) {
@@ -402,7 +460,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
     List<String> mediaUrls = const [],
     bool allowRetry = false,
   }) async {
-    if (state.sendRestricted || state.checkingAccess) {
+    if (state.sendRestricted || state.checkingAccess || !state.accessVerified) {
       return ApiException(
         type: ApiErrorType.forbidden,
         message: state.sendRestricted
@@ -523,7 +581,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
     final request = ++_accessRequest;
     final peer = _peerId;
     if (peer == null) {
-      emit(state.copyWith(checkingAccess: false));
+      emit(state.copyWith(checkingAccess: false, accessVerified: true));
       _markRead();
       return;
     }
@@ -544,6 +602,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
       emit(
         state.copyWith(
           checkingAccess: false,
+          accessVerified: !blocked,
           sendRestricted: blocked,
           messages: blocked ? const [] : state.messages,
           hasNext: blocked ? false : state.hasNext,
@@ -556,7 +615,13 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
       if (!blocked) _markRead();
     } on ApiException catch (e) {
       if (!isClosed && request == _accessRequest) {
-        emit(state.copyWith(error: e));
+        emit(
+          state.copyWith(
+            error: e,
+            checkingAccess: false,
+            accessVerified: false,
+          ),
+        );
         _restrict(e);
       }
     }
@@ -576,6 +641,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
         hasNext: false,
         lastReadMessageId: 0,
         checkingAccess: false,
+        accessVerified: false,
         isTyping: false,
         restrictionMessage: error.message,
       ),

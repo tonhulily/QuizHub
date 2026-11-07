@@ -44,7 +44,7 @@ class PreviewTokens extends TokenStorage {
 /// Backend giả (trả dữ liệu mẫu) để xem & phát triển giao diện khi chưa có
 /// tài khoản / mạng tới server. Chạy: `flutter run -t lib/main_preview.dart`.
 ///
-/// Bài viết, reaction bình luận và quan hệ xã hội được lưu trên máy khi truyền
+/// Bài viết, reaction bình luận, quan hệ xã hội và chat được lưu trên máy khi truyền
 /// [preferences]; dữ liệu khác nằm trong RAM. Không truyền kho lưu trữ khi
 /// dùng làm fixture cho unit test.
 class PreviewBackend implements HttpClientAdapter {
@@ -151,6 +151,7 @@ class PreviewBackend implements HttpClientAdapter {
     person: _person,
     me: _me,
     isBlocked: _blocked.contains,
+    preferences: _preferences,
   );
 
   PreviewBackend({SharedPreferences? preferences})
@@ -509,6 +510,27 @@ class PreviewBackend implements HttpClientAdapter {
   );
 
   Future<ResponseBody> _respond(RequestOptions options) async {
+    if (PreviewChat.handles(options.method, options.path)) {
+      try {
+        return _response(
+          await chat.handle(
+            options.method,
+            options.path,
+            options.queryParameters,
+            options.data is Map
+                ? Map<String, dynamic>.from(options.data as Map)
+                : {},
+          ),
+        );
+      } on ApiException catch (e) {
+        return _response(
+          null,
+          status: e.statusCode ?? 500,
+          code: e.code ?? '1001',
+          message: e.message,
+        );
+      }
+    }
     if (options.path == '/react' &&
         options.method == 'POST' &&
         options.data is Map &&
@@ -604,8 +626,6 @@ class PreviewBackend implements HttpClientAdapter {
 
     final qbank = _qbank.route(m, path, q, body);
     if (!identical(qbank, PreviewQbank.unhandled)) return qbank;
-    final chatResult = chat.route(m, path, q, body);
-    if (!identical(chatResult, PreviewChat.unhandled)) return chatResult;
 
     if (path == '/auth/login' && m == 'POST') {
       // Chấp nhận mọi tài khoản trong bản xem trước (để thử luồng đăng nhập nhanh)
