@@ -7,6 +7,7 @@ import '../../core/widgets/user_avatar.dart';
 import '../../data/models/comment_model.dart';
 import '../media/media_viewer.dart';
 import '../widgets/link_text.dart';
+import '../widgets/blocked_content.dart';
 import '../../data/models/media_item.dart';
 import '../../core/design_system/app_icons.dart';
 
@@ -40,31 +41,18 @@ class CommentTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => BlockedContent(
+    userIds: [comment.author?.userId],
+    blockedChild: const _UnavailableComment(),
+    child: _content(context),
+  );
+
+  Widget _content(BuildContext context) {
     final theme = Theme.of(context);
     final author = comment.author;
 
     if (comment.hidden || author == null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            const Icon(
-              AppIcons.eyeOff,
-              size: 16,
-              color: AppColors.textTertiary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Bình luận này không khả dụng',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontStyle: FontStyle.italic,
-                color: AppColors.textTertiary,
-              ),
-            ),
-          ],
-        ),
-      );
+      return const _UnavailableComment();
     }
 
     final avatarSize = isReply ? 24.0 : 32.0;
@@ -149,9 +137,11 @@ class CommentTile extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: GestureDetector(
-                      onTap: () => MediaViewer.open(context, [
-                        MediaItem(url: comment.mediaUrl!),
-                      ]),
+                      onTap: () => MediaViewer.open(
+                        context,
+                        [MediaItem(url: comment.mediaUrl!)],
+                        userIds: [comment.author!.userId],
+                      ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: CachedNetworkImage(
@@ -205,6 +195,27 @@ class CommentTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _UnavailableComment extends StatelessWidget {
+  const _UnavailableComment();
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        const Icon(AppIcons.eyeOff, size: 16, color: AppColors.textTertiary),
+        const SizedBox(width: 8),
+        Text(
+          'Bình luận này không khả dụng',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontStyle: FontStyle.italic,
+            color: AppColors.textTertiary,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _TextAction extends StatelessWidget {

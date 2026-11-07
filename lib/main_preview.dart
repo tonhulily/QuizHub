@@ -17,8 +17,8 @@ import 'di/locator.dart';
 /// flutter run -t lib/main_preview.dart --dart-define=SEED_SAVED_ACCOUNT=true
 /// ```
 ///
-/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết và reaction
-/// bình luận mẫu được lưu trên máy qua các lần chạy; dữ liệu khác trong RAM.
+/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết, reaction
+/// bình luận và quan hệ xã hội được lưu trên máy; dữ liệu khác trong RAM.
 /// Bản thật là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +28,7 @@ Future<void> main() async {
     tokenStorage: PreviewTokens(),
     httpAdapter: backend,
     chatRealtime: backend.chat.realtime,
+    blockStorageScope: 'preview',
   );
   AppFeedback.configureLoading();
 

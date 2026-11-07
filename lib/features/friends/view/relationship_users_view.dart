@@ -122,6 +122,8 @@ class _RelationshipUsersViewState extends State<RelationshipUsersView> {
           ),
           itemBuilder: (context, user) => PersonCard(
             key: ValueKey('${widget.kind.name}_${user.userId}'),
+            userId: user.userId,
+            allowBlocked: isBlocked,
             name: user.fullName,
             avatarUrl: user.avatarUrl,
             frameUrl: user.frameUrl,

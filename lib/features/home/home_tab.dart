@@ -7,6 +7,7 @@ import '../../core/bloc/paged_cubit.dart';
 import '../../core/design_system/app_colors.dart';
 import '../../core/design_system/component_tokens.dart';
 import '../../core/services/post_events.dart';
+import '../../core/services/blocked_users.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/utils/time_format.dart';
 import '../../core/widgets/paged_list.dart';
@@ -35,6 +36,7 @@ class _HomeTabState extends State<HomeTab> {
   late final PagedCubit<FeedItem> _feed;
   StreamSubscription<dynamic>? _sub;
   StreamSubscription<PostModel>? _updatedSub;
+  StreamSubscription<void>? _blocksSub;
 
   @override
   void initState() {
@@ -58,12 +60,24 @@ class _HomeTabState extends State<HomeTab> {
         );
       }
     });
+    if (getIt.isRegistered<BlockedUsers>()) {
+      final blocks = getIt<BlockedUsers>();
+      _blocksSub = blocks.onChanged.listen((_) {
+        _feed.removeWhere(
+          (item) =>
+              blocks.contains(item.actor?.userId) ||
+              blocks.contains(item.toPost()?.author.userId),
+        );
+        unawaited(_feed.refresh());
+      });
+    }
   }
 
   @override
   void dispose() {
     _sub?.cancel();
     _updatedSub?.cancel();
+    _blocksSub?.cancel();
     _feed.close();
     super.dispose();
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../core/services/chat_realtime.dart';
 import '../core/network/api_exception.dart';
+import '../core/services/blocked_users.dart';
 import '../data/models/chat_models.dart';
 
 /// Dữ liệu chat trong RAM cho bản xem trước; không gọi backend thật.
@@ -110,21 +111,23 @@ class PreviewChat {
     if (path == '/conversations' && method == 'GET') {
       final rows = [
         for (final entry in peers.entries)
-          {
-            'conversation_id': entry.key,
-            'type': 'DIRECT',
-            'display_name': person(entry.value)['full_name'],
-            'display_avatar_url': person(entry.value)['avatar_url'],
-            'last_message': messages[entry.key]?.lastOrNull,
-            'unread_count': 0,
-            'updated_at': messages[entry.key]?.lastOrNull?['created_at'],
-          },
+          if (!isBlocked(entry.value))
+            {
+              'conversation_id': entry.key,
+              'type': 'DIRECT',
+              'display_name': person(entry.value)['full_name'],
+              'display_avatar_url': person(entry.value)['avatar_url'],
+              'last_message': messages[entry.key]?.lastOrNull,
+              'unread_count': 0,
+              'updated_at': messages[entry.key]?.lastOrNull?['created_at'],
+            },
       ];
       rows.sort((a, b) => '${b['updated_at']}'.compareTo('${a['updated_at']}'));
       return _page(rows, query);
     }
     if (path == '/conversations/direct' && method == 'POST') {
       final peerId = int.parse('${body['target_user_id']}');
+      if (isBlocked(peerId)) throw BlockedUsers.unavailable;
       var id = peers.entries.where((e) => e.value == peerId).firstOrNull?.key;
       if (id == null) {
         id = peers.length + 1;
@@ -142,6 +145,8 @@ class PreviewChat {
     ).firstMatch(path);
     if (match != null && method == 'GET') {
       final id = int.parse(match[1]!);
+      final peer = peers[id];
+      if (peer != null && isBlocked(peer)) throw BlockedUsers.unavailable;
       if (match[2] == 'members') return [_member(1), _member(peers[id]!)];
       return {
         'conversation_id': id,

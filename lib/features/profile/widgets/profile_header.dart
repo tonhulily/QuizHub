@@ -69,9 +69,11 @@ class ProfileHeader extends StatelessWidget {
                   child: GestureDetector(
                     onTap: (p.coverUrl ?? '').isEmpty
                         ? null
-                        : () => MediaViewer.open(context, [
-                            MediaItem(url: p.coverUrl!),
-                          ]),
+                        : () => MediaViewer.open(
+                            context,
+                            [MediaItem(url: p.coverUrl!)],
+                            userIds: [p.userId],
+                          ),
                     child: _Cover(url: p.coverUrl),
                   ),
                 ),
@@ -96,9 +98,11 @@ class ProfileHeader extends StatelessWidget {
                     showBorder: true,
                     onTap: (p.avatarUrl ?? '').isEmpty
                         ? null
-                        : () => MediaViewer.open(context, [
-                            MediaItem(url: p.avatarUrl!),
-                          ]),
+                        : () => MediaViewer.open(
+                            context,
+                            [MediaItem(url: p.avatarUrl!)],
+                            userIds: [p.userId],
+                          ),
                   ),
                 ),
               ],

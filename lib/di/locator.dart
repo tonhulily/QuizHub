@@ -8,6 +8,8 @@ import '../core/services/device_service.dart';
 import '../core/services/post_events.dart';
 import '../core/services/social_events.dart';
 import '../core/services/chat_realtime.dart';
+import '../core/services/blocked_users.dart';
+import '../core/config/app_config.dart';
 import '../core/storage/credential_storage.dart';
 import '../core/storage/local_storage.dart';
 import '../core/storage/token_storage.dart';
@@ -41,6 +43,7 @@ Future<void> setupLocator({
   CredentialStorage? credentialStorage,
   HttpClientAdapter? httpAdapter,
   ChatRealtime? chatRealtime,
+  String blockStorageScope = 'server',
 }) async {
   // ---- Storage ----
   final prefs = await SharedPreferences.getInstance();
@@ -57,6 +60,13 @@ Future<void> setupLocator({
   getIt.registerSingleton<SessionEvents>(SessionEvents());
   getIt.registerSingleton<PostEvents>(PostEvents());
   getIt.registerSingleton<SocialEvents>(SocialEvents());
+  getIt.registerLazySingleton<BlockedUsers>(
+    () => BlockedUsers(
+      getIt<LocalStorage>(),
+      scope: '$blockStorageScope:${AppConfig.apiBaseUrl}',
+    ),
+    dispose: (value) => value.dispose(),
+  );
   getIt.registerLazySingleton<DeviceService>(
     () => DeviceService(getIt<LocalStorage>()),
   );
@@ -81,7 +91,7 @@ Future<void> setupLocator({
     dispose: (value) => value.dispose(),
   );
   getIt.registerLazySingleton<ChatRepository>(
-    () => ChatRepository(getIt<ApiClient>()),
+    () => ChatRepository(getIt<ApiClient>(), blocks: getIt<BlockedUsers>()),
   );
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(
@@ -97,10 +107,15 @@ Future<void> setupLocator({
       getIt<ApiClient>(),
       getIt<LocalStorage>(),
       getIt<CredentialStorage>(),
+      blocks: getIt<BlockedUsers>(),
     ),
   );
   getIt.registerLazySingleton<PostRepository>(
-    () => PostRepository(getIt<ApiClient>(), getIt<LocalStorage>()),
+    () => PostRepository(
+      getIt<ApiClient>(),
+      getIt<LocalStorage>(),
+      blocks: getIt<BlockedUsers>(),
+    ),
   );
   getIt.registerLazySingleton<CommentRepository>(
     () => CommentRepository(getIt<ApiClient>()),
@@ -115,13 +130,21 @@ Future<void> setupLocator({
     () => ReportRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<FriendRepository>(
-    () => FriendRepository(getIt<ApiClient>()),
+    () => FriendRepository(getIt<ApiClient>(), blocks: getIt<BlockedUsers>()),
   );
   getIt.registerLazySingleton<UserSearchRepository>(
-    () => UserSearchRepository(getIt<ApiClient>(), getIt<FriendRepository>()),
+    () => UserSearchRepository(
+      getIt<ApiClient>(),
+      getIt<FriendRepository>(),
+      blocks: getIt<BlockedUsers>(),
+    ),
   );
   getIt.registerLazySingleton<FeedRepository>(
-    () => FeedRepository(getIt<ApiClient>(), getIt<LocalStorage>()),
+    () => FeedRepository(
+      getIt<ApiClient>(),
+      getIt<LocalStorage>(),
+      blocks: getIt<BlockedUsers>(),
+    ),
   );
 
   // ---- Ngân hàng câu hỏi + Đề thi + AI (docs/qbank/API_CONTRACT.md) ----

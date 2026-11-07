@@ -24,8 +24,10 @@ Bản preview dùng realtime trong RAM và có phản hồi mẫu, phục vụ k
 
 ## Mốc 3: quyền gửi và khôi phục kết nối
 
-- Chặn đối phương từ hồ sơ trong khi chat đang mở: ô gửi bị khoá, không gửi typing/read tiếp; giữ nội dung nháp.
-- Bỏ chặn từ danh sách Người đã chặn rồi quay lại: app kiểm tra lại quyền và cho gửi khi backend xác nhận không bị chặn.
+- Chặn đối phương từ hồ sơ trong khi chat đang mở: ẩn tên/ảnh, lịch sử và ô gửi,
+  không gửi typing/read tiếp; giữ nội dung nháp của mình trong phiên. Hội thoại bị ẩn khỏi danh sách.
+- Bỏ chặn từ danh sách Người đã chặn rồi quay lại: app kiểm tra lại quyền, tải lại lịch sử,
+  hiện lại nội dung nháp và cho gửi khi backend xác nhận không bị chặn.
 - Đối phương chặn mình: kiểm tra bằng tài khoản thứ hai; backend phải từ chối gửi và client hiển thị lỗi/khóa gửi.
 - Đổi mạng/đưa app vào nền/mở lại nhiều lần: không lặp tin hoặc đăng ký trùng kênh.
 - Đăng xuất rồi đăng nhập tài khoản khác: không nhận sự kiện từ kết nối cũ.

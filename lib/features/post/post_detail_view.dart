@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/design_system/app_colors.dart';
 import '../../core/network/api_exception.dart';
+import '../../core/services/blocked_users.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/models/post_model.dart';
@@ -23,27 +25,43 @@ class _PostDetailViewState extends State<PostDetailView> {
   PostModel? _post;
   ApiException? _error;
   bool _loading = true;
+  int _request = 0;
+  StreamSubscription<void>? _blocksSub;
 
   @override
   void initState() {
     super.initState();
     _load();
+    if (getIt.isRegistered<BlockedUsers>()) {
+      _blocksSub = getIt<BlockedUsers>().onChanged.listen((_) => _load());
+    }
+  }
+
+  @override
+  void dispose() {
+    _blocksSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
+    final request = ++_request;
     setState(() {
+      if (getIt.isRegistered<BlockedUsers>() &&
+          getIt<BlockedUsers>().contains(_post?.author.userId)) {
+        _post = null;
+      }
       _loading = true;
       _error = null;
     });
     try {
       final post = await getIt<PostRepository>().getById(widget.postId);
-      if (!mounted) return;
+      if (!mounted || request != _request) return;
       setState(() {
         _post = post;
         _loading = false;
       });
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _request) return;
       setState(() {
         _error = e;
         _loading = false;

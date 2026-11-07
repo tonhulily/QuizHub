@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/bloc/paged_cubit.dart';
 import '../../../core/design_system/component_tokens.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/services/blocked_users.dart';
+import '../../../shared/widgets/blocked_content.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/fb_widgets.dart';
 import '../../../core/widgets/paged_list.dart';
@@ -41,34 +44,43 @@ class _UserProfileViewState extends State<UserProfileView> {
   ProfileModel? _profile;
   ApiException? _error;
   bool _loading = true;
+  StreamSubscription<void>? _blocksSub;
+  int _request = 0;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    if (getIt.isRegistered<BlockedUsers>()) {
+      _blocksSub = getIt<BlockedUsers>().onChanged.listen(
+        (_) => _loadProfile(),
+      );
+    }
   }
 
   @override
   void dispose() {
     _posts.close();
+    _blocksSub?.cancel();
     super.dispose();
   }
 
   Future<void> _loadProfile() async {
+    final request = ++_request;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final profile = await getIt<UserRepository>().getUser(widget.userId);
-      if (!mounted) return;
+      if (!mounted || request != _request) return;
       setState(() {
         _profile = profile;
         _loading = false;
       });
       _posts.load();
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _request) return;
       setState(() {
         _error = e;
         _loading = false;
@@ -103,7 +115,20 @@ class _UserProfileViewState extends State<UserProfileView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => BlockedContent(
+    userIds: [widget.userId],
+    blockedChild: Scaffold(
+      appBar: AppBar(title: const Text('Trang cá nhân')),
+      body: const EmptyView(
+        icon: AppIcons.lock,
+        title: 'Tài khoản không khả dụng',
+        message: 'Quản lý tài khoản đã chặn trong mục Người đã chặn.',
+      ),
+    ),
+    child: _buildProfile(context),
+  );
+
+  Widget _buildProfile(BuildContext context) {
     final back = OverlayButton(
       icon: AppIcons.back,
       onTap: () => Navigator.of(context).maybePop(),

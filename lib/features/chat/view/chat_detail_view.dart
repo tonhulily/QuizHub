@@ -8,6 +8,7 @@ import '../../../core/design_system/app_icons.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/services/chat_realtime.dart';
 import '../../../core/services/social_events.dart';
+import '../../../core/services/blocked_users.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -38,6 +39,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
     myId: _myId,
     realtime: getIt<ChatRealtime>(),
     socialEvents: getIt<SocialEvents>(),
+    blocks: getIt.isRegistered<BlockedUsers>() ? getIt<BlockedUsers>() : null,
   )..load();
   final _scroll = ScrollController();
   final _draft = TextEditingController();
@@ -258,6 +260,22 @@ class _ChatDetailViewState extends State<ChatDetailView>
     value: _chat,
     child: BlocBuilder<ChatDetailCubit, ChatDetailState>(
       builder: (context, state) {
+        if (state.sendRestricted) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Cuộc trò chuyện không khả dụng')),
+            body: EmptyView(
+              icon: AppIcons.lock,
+              title: 'Không thể xem cuộc trò chuyện',
+              message: state.restrictionMessage,
+            ),
+          );
+        }
+        if (state.checkingAccess) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Cuộc trò chuyện')),
+            body: const LoadingView(),
+          );
+        }
         final conversation = state.conversation;
         final title =
             conversation?.title ??
@@ -379,6 +397,9 @@ class _ChatDetailViewState extends State<ChatDetailView>
                                 return _MessageBubble(
                                   key: ValueKey(message.messageId),
                                   message: message,
+                                  userIds: state.conversation!.members.map(
+                                    (u) => u.userId,
+                                  ),
                                   mine: message.senderId == _myId,
                                   onLongPress: () => _messageMenu(message),
                                 );
@@ -413,24 +434,30 @@ class _ChatDetailViewState extends State<ChatDetailView>
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final bool mine;
+  final Iterable<int> userIds;
   final VoidCallback onLongPress;
   const _MessageBubble({
     super.key,
     required this.message,
     required this.mine,
+    required this.userIds,
     required this.onLongPress,
   });
 
   Future<void> _openMedia(BuildContext context, String url) async {
     if (['IMAGE', 'VIDEO', 'GIF'].contains(message.messageType)) {
-      await MediaViewer.open(context, [
-        MediaItem(
-          url: url,
-          type: message.messageType == 'VIDEO'
-              ? MediaType.video
-              : MediaType.image,
-        ),
-      ]);
+      await MediaViewer.open(
+        context,
+        [
+          MediaItem(
+            url: url,
+            type: message.messageType == 'VIDEO'
+                ? MediaType.video
+                : MediaType.image,
+          ),
+        ],
+        userIds: {...userIds, message.senderId},
+      );
       return;
     }
     final uri = Uri.tryParse(url);

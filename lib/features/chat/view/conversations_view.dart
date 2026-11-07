@@ -7,6 +7,8 @@ import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_icons.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/services/chat_realtime.dart';
+import '../../../core/services/blocked_users.dart';
+import '../../../shared/widgets/blocked_content.dart';
 import '../widgets/connection_banner.dart';
 import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/paged_list.dart';
@@ -48,6 +50,15 @@ class _ConversationsViewState extends State<ConversationsView>
       }),
     );
     _live.acquire();
+    if (getIt.isRegistered<BlockedUsers>()) {
+      _subscriptions.add(
+        getIt<BlockedUsers>().onChanged.listen((_) {
+          if (!mounted) return;
+          setState(() {});
+          unawaited(_conversations.refresh());
+        }),
+      );
+    }
   }
 
   @override
@@ -120,60 +131,73 @@ class _ConversationsViewState extends State<ConversationsView>
                   child: const Text('Tìm người để nhắn tin'),
                 ),
               ),
-              itemBuilder: (context, conversation) => ListTile(
-                key: ValueKey('conversation_${conversation.conversationId}'),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                leading: UserAvatar(
-                  name: conversation.title,
-                  avatarUrl: conversation.avatarUrl,
-                  size: 52,
-                ),
-                title: Text(
-                  conversation.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: conversation.unreadCount > 0
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                  ),
-                ),
-                subtitle: Text(
-                  conversation.lastMessage?.preview ??
-                      'Bắt đầu cuộc trò chuyện',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      TimeFormat.ago(conversation.updatedAt),
-                      style: Theme.of(context).textTheme.labelSmall,
+              itemBuilder: (context, conversation) {
+                if (conversation.type == 'DIRECT' &&
+                    conversation.members.isEmpty &&
+                    getIt.isRegistered<BlockedUsers>() &&
+                    getIt<BlockedUsers>().ids.isNotEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return BlockedContent(
+                  userIds: conversation.members.map((u) => u.userId),
+                  child: ListTile(
+                    key: ValueKey(
+                      'conversation_${conversation.conversationId}',
                     ),
-                    if (conversation.unreadCount > 0)
-                      Container(
-                        margin: const EdgeInsets.only(top: 5),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary600,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${conversation.unreadCount}',
-                          style: const TextStyle(color: AppColors.white),
-                        ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    leading: UserAvatar(
+                      name: conversation.title,
+                      avatarUrl: conversation.avatarUrl,
+                      size: 52,
+                    ),
+                    title: Text(
+                      conversation.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: conversation.unreadCount > 0
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
-                  ],
-                ),
-                onTap: () => _open(conversation),
-              ),
+                    ),
+                    subtitle: Text(
+                      conversation.lastMessage?.preview ??
+                          'Bắt đầu cuộc trò chuyện',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          TimeFormat.ago(conversation.updatedAt),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        if (conversation.unreadCount > 0)
+                          Container(
+                            margin: const EdgeInsets.only(top: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary600,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${conversation.unreadCount}',
+                              style: const TextStyle(color: AppColors.white),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onTap: () => _open(conversation),
+                  ),
+                );
+              },
             ),
           ),
         ],

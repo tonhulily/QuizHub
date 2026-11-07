@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/chat_realtime.dart';
 import '../../../core/services/social_events.dart';
+import '../../../core/services/blocked_users.dart';
 import '../../../data/models/chat_models.dart';
 import '../../../data/repositories/chat_repository.dart';
 
@@ -136,6 +137,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
     required this.myId,
     this.realtime,
     SocialEvents? socialEvents,
+    BlockedUsers? blocks,
     this.confirmationTimeout = const Duration(seconds: 10),
   }) : super(
          ChatDetailState(
@@ -172,8 +174,20 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
       unawaited(live.acquire());
     }
     if (socialEvents != null) {
-      _subscriptions.add(socialEvents.onChanged.listen((_) => checkAccess()));
+      _subscriptions.add(
+        socialEvents.onChanged.listen((_) => _relationshipChanged()),
+      );
     }
+    if (blocks != null) {
+      _subscriptions.add(
+        blocks.onChanged.listen((_) => _relationshipChanged()),
+      );
+    }
+  }
+
+  void _relationshipChanged() {
+    if (isClosed) return;
+    unawaited(state.sendRestricted ? load() : checkAccess());
   }
 
   Future<void> load() async {
@@ -194,7 +208,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
       emit(state.copyWith(conversation: conversation));
       final page = await _repo.messages(conversation.conversationId);
       if (isClosed || request != _request) return;
-      final first = state.status != ChatStatus.loaded;
+      final first = state.status != ChatStatus.loaded || state.messages.isEmpty;
       emit(
         state.copyWith(
           status: ChatStatus.loaded,
@@ -531,6 +545,9 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
         state.copyWith(
           checkingAccess: false,
           sendRestricted: blocked,
+          messages: blocked ? const [] : state.messages,
+          hasNext: blocked ? false : state.hasNext,
+          lastReadMessageId: blocked ? 0 : state.lastReadMessageId,
           isTyping: blocked ? false : state.isTyping,
           restrictionMessage:
               'Không thể nhắn tin khi một trong hai người chặn người còn lại.',
@@ -546,6 +563,7 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
   }
 
   void _restrict(ApiException error) {
+    if (isClosed) return;
     final code = (error.code ?? '').toUpperCase();
     if (error.type != ApiErrorType.forbidden && !code.contains('BLOCK')) return;
     _sendError = error;
@@ -554,6 +572,9 @@ class ChatDetailCubit extends Cubit<ChatDetailState> {
     emit(
       state.copyWith(
         sendRestricted: true,
+        messages: const [],
+        hasNext: false,
+        lastReadMessageId: 0,
         checkingAccess: false,
         isTyping: false,
         restrictionMessage: error.message,

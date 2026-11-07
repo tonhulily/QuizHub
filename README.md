@@ -14,9 +14,10 @@ powershell -ExecutionPolicy Bypass -File scripts\setup.ps1   # Windows; Git Bash
 flutter run -d <id>          # id lấy từ: flutter devices
 ```
 Chưa có tài khoản thì chạy bản **xem trước** (dữ liệu mẫu, đã đăng nhập sẵn):
-`flutter run -d <id> -t lib/main_preview.dart`. Bài viết tạo/sửa/xoá và reaction bình luận mẫu
-được lưu trên máy qua các lần chạy; dữ liệu khác vẫn nằm trong RAM. Xem cách kiểm tra ở
-[docs/qa/post_preview.md](docs/qa/post_preview.md) và [docs/qa/comment_reactions.md](docs/qa/comment_reactions.md).
+`flutter run -d <id> -t lib/main_preview.dart`. Bài viết tạo/sửa/xoá, reaction bình luận và
+quan hệ bạn bè/theo dõi/chặn mẫu được lưu trên máy qua các lần chạy; dữ liệu khác vẫn nằm trong RAM.
+Xem cách kiểm tra ở [docs/qa/post_preview.md](docs/qa/post_preview.md),
+[docs/qa/comment_reactions.md](docs/qa/comment_reactions.md) và [docs/qa/relationships.md](docs/qa/relationships.md).
 Thêm dữ liệu mẫu cho API mới trong hàm
 `_route` của `lib/dev/preview_backend.dart`. Thử nhánh của giảng viên (Đề thi, áp dụng AI): thêm
 `--dart-define=PREVIEW_ROLE=LECTURER`.
@@ -55,6 +56,9 @@ bằng điều hướng thật. Endpoint của mọi module đã khai báo sẵn
 - Bình luận và phản hồi có Thích/bỏ thích, số lượt thích và hoàn tác khi API lỗi.
 - Bình luận **không sửa được**; chỉ chủ bình luận được xoá.
 - Chỉ kết bạn với người **cùng vai trò**; theo dõi thì không phân biệt.
+- Chặn tài khoản: FE ẩn bài viết, hồ sơ, kết quả tìm kiếm, nội dung bình luận và hội thoại
+  của họ, kể cả nội dung đã tải trước đó; chỉ còn dòng quản lý trong Người đã chặn.
+  Bỏ chặn không tự kết bạn hoặc theo dõi lại. Danh sách chặn cục bộ tách theo tài khoản/môi trường.
 - **Validate bằng regex ở client trước** khi gọi API (`Validators`); mật khẩu mới 6-32 ký tự, chỉ chữ
   và số.
 - Trang chủ **cache** trang đầu để mở app là có nội dung ngay.
