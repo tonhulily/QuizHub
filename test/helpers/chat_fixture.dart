@@ -14,6 +14,7 @@ class ChatFixture implements HttpClientAdapter {
     person: (id) => {'user_id': id, 'full_name': 'Bạn $id'},
     me: {'user_id': 1, 'full_name': 'Tôi'},
     isBlocked: blocked.contains,
+    autoReply: true,
   );
   late final repo = ChatRepository(
     ApiClient(tokens: PreviewTokens(), events: sessions, adapter: this),

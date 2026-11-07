@@ -20,8 +20,9 @@ Mốc 1 chỉ kiểm tra danh sách/lịch sử; gửi tin nằm ở mốc 2.
 5. Mất mạng ngay sau gửi: nội dung được giữ nếu chưa xác nhận. Bấm gửi lại sẽ kiểm tra lịch sử trước và hỏi xác nhận nếu chưa thấy tin.
 6. Thu nhỏ rồi mở lại app: kết nối và danh sách tự cập nhật. Đăng xuất: kết nối phải dừng.
 
-Bản preview mô phỏng realtime và có phản hồi mẫu, phục vụ kiểm tra UI; hội thoại và lịch sử
-chữ/ảnh được lưu trên máy. Không thay thế kiểm tra STOMP với hai tài khoản thật.
+Bản preview đơn lẻ lưu hội thoại và lịch sử chữ/ảnh trên máy, không tự sinh phản hồi.
+Để test hai tài khoản qua REST/STOMP, dùng [bản test dùng chung](chat_two_accounts.md):
+An trên Samsung và Lan trên web cùng nối vào mock API trên Mac.
 
 ## Mốc 3: quyền gửi và khôi phục kết nối
 
@@ -49,8 +50,8 @@ chữ/ảnh được lưu trên máy. Không thay thế kiểm tra STOMP với h
 - Ngắt mạng khi tải lịch sử/kiểm tra quyền: hết vòng chờ, có Thử lại; không mở khoá gửi khi chưa xác nhận quyền.
 - Thu hồi/xoá một tin nằm ngoài trang đầu ở phiên khác, sau đó đồng bộ/reconnect: phần lịch sử đã tải cũng cập nhật.
 
-Các thao tác trên thuộc FE và dùng API/STOMP hiện có. Preview vẫn có phản hồi tự động,
-chưa mô phỏng hai tài khoản trên hai app cùng trao đổi dữ liệu.
+Các thao tác trên thuộc FE và dùng API/STOMP hiện có. Bản `main_chat_demo.dart` kiểm tra
+hai phiên app với hai danh tính riêng, không có bot; không thay đổi server thật của dự án.
 
 ## Giữ tin nhắn preview khi thoát và mở lại
 

@@ -23,6 +23,12 @@ Thêm dữ liệu mẫu cho API mới trong hàm
 `_route` của `lib/dev/preview_backend.dart`. Thử nhánh của giảng viên (Đề thi, áp dụng AI): thêm
 `--dart-define=PREVIEW_ROLE=LECTURER`.
 
+Test chat **hai tài khoản, không có bot**: dùng `lib/main_chat_demo.dart` và mock API
+chung trên Mac. Samsung chạy An, trình duyệt chạy Lan; lịch sử/ảnh được lưu tại
+`.local/chat-demo`, không mất khi mở lại app hoặc mock. Xem lệnh chạy và cách kiểm tra tại
+[docs/qa/chat_two_accounts.md](docs/qa/chat_two_accounts.md).
+Bản `main_preview.dart` vẫn dùng dữ liệu riêng trên từng máy và không tự trả lời nữa.
+
 | Việc | Lệnh |
 |---|---|
 | Kiểm tra mã | `flutter analyze` và `flutter test` (phải sạch và xanh) |

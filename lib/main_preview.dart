@@ -19,6 +19,8 @@ import 'di/locator.dart';
 ///
 /// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết, reaction
 /// bình luận, quan hệ xã hội và lịch sử chat được lưu trên máy; dữ liệu khác trong RAM.
+/// Chat ở bản này chỉ lưu trên từng thiết bị, không có bot. Test hai tài khoản dùng
+/// `lib/main_chat_demo.dart` cùng mock API trên Mac.
 /// Bản thật là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

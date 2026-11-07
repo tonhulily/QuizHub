@@ -14,6 +14,9 @@ class PreviewChat {
   final Map<String, dynamic> me;
   final bool Function(int) isBlocked;
   final SharedPreferences? preferences;
+
+  /// Chỉ bật trong fixture kiểm tra typing/read; app preview không tự trả lời.
+  final bool autoReply;
   Future<void> _pending = Future<void>.value();
   String get _storageKey => 'preview_chat_v1_${me['user_id']}';
   final Map<int, int> peers = {1: 2, 2: 4};
@@ -25,6 +28,7 @@ class PreviewChat {
     required this.me,
     required this.isBlocked,
     this.preferences,
+    this.autoReply = false,
   }) {
     for (final id in peers.keys) {
       messages[id] = [
@@ -465,6 +469,7 @@ class PreviewChatRealtime implements ChatRealtime {
       _events.add(
         ChatEvent(ChatEventKind.message, conversationId: id, message: message),
       );
+      if (!backend.autoReply) return;
       _timers.add(
         Timer(const Duration(milliseconds: 500), () {
           if (_current(generation, peer)) {

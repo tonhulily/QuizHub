@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -10,8 +8,8 @@ import '../../data/repositories/media_repository.dart';
 import '../../di/locator.dart';
 import '../../core/design_system/app_icons.dart';
 
-/// Hiện lựa chọn "Chụp ảnh / Chọn từ thư viện" rồi trả về file đã chọn.
-Future<File?> pickImageFile(BuildContext context) async {
+/// Dùng XFile để ảnh chọn từ web cũng đọc được như ảnh trên điện thoại.
+Future<XFile?> _pickImage(BuildContext context) async {
   final source = await showModalBottomSheet<ImageSource>(
     context: context,
     builder: (ctx) => SafeArea(
@@ -43,7 +41,7 @@ Future<File?> pickImageFile(BuildContext context) async {
       maxHeight: 1920,
       imageQuality: 85,
     );
-    return picked == null ? null : File(picked.path);
+    return picked;
   } catch (_) {
     if (context.mounted) {
       AppFeedback.errorMessage(
@@ -60,11 +58,15 @@ Future<MediaUploadResult?> pickAndUploadImage(
   BuildContext context, {
   required MediaPurpose purpose,
 }) async {
-  final file = await pickImageFile(context);
+  final file = await _pickImage(context);
   if (file == null || !context.mounted) return null;
   try {
     return await AppFeedback.withLoading(
-      () => getIt<MediaRepository>().uploadImage(file, purpose: purpose),
+      () async => getIt<MediaRepository>().uploadImageBytes(
+        await file.readAsBytes(),
+        name: file.name,
+        purpose: purpose,
+      ),
     );
   } on ApiException catch (e) {
     if (context.mounted) AppFeedback.error(context, e);

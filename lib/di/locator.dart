@@ -44,9 +44,12 @@ Future<void> setupLocator({
   HttpClientAdapter? httpAdapter,
   ChatRealtime? chatRealtime,
   String blockStorageScope = 'server',
+  String? apiBaseUrl,
+  String? chatWebSocketUrl,
+  SharedPreferences? preferences,
 }) async {
   // ---- Storage ----
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = preferences ?? await SharedPreferences.getInstance();
   getIt.registerSingleton<LocalStorage>(LocalStorage(prefs));
 
   final tokens = tokenStorage ?? TokenStorage();
@@ -63,7 +66,7 @@ Future<void> setupLocator({
   getIt.registerLazySingleton<BlockedUsers>(
     () => BlockedUsers(
       getIt<LocalStorage>(),
-      scope: '$blockStorageScope:${AppConfig.apiBaseUrl}',
+      scope: '$blockStorageScope:${apiBaseUrl ?? AppConfig.apiBaseUrl}',
     ),
     dispose: (value) => value.dispose(),
   );
@@ -74,6 +77,7 @@ Future<void> setupLocator({
     () => ApiClient(
       tokens: getIt<TokenStorage>(),
       events: getIt<SessionEvents>(),
+      baseUrl: apiBaseUrl,
       // ignore: invalid_use_of_visible_for_testing_member
       adapter: httpAdapter,
     ),
@@ -87,6 +91,7 @@ Future<void> setupLocator({
           getIt<ApiClient>(),
           getIt<TokenStorage>(),
           getIt<SessionEvents>(),
+          url: chatWebSocketUrl ?? AppConfig.wsUrl,
         ),
     dispose: (value) => value.dispose(),
   );

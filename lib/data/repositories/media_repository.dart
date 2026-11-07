@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
@@ -57,6 +58,38 @@ class MediaRepository {
       );
     }
     return _upload(file, name, purpose, onProgress);
+  }
+
+  /// XFile cung cấp bytes cả trên web và điện thoại, không phụ thuộc đường dẫn File.
+  Future<MediaUploadResult> uploadImageBytes(
+    Uint8List bytes, {
+    required String name,
+    required MediaPurpose purpose,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    if (name.toLowerCase().endsWith('.gif')) {
+      throw const ApiException(
+        type: ApiErrorType.validation,
+        code: ResponseCodes.invalidParameterValue,
+        message: 'Ứng dụng không hỗ trợ ảnh động (GIF).',
+      );
+    }
+    if (bytes.length > ComponentTokens.maxImageSizeBytes) {
+      throw const ApiException(
+        type: ApiErrorType.validation,
+        code: ResponseCodes.fileSizeExceeded,
+        message: 'Ảnh vượt quá dung lượng tối đa 4MB.',
+      );
+    }
+    return _api.upload<MediaUploadResult>(
+      ApiEndpoints.mediaUpload,
+      formData: FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: name),
+      }),
+      query: {'purpose': purpose.apiValue},
+      onProgress: onProgress,
+      parser: (d) => MediaUploadResult.fromJson(J.asMap(d) ?? const {}),
+    );
   }
 
   Future<MediaUploadResult> uploadVideo(
