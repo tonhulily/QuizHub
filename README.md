@@ -29,6 +29,15 @@ chung trên Mac. Samsung chạy An, trình duyệt chạy Lan; lịch sử/ảnh
 [docs/qa/chat_two_accounts.md](docs/qa/chat_two_accounts.md).
 Bản `main_preview.dart` vẫn dùng dữ liệu riêng trên từng máy và không tự trả lời nữa.
 
+Chạy trên **iPhone thật**: dùng Mac có Xcode và CocoaPods, bật Developer Mode trên iPhone,
+ghép nối với Mac rồi chọn Apple Developer Team của mình trong
+`ios/Runner.xcworkspace` → Runner → Signing & Capabilities. Dự án dùng iOS **15.0 trở lên**.
+Chạy `flutter devices` lấy ID rồi `flutter run -d <id> -t lib/main_preview.dart` để thử
+dữ liệu mẫu. Thêm `--release` khi cần test đóng hẳn app rồi mở lại từ màn hình chính.
+Team ký riêng có thể lưu trong `ios/Flutter/Signing.xcconfig` (Git bỏ qua).
+Hướng dẫn kiểm tra build và các bước test trên máy ở
+[docs/qa/ios.md](docs/qa/ios.md).
+
 | Việc | Lệnh |
 |---|---|
 | Kiểm tra mã | `flutter analyze` và `flutter test` (phải sạch và xanh) |
