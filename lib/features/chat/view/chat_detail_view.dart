@@ -162,14 +162,13 @@ class _ChatDetailViewState extends State<ChatDetailView>
   }
 
   Future<void> _messageMenu(ChatMessage message) async {
-    if (message.revoked) return;
     final scope = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (message.content.isNotEmpty)
+            if (!message.revoked && message.content.isNotEmpty)
               ListTile(
                 leading: const Icon(AppIcons.copy),
                 title: const Text('Sao chép'),
@@ -180,7 +179,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
               title: const Text('Xoá ở phía tôi'),
               onTap: () => Navigator.pop(ctx, 'ME'),
             ),
-            if (message.senderId == _myId)
+            if (!message.revoked && message.senderId == _myId)
               ListTile(
                 title: const Text('Thu hồi với mọi người'),
                 leading: const Icon(AppIcons.refresh),

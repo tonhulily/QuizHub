@@ -190,6 +190,57 @@ void main() {
     expect(find.text('Thu hồi với mọi người'), findsOneWidget);
   });
 
+  for (final senderId in [1, 2]) {
+    testWidgets(
+      'xoá riêng khối tin đã thu hồi của người gửi $senderId, mở lại không hiện lại',
+      (tester) async {
+        final fixture = await _setup(tester);
+        final messageId = 1000 + senderId;
+        fixture.data.messages[1]!.add({
+          'message_id': messageId,
+          'conversation_id': 1,
+          'sender_id': senderId,
+          'sender_name': 'Bạn $senderId',
+          'content': 'Nội dung đã thu hồi không được sao chép',
+          'message_type': 'TEXT',
+          'media_urls': <String>[],
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'revoked': true,
+        });
+        const detail = ChatDetailView(
+          target: ChatTarget.conversation(
+            ChatConversation(conversationId: 1, title: 'Lan'),
+          ),
+        );
+        final bubble = find.byWidgetPredicate(
+          (widget) =>
+              widget is ChatMessageTile &&
+              widget.message.messageId == messageId,
+        );
+        await tester.pumpWidget(_app(detail));
+        await tester.pumpAndSettle();
+        expect(bubble, findsOneWidget);
+
+        await tester.longPress(find.text('Tin nhắn đã thu hồi'));
+        await tester.pumpAndSettle();
+        expect(find.text('Xoá ở phía tôi'), findsOneWidget);
+        expect(find.text('Sao chép'), findsNothing);
+        expect(find.text('Thu hồi với mọi người'), findsNothing);
+        await tester.tap(find.text('Xoá ở phía tôi'));
+        await tester.pumpAndSettle();
+        expect(bubble, findsNothing);
+        expect(find.text('Tin nhắn đã thu hồi'), findsNothing);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(_app(detail));
+        await tester.pumpAndSettle();
+        expect(bubble, findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('lỗi lịch sử hiện Thử lại và khoá gửi; bấm lại vào được chat', (
     tester,
   ) async {
