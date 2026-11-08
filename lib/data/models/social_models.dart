@@ -78,6 +78,61 @@ class FriendRequestModel extends Equatable {
   List<Object?> get props => [user, sentByMe, createdAt, mutualFriendsCount];
 }
 
+/// Người dùng trong danh sách followers, following hoặc blocked users.
+/// Hỗ trợ cả response phẳng và response bọc trong object quan hệ.
+class RelationshipUserModel extends Equatable {
+  final int userId;
+  final String fullName;
+  final String? avatarUrl;
+  final String? frameUrl;
+
+  const RelationshipUserModel({
+    required this.userId,
+    required this.fullName,
+    this.avatarUrl,
+    this.frameUrl,
+  });
+
+  factory RelationshipUserModel.fromJson(Map<String, dynamic> json) {
+    var user = json;
+    for (final key in [
+      'user',
+      'follower',
+      'followed_user',
+      'following_user',
+      'blocked_user',
+    ]) {
+      final nested = J.asMap(json[key]);
+      if (nested != null) {
+        user = nested;
+        break;
+      }
+    }
+    return RelationshipUserModel(
+      userId: J.intOr(
+        user['user_id'] ??
+            json['user_id'] ??
+            json['follower_id'] ??
+            json['followed_id'] ??
+            json['blocked_user_id'],
+      ),
+      fullName: J.stringOr(user['full_name'] ?? user['name'], 'Người dùng'),
+      avatarUrl: J.asString(user['avatar_url']),
+      frameUrl: J.asString(user['avatar_frame_url'] ?? user['frame_url']),
+    );
+  }
+
+  AuthorModel get asAuthor => AuthorModel(
+    userId: userId,
+    fullName: fullName,
+    avatarUrl: avatarUrl,
+    frameUrl: frameUrl,
+  );
+
+  @override
+  List<Object?> get props => [userId, fullName, avatarUrl, frameUrl];
+}
+
 /// Người dùng trong kết quả tìm kiếm (`GET /search?type=USER`).
 ///
 /// Server trả cả `email` của người khác trong kết quả tìm kiếm; app giữ lại

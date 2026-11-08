@@ -7,6 +7,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'core/config/app_config.dart';
 import 'core/design_system/app_theme.dart';
 import 'core/network/session_events.dart';
+import 'core/services/chat_realtime.dart';
 import 'core/router/app_navigator.dart';
 import 'core/router/app_router.dart';
 import 'core/router/app_routes.dart';
@@ -43,6 +44,7 @@ class QuizHubApp extends StatelessWidget {
         listener: (context, state) {
           context.read<ProfileCubit>().clear();
           getIt<UserDirectory>().clear();
+          getIt<ChatRealtime>().disconnect();
           AppNavigator.toLogin();
         },
         child: MaterialApp(

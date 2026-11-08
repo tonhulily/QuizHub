@@ -16,7 +16,8 @@ class AppConfig {
   /// Endpoint WebSocket STOMP (dùng cho chat - chương 11)
   static const String wsUrl = String.fromEnvironment(
     'WS_URL',
-    defaultValue: 'wss://snsqb.duckdns.org/api/v1/ws',
+    // Backend bật SockJS; đường dẫn raw WebSocket đã kiểm tra trả HTTP 101.
+    defaultValue: 'wss://snsqb.duckdns.org/api/v1/ws/websocket',
   );
 
   static const Duration connectTimeout = Duration(seconds: 20);

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../data/models/chat_models.dart';
+import '../../features/chat/view/conversations_view.dart';
+import '../../features/chat/view/chat_detail_view.dart';
 
 import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
+import '../../features/friends/view/relationship_users_view.dart';
+import '../../data/models/post_model.dart';
 import '../../features/post/create_post_view.dart';
+import '../../features/post/post_detail_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
 import '../../features/exam/view/exam_detail_view.dart';
 import '../../features/exam/view/exam_generator_view.dart';
@@ -59,11 +65,35 @@ class AppRouter {
             : _NotFoundView(name: settings.name);
       case AppRoutes.searchUsers:
         page = const SearchUsersView();
+      case AppRoutes.conversations:
+        page = const ConversationsView();
+      case AppRoutes.chatDetail:
+        page = args is ChatTarget
+            ? ChatDetailView(target: args)
+            : _NotFoundView(name: settings.name);
+      case AppRoutes.followers:
+        page = const RelationshipUsersView(
+          kind: RelationshipListKind.followers,
+        );
+      case AppRoutes.following:
+        page = const RelationshipUsersView(
+          kind: RelationshipListKind.following,
+        );
+      case AppRoutes.blockedUsers:
+        page = const RelationshipUsersView(kind: RelationshipListKind.blocked);
       case AppRoutes.editProfile:
         // arguments: bool forceComplete (bắt buộc hoàn thiện hồ sơ lần đầu)
         page = EditProfileView(forceComplete: args == true);
       case AppRoutes.createPost:
         page = CreatePostView(pickImagesOnOpen: args == true);
+      case AppRoutes.editPost:
+        page = args is PostModel
+            ? CreatePostView(initialPost: args)
+            : _NotFoundView(name: settings.name);
+      case AppRoutes.postDetail:
+        page = args is int && args > 0
+            ? PostDetailView(postId: args)
+            : _NotFoundView(name: settings.name);
       case AppRoutes.changePassword:
         page = const ChangePasswordView();
       case AppRoutes.examMyExams:
@@ -133,7 +163,9 @@ class AppRouter {
     }
     return MaterialPageRoute<dynamic>(
       settings: settings,
-      fullscreenDialog: settings.name == AppRoutes.createPost,
+      fullscreenDialog:
+          settings.name == AppRoutes.createPost ||
+          settings.name == AppRoutes.editPost,
       builder: (_) => page,
     );
   }
