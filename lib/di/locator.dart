@@ -22,6 +22,8 @@ import '../data/repositories/like_state_store.dart';
 import '../data/repositories/question_bank_repository.dart';
 import '../data/repositories/reaction_repository.dart';
 import '../data/repositories/report_repository.dart';
+import '../data/repositories/search_repository.dart';
+import '../data/repositories/notification_repository.dart';
 import '../data/repositories/subject_repository.dart';
 import '../data/repositories/user_directory.dart';
 import '../data/repositories/submission_repository.dart';
@@ -103,6 +105,12 @@ Future<void> setupLocator({
   );
   getIt.registerLazySingleton<UserSearchRepository>(
     () => UserSearchRepository(getIt<ApiClient>(), getIt<FriendRepository>()),
+  );
+  getIt.registerLazySingleton<SearchRepository>(
+    () => SearchRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<FeedRepository>(
     () => FeedRepository(getIt<ApiClient>(), getIt<LocalStorage>()),

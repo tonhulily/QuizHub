@@ -104,6 +104,7 @@ class ApiEndpoints {
   // ---- 25. Search ----
   static const String search = '/search';
   static const String searchSaved = '/search/saved';
+  static String searchSavedById(int id) => '/search/saved/$id';
 
   // ---- 27. Media ----
   static const String mediaUpload = '/medias/upload';
