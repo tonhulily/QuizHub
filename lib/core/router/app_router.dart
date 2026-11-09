@@ -22,6 +22,7 @@ import '../../features/profile/view/change_password_view.dart';
 import '../../features/profile/view/edit_profile_view.dart';
 import '../../features/profile/view/my_profile_view.dart';
 import '../../features/profile/view/user_profile_view.dart';
+import '../../features/search/view/global_search_view.dart';
 import '../../features/shell/main_shell.dart';
 import '../../features/splash/splash_view.dart';
 import 'app_routes.dart';
@@ -59,6 +60,8 @@ class AppRouter {
             : _NotFoundView(name: settings.name);
       case AppRoutes.searchUsers:
         page = const SearchUsersView();
+      case AppRoutes.searchGlobal:
+        page = const GlobalSearchView();
       case AppRoutes.editProfile:
         // arguments: bool forceComplete (bắt buộc hoàn thiện hồ sơ lần đầu)
         page = EditProfileView(forceComplete: args == true);

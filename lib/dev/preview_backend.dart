@@ -5,6 +5,8 @@ import 'package:dio/dio.dart';
 
 import '../core/storage/token_storage.dart';
 import 'preview_qbank.dart';
+import 'preview_search.dart';
+import 'preview_notifications.dart';
 
 /// Token giả để vào thẳng app mà không cần đăng nhập (chỉ dùng cho preview).
 class PreviewTokens extends TokenStorage {
@@ -128,6 +130,11 @@ class PreviewBackend implements HttpClientAdapter {
   /// Module Ngân hàng câu hỏi + Đề thi + AI (dữ liệu mẫu riêng).
   final PreviewQbank _qbank = PreviewQbank();
 
+  final PreviewSearch _search = PreviewSearch();
+
+  /// Module thông báo (danh sách, đánh dấu đã đọc) dùng dữ liệu RAM.
+  final PreviewNotifications _notifications = PreviewNotifications();
+
   PreviewBackend() {
     String ago(int minutes) => DateTime.now()
         .toUtc()
@@ -214,6 +221,14 @@ class PreviewBackend implements HttpClientAdapter {
       'items': items,
       'pagination': {'after': null, 'has_next': false},
     };
+
+    final notifications = _notifications.route(m, path, q, body);
+    if (!identical(notifications, PreviewNotifications.unhandled)) {
+      return notifications;
+    }
+
+    final search = _search.route(m, path, q, body);
+    if (!identical(search, PreviewSearch.unhandled)) return search;
 
     final qbank = _qbank.route(m, path, q, body);
     if (!identical(qbank, PreviewQbank.unhandled)) return qbank;

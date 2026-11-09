@@ -6,9 +6,9 @@ import '../../core/router/app_routes.dart';
 import '../../core/widgets/fb_widgets.dart';
 import '../home/home_tab.dart';
 import '../menu/menu_tab.dart';
+import '../notifications/view/notifications_tab.dart';
 import '../question_bank/view/question_bank_tab.dart';
 import '../friends/view/friends_tab.dart';
-import 'placeholder_tab.dart';
 import '../../core/design_system/app_icons.dart';
 
 /// Định nghĩa 1 tab của shell. Module khác chỉ cần thay `builder` của tab
@@ -69,10 +69,7 @@ class MainShell extends StatefulWidget {
       title: 'Thông báo',
       icon: AppIcons.notifications,
       activeIcon: AppIcons.notificationsActive,
-      builder: (_) => const PlaceholderTab(
-        icon: AppIcons.notificationsActive,
-        message: 'Thông báo về lượt thích, bình luận, kết bạn... sẽ có ở đây.',
-      ),
+      builder: (_) => const NotificationsTab(),
     ),
     ShellTab(
       label: 'Menu',
@@ -214,7 +211,7 @@ class _Header extends StatelessWidget {
           HeaderIconButton(
             icon: AppIcons.search,
             tooltip: 'Tìm kiếm',
-            onTap: () => Navigator.of(context).pushNamed(AppRoutes.searchUsers),
+            onTap: () => Navigator.of(context).pushNamed(AppRoutes.searchGlobal),
           ),
           HeaderIconButton(
             icon: AppIcons.messenger,

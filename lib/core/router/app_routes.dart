@@ -17,6 +17,8 @@ class AppRoutes {
   // Bạn bè / tìm kiếm
   static const searchUsers = '/search/users';
 
+  static const searchGlobal = '/search/global';
+
   // Ngân hàng câu hỏi
   static const qbankMySubmissions = '/qbank/my-submissions';
   // arguments: int sessionId, hoặc ({int id, SessionStatus status})
