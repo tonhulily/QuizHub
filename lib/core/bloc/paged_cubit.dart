@@ -171,6 +171,12 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
     );
   }
 
+  /// Biến đổi toàn bộ item trong một lần emit (vd đánh dấu đọc tất cả).
+  void mapItems(T Function(T item) transform) {
+    if (isClosed) return;
+    emit(state.copyWith(items: state.items.map(transform).toList()));
+  }
+
   void removeWhere(bool Function(T) test) {
     if (isClosed) return;
     emit(state.copyWith(items: state.items.where((i) => !test(i)).toList()));
