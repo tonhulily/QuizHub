@@ -7,7 +7,8 @@ import 'author_model.dart';
 enum TargetType {
   post,
   session,
-  question;
+  question,
+  comment;
 
   String get apiValue => name.toUpperCase();
 }
@@ -27,6 +28,8 @@ class CommentModel extends Equatable {
   final AuthorModel? author;
   final DateTime? createdAt;
   final bool hidden;
+  final int reactCount;
+  final bool reactedByMe;
   final int replyCount;
   final List<CommentModel> replies;
 
@@ -40,6 +43,8 @@ class CommentModel extends Equatable {
     this.author,
     this.createdAt,
     this.hidden = false,
+    this.reactCount = 0,
+    this.reactedByMe = false,
     this.replyCount = 0,
     this.replies = const [],
   });
@@ -58,7 +63,17 @@ class CommentModel extends Equatable {
       mediaUrl: J.asString(json['media_url']),
       author: author == null ? null : AuthorModel.fromJson(author),
       createdAt: J.asDate(json['created_at']),
-      hidden: J.asBool(json['hidden']),
+      hidden: J.asBool(json['hidden']) || J.asBool(json['deleted']),
+      reactCount:
+          J.asInt(
+            json['react_count'] ?? json['like_count'] ?? json['total_count'],
+          ) ??
+          J.intOr(J.asMap(json['reaction_counts'])?['LIKE']),
+      reactedByMe: J.asBool(
+        json['reacted_by_me'],
+        J.asString(json['my_reaction']) != null &&
+            J.stringOr(json['my_reaction']).toUpperCase() != 'NONE',
+      ),
       replyCount: J.asInt(json['reply_count']) ?? replies.length,
       replies: replies,
     );
@@ -72,6 +87,8 @@ class CommentModel extends Equatable {
         return TargetType.session;
       case 'QUESTION':
         return TargetType.question;
+      case 'COMMENT':
+        return TargetType.comment;
       default:
         return null;
     }
@@ -81,6 +98,8 @@ class CommentModel extends Equatable {
     int? replyCount,
     List<CommentModel>? replies,
     bool? hidden,
+    int? reactCount,
+    bool? reactedByMe,
   }) => CommentModel(
     commentId: commentId,
     targetType: targetType,
@@ -91,6 +110,8 @@ class CommentModel extends Equatable {
     author: author,
     createdAt: createdAt,
     hidden: hidden ?? this.hidden,
+    reactCount: reactCount ?? this.reactCount,
+    reactedByMe: reactedByMe ?? this.reactedByMe,
     replyCount: replyCount ?? this.replyCount,
     replies: replies ?? this.replies,
   );
@@ -103,6 +124,8 @@ class CommentModel extends Equatable {
     mediaUrl,
     author,
     hidden,
+    reactCount,
+    reactedByMe,
     replyCount,
     replies,
   ];

@@ -16,6 +16,12 @@ class AppRoutes {
 
   // Bạn bè / tìm kiếm
   static const searchUsers = '/search/users';
+  static const followers = '/relationships/followers';
+  static const following = '/relationships/following';
+  static const blockedUsers = '/relationships/blocked';
+
+  static const conversations = '/chat';
+  static const chatDetail = '/chat/detail'; // arguments: ChatTarget
 
   static const searchGlobal = '/search/global';
 
@@ -42,4 +48,6 @@ class AppRoutes {
   // Social (module khác sẽ bổ sung)
   static const postDetail = '/post/detail'; // arguments: int postId
   static const createPost = '/post/create'; // pop -> PostModel? (bài vừa đăng)
+  static const editPost =
+      '/post/edit'; // arguments: PostModel; pop -> PostModel?
 }

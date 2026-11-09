@@ -7,6 +7,7 @@ import '../../core/widgets/user_avatar.dart';
 import '../../data/models/comment_model.dart';
 import '../media/media_viewer.dart';
 import '../widgets/link_text.dart';
+import '../widgets/blocked_content.dart';
 import '../../data/models/media_item.dart';
 import '../../core/design_system/app_icons.dart';
 
@@ -19,6 +20,8 @@ class CommentTile extends StatelessWidget {
   final CommentModel comment;
   final bool isMine;
   final bool isReply;
+  final bool liking;
+  final VoidCallback? onLike;
   final VoidCallback? onReply;
   final VoidCallback? onDelete;
   final VoidCallback? onReport;
@@ -29,6 +32,8 @@ class CommentTile extends StatelessWidget {
     required this.comment,
     this.isMine = false,
     this.isReply = false,
+    this.liking = false,
+    this.onLike,
     this.onReply,
     this.onDelete,
     this.onReport,
@@ -36,31 +41,18 @@ class CommentTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => BlockedContent(
+    userIds: [comment.author?.userId],
+    blockedChild: const _UnavailableComment(),
+    child: _content(context),
+  );
+
+  Widget _content(BuildContext context) {
     final theme = Theme.of(context);
     final author = comment.author;
 
     if (comment.hidden || author == null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            const Icon(
-              AppIcons.eyeOff,
-              size: 16,
-              color: AppColors.textTertiary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Bình luận này không khả dụng',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontStyle: FontStyle.italic,
-                color: AppColors.textTertiary,
-              ),
-            ),
-          ],
-        ),
-      );
+      return const _UnavailableComment();
     }
 
     final avatarSize = isReply ? 24.0 : 32.0;
@@ -111,6 +103,32 @@ class CommentTile extends StatelessWidget {
                               ),
                             ),
                           ),
+                        if (comment.reactCount > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Semantics(
+                              label: '${comment.reactCount} lượt thích',
+                              excludeSemantics: true,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    AppIcons.likeFill,
+                                    size: 13,
+                                    color: AppColors.like,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    TimeFormat.compact(comment.reactCount),
+                                    key: ValueKey(
+                                      'comment_reaction_count_${comment.commentId}',
+                                    ),
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -119,9 +137,11 @@ class CommentTile extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: GestureDetector(
-                      onTap: () => MediaViewer.open(context, [
-                        MediaItem(url: comment.mediaUrl!),
-                      ]),
+                      onTap: () => MediaViewer.open(
+                        context,
+                        [MediaItem(url: comment.mediaUrl!)],
+                        userIds: [comment.author!.userId],
+                      ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: CachedNetworkImage(
@@ -137,25 +157,32 @@ class CommentTile extends StatelessWidget {
                   ),
                 Padding(
                   padding: const EdgeInsets.only(left: 6, top: 4),
-                  child: Row(
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         TimeFormat.ago(comment.createdAt),
                         style: theme.textTheme.bodySmall,
                       ),
+                      if (onLike != null)
+                        _TextAction(
+                          label: 'Thích',
+                          onTap: liking ? null : onLike,
+                          color: comment.reactedByMe ? AppColors.like : null,
+                          selected: comment.reactedByMe,
+                        ),
                       if (onReply != null) ...[
-                        const SizedBox(width: 16),
                         _TextAction(label: 'Phản hồi', onTap: onReply!),
                       ],
                       if (isMine && onDelete != null) ...[
-                        const SizedBox(width: 16),
                         _TextAction(
                           label: 'Xoá',
                           onTap: onDelete!,
                           color: AppColors.error,
                         ),
                       ] else if (!isMine && onReport != null) ...[
-                        const SizedBox(width: 16),
                         _TextAction(label: 'Báo cáo', onTap: onReport!),
                       ],
                     ],
@@ -170,22 +197,57 @@ class CommentTile extends StatelessWidget {
   }
 }
 
+class _UnavailableComment extends StatelessWidget {
+  const _UnavailableComment();
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        const Icon(AppIcons.eyeOff, size: 16, color: AppColors.textTertiary),
+        const SizedBox(width: 8),
+        Text(
+          'Bình luận này không khả dụng',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontStyle: FontStyle.italic,
+            color: AppColors.textTertiary,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class _TextAction extends StatelessWidget {
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color? color;
+  final bool? selected;
 
-  const _TextAction({required this.label, required this.onTap, this.color});
+  const _TextAction({
+    required this.label,
+    required this.onTap,
+    this.color,
+    this.selected,
+  });
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    behavior: HitTestBehavior.opaque,
-    onTap: onTap,
-    child: Text(
-      label,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: color ?? AppColors.textSecondary,
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    enabled: onTap != null,
+    selected: selected,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: color ?? AppColors.textSecondary,
+          ),
+        ),
       ),
     ),
   );

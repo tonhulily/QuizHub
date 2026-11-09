@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/design_system/app_colors.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/widgets/fb_widgets.dart';
+import '../../core/widgets/state_views.dart';
+import '../../data/repositories/friend_repository.dart';
+import '../../di/locator.dart';
 import '../home/home_tab.dart';
 import '../menu/menu_tab.dart';
 import '../notifications/view/notifications_tab.dart';
@@ -86,6 +92,30 @@ class MainShell extends StatefulWidget {
 
 class MainShellState extends State<MainShell>
     with SingleTickerProviderStateMixin {
+  bool _loadingBlocks = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadBlocks());
+  }
+
+  Future<void> _loadBlocks() async {
+    // Chạy cả sau đăng nhập mới, trước khi dựng feed/cache của tài khoản này.
+    try {
+      if (getIt.isRegistered<FriendRepository>()) {
+        await getIt<FriendRepository>().blockedIds().timeout(
+          const Duration(seconds: 6),
+        );
+      }
+    } on ApiException {
+      // Mất mạng: vẫn lọc theo danh sách chặn cục bộ của tài khoản.
+    } on TimeoutException {
+      // Không giữ màn hình chờ khi server phản hồi chậm.
+    }
+    if (mounted) setState(() => _loadingBlocks = false);
+  }
+
   late final TabController _controller = TabController(
     length: MainShell.tabs.length,
     vsync: this,
@@ -124,6 +154,9 @@ class MainShellState extends State<MainShell>
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingBlocks) {
+      return const Scaffold(body: LoadingView());
+    }
     final tabs = MainShell.tabs;
     final current = tabs[_index];
 
@@ -216,7 +249,8 @@ class _Header extends StatelessWidget {
           HeaderIconButton(
             icon: AppIcons.messenger,
             tooltip: 'Tin nhắn',
-            onTap: () => showComingSoon(context, 'Tin nhắn'),
+            onTap: () =>
+                Navigator.of(context).pushNamed(AppRoutes.conversations),
           ),
         ],
       ),

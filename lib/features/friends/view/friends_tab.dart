@@ -6,6 +6,7 @@ import '../../../core/design_system/app_icons.dart';
 import '../../../core/design_system/design_tokens.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/services/social_events.dart';
+import '../../../core/services/blocked_users.dart';
 import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -41,6 +42,7 @@ class _FriendsTabState extends State<FriendsTab> {
       getIt<UserSearchRepository>(),
       getIt<SocialEvents>(),
       () => profileCubit.state.profile,
+      blocks: getIt.isRegistered<BlockedUsers>() ? getIt<BlockedUsers>() : null,
     )..load();
   }
 
@@ -139,6 +141,7 @@ class _FriendsTabState extends State<FriendsTab> {
         for (final u in state.suggestions) ...[
           PersonCard(
             key: ValueKey('sg_${u.userId}'),
+            userId: u.userId,
             name: u.fullName,
             subtitle: u.subtitle,
             avatarUrl: u.avatarUrl,
@@ -187,6 +190,7 @@ class _FriendsTabState extends State<FriendsTab> {
           for (final r in state.received) ...[
             PersonCard(
               key: ValueKey('rq_${r.user.userId}'),
+              userId: r.user.userId,
               name: r.user.fullName,
               subtitle: _requestSubtitle(r),
               avatarUrl: r.user.avatarUrl,
@@ -206,6 +210,7 @@ class _FriendsTabState extends State<FriendsTab> {
           for (final r in state.sent) ...[
             PersonCard(
               key: ValueKey('st_${r.user.userId}'),
+              userId: r.user.userId,
               name: r.user.fullName,
               subtitle: _requestSubtitle(r),
               avatarUrl: r.user.avatarUrl,
@@ -260,6 +265,7 @@ class _FriendsTabState extends State<FriendsTab> {
         for (final f in state.friends) ...[
           PersonCard(
             key: ValueKey('fr_${f.userId}'),
+            userId: f.userId,
             name: f.fullName,
             subtitle: f.mutualFriendsCount > 0
                 ? '${f.mutualFriendsCount} bạn chung'

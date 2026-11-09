@@ -1,4 +1,5 @@
 import '../../core/config/app_config.dart';
+import '../../core/services/blocked_users.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/network/api_exception.dart';
@@ -14,8 +15,10 @@ import '../models/feed_item.dart';
 class FeedRepository {
   final ApiClient _api;
   final LocalStorage _storage;
+  final BlockedUsers? _blocks;
 
-  FeedRepository(this._api, this._storage);
+  FeedRepository(this._api, this._storage, {BlockedUsers? blocks})
+    : _blocks = blocks;
 
   /// Trang đầu từ cache (null nếu chưa có).
   CursorPage<FeedItem>? get cachedFirstPage {
@@ -79,7 +82,11 @@ class FeedRepository {
   /// Ẩn các bài đã xoá (server có thể vẫn trả bản chụp cũ trong dòng hoạt động).
   CursorPage<FeedItem> _withoutDeleted(CursorPage<FeedItem> page) {
     final deleted = _storage.deletedPostIds;
-    if (deleted.isEmpty) return page;
-    return page.filtered((i) => !deleted.contains(i.postId));
+    return page.filtered(
+      (i) =>
+          !deleted.contains(i.postId) &&
+          !(_blocks?.contains(i.actor?.userId) ?? false) &&
+          !(_blocks?.contains(i.toPost()?.author.userId) ?? false),
+    );
   }
 }

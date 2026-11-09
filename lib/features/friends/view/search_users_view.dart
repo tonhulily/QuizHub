@@ -5,6 +5,7 @@ import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_icons.dart';
 import '../../../core/design_system/design_tokens.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/services/blocked_users.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../data/repositories/user_search_repository.dart';
 import '../../../di/locator.dart';
@@ -19,7 +20,12 @@ class SearchUsersView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => UserSearchCubit(getIt<UserSearchRepository>()),
+      create: (_) => UserSearchCubit(
+        getIt<UserSearchRepository>(),
+        blocks: getIt.isRegistered<BlockedUsers>()
+            ? getIt<BlockedUsers>()
+            : null,
+      ),
       child: const _SearchBody(),
     );
   }
@@ -187,6 +193,7 @@ class _SearchBodyState extends State<_SearchBody> {
                   final u = state.items[i - 1];
                   return PersonCard(
                     key: ValueKey('sr_${u.userId}'),
+                    userId: u.userId,
                     name: u.fullName,
                     subtitle: u.subtitle,
                     avatarUrl: u.avatarUrl,

@@ -12,8 +12,14 @@ import '../../core/design_system/app_icons.dart';
 class PostMediaGrid extends StatelessWidget {
   final List<MediaItem> media;
   final double spacing;
+  final int? ownerUserId;
 
-  const PostMediaGrid({super.key, required this.media, this.spacing = 2});
+  const PostMediaGrid({
+    super.key,
+    required this.media,
+    this.spacing = 2,
+    this.ownerUserId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +35,12 @@ class PostMediaGrid extends StatelessWidget {
     Widget tile(int i, {bool withExtra = false}) => _MediaTile(
       item: items[i],
       extra: withExtra && extra > 0 ? extra : 0,
-      onTap: () => MediaViewer.open(context, items, initialIndex: i),
+      onTap: () => MediaViewer.open(
+        context,
+        items,
+        initialIndex: i,
+        userIds: [?ownerUserId],
+      ),
     );
 
     switch (items.length) {

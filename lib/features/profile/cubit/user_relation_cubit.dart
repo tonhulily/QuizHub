@@ -80,6 +80,7 @@ class UserRelationCubit extends Cubit<UserRelationState> {
     emit(state.copyWith(busy: true));
     try {
       await action();
+      if (isClosed) return null;
       emit(
         state.copyWith(
           relationship: apply(state.relationship),
@@ -90,7 +91,7 @@ class UserRelationCubit extends Cubit<UserRelationState> {
       _events.notifyChanged();
       return null;
     } on ApiException catch (e) {
-      emit(state.copyWith(busy: false));
+      if (!isClosed) emit(state.copyWith(busy: false));
       return e;
     }
   }
@@ -99,6 +100,7 @@ class UserRelationCubit extends Cubit<UserRelationState> {
     emit(state.copyWith(busy: true));
     try {
       final status = await _friends.sendRequest(userId);
+      if (isClosed) return null;
       final accepted = status == 'ACCEPTED';
       emit(
         state.copyWith(
@@ -113,7 +115,7 @@ class UserRelationCubit extends Cubit<UserRelationState> {
       _events.notifyChanged();
       return null;
     } on ApiException catch (e) {
-      emit(state.copyWith(busy: false));
+      if (!isClosed) emit(state.copyWith(busy: false));
       return e;
     }
   }

@@ -9,6 +9,7 @@ import '../../../core/utils/time_format.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/profile_model.dart';
+import '../../../shared/widgets/blocked_content.dart';
 import '../cubit/profile_cubit.dart';
 import '../widgets/info_grid.dart';
 
@@ -84,7 +85,16 @@ class AboutProfileView extends StatelessWidget {
   const AboutProfileView({super.key, required this.profile});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => BlockedContent(
+    userIds: [profile.userId],
+    blockedChild: Scaffold(
+      appBar: AppBar(title: const Text('Giới thiệu')),
+      body: const Center(child: Text('Tài khoản không khả dụng')),
+    ),
+    child: _content(context),
+  );
+
+  Widget _content(BuildContext context) {
     final cubit = context.read<ProfileCubit>();
     final isMe = cubit.state.profile?.userId == profile.userId;
     if (!isMe) return _AboutBody(profile: profile, isMe: false);

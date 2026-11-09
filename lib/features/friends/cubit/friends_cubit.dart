@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/services/social_events.dart';
+import '../../../core/services/blocked_users.dart';
 import '../../../data/models/profile_model.dart';
 import '../../../data/models/social_models.dart';
 import '../../../data/repositories/friend_repository.dart';
@@ -88,10 +89,18 @@ class FriendsCubit extends Cubit<FriendsState> {
   /// Gợi ý đã bị người dùng bấm "Gỡ" trong phiên này (không hiện lại khi tải).
   final Set<int> _dismissed = {};
 
-  FriendsCubit(this._friends, this._search, this._events, this._me)
-    : super(const FriendsState()) {
+  StreamSubscription<void>? _blocksSub;
+
+  FriendsCubit(
+    this._friends,
+    this._search,
+    this._events,
+    this._me, {
+    BlockedUsers? blocks,
+  }) : super(const FriendsState()) {
     // Trang cá nhân người khác vừa đổi quan hệ -> tải lại im lặng
     _sub = _events.onChanged.listen((_) => load(silent: true));
+    _blocksSub = blocks?.onChanged.listen((_) => load(silent: true));
   }
 
   Future<void> load({bool silent = false}) async {
@@ -308,6 +317,7 @@ class FriendsCubit extends Cubit<FriendsState> {
   @override
   Future<void> close() {
     _sub.cancel();
+    _blocksSub?.cancel();
     return super.close();
   }
 }

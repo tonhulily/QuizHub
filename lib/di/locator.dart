@@ -7,11 +7,15 @@ import '../core/network/session_events.dart';
 import '../core/services/device_service.dart';
 import '../core/services/post_events.dart';
 import '../core/services/social_events.dart';
+import '../core/services/chat_realtime.dart';
+import '../core/services/blocked_users.dart';
+import '../core/config/app_config.dart';
 import '../core/storage/credential_storage.dart';
 import '../core/storage/local_storage.dart';
 import '../core/storage/token_storage.dart';
 import '../data/repositories/ai_repository.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/chat_repository.dart';
 import '../data/repositories/comment_repository.dart';
 import '../data/repositories/exam_repository.dart';
 import '../data/repositories/feed_repository.dart';
@@ -40,9 +44,14 @@ Future<void> setupLocator({
   TokenStorage? tokenStorage,
   CredentialStorage? credentialStorage,
   HttpClientAdapter? httpAdapter,
+  ChatRealtime? chatRealtime,
+  String blockStorageScope = 'server',
+  String? apiBaseUrl,
+  String? chatWebSocketUrl,
+  SharedPreferences? preferences,
 }) async {
   // ---- Storage ----
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = preferences ?? await SharedPreferences.getInstance();
   getIt.registerSingleton<LocalStorage>(LocalStorage(prefs));
 
   final tokens = tokenStorage ?? TokenStorage();
@@ -56,6 +65,13 @@ Future<void> setupLocator({
   getIt.registerSingleton<SessionEvents>(SessionEvents());
   getIt.registerSingleton<PostEvents>(PostEvents());
   getIt.registerSingleton<SocialEvents>(SocialEvents());
+  getIt.registerLazySingleton<BlockedUsers>(
+    () => BlockedUsers(
+      getIt<LocalStorage>(),
+      scope: '$blockStorageScope:${apiBaseUrl ?? AppConfig.apiBaseUrl}',
+    ),
+    dispose: (value) => value.dispose(),
+  );
   getIt.registerLazySingleton<DeviceService>(
     () => DeviceService(getIt<LocalStorage>()),
   );
@@ -63,12 +79,27 @@ Future<void> setupLocator({
     () => ApiClient(
       tokens: getIt<TokenStorage>(),
       events: getIt<SessionEvents>(),
+      baseUrl: apiBaseUrl,
       // ignore: invalid_use_of_visible_for_testing_member
       adapter: httpAdapter,
     ),
   );
 
   // ---- Repositories ----
+  getIt.registerLazySingleton<ChatRealtime>(
+    () =>
+        chatRealtime ??
+        StompChatRealtime(
+          getIt<ApiClient>(),
+          getIt<TokenStorage>(),
+          getIt<SessionEvents>(),
+          url: chatWebSocketUrl ?? AppConfig.wsUrl,
+        ),
+    dispose: (value) => value.dispose(),
+  );
+  getIt.registerLazySingleton<ChatRepository>(
+    () => ChatRepository(getIt<ApiClient>(), blocks: getIt<BlockedUsers>()),
+  );
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(
       getIt<ApiClient>(),
@@ -83,10 +114,15 @@ Future<void> setupLocator({
       getIt<ApiClient>(),
       getIt<LocalStorage>(),
       getIt<CredentialStorage>(),
+      blocks: getIt<BlockedUsers>(),
     ),
   );
   getIt.registerLazySingleton<PostRepository>(
-    () => PostRepository(getIt<ApiClient>(), getIt<LocalStorage>()),
+    () => PostRepository(
+      getIt<ApiClient>(),
+      getIt<LocalStorage>(),
+      blocks: getIt<BlockedUsers>(),
+    ),
   );
   getIt.registerLazySingleton<CommentRepository>(
     () => CommentRepository(getIt<ApiClient>()),
@@ -101,10 +137,14 @@ Future<void> setupLocator({
     () => ReportRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<FriendRepository>(
-    () => FriendRepository(getIt<ApiClient>()),
+    () => FriendRepository(getIt<ApiClient>(), blocks: getIt<BlockedUsers>()),
   );
   getIt.registerLazySingleton<UserSearchRepository>(
-    () => UserSearchRepository(getIt<ApiClient>(), getIt<FriendRepository>()),
+    () => UserSearchRepository(
+      getIt<ApiClient>(),
+      getIt<FriendRepository>(),
+      blocks: getIt<BlockedUsers>(),
+    ),
   );
   getIt.registerLazySingleton<SearchRepository>(
     () => SearchRepository(getIt<ApiClient>()),
@@ -113,7 +153,11 @@ Future<void> setupLocator({
     () => NotificationRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<FeedRepository>(
-    () => FeedRepository(getIt<ApiClient>(), getIt<LocalStorage>()),
+    () => FeedRepository(
+      getIt<ApiClient>(),
+      getIt<LocalStorage>(),
+      blocks: getIt<BlockedUsers>(),
+    ),
   );
 
   // ---- Ngân hàng câu hỏi + Đề thi + AI (docs/qbank/API_CONTRACT.md) ----
