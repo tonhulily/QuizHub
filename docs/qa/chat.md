@@ -6,6 +6,9 @@
 2. Bấm một hội thoại: lịch sử mới nhất nằm dưới, kéo lên để tải tin cũ; không lặp tin khi làm mới.
 3. Mở hồ sơ người khác → Nhắn tin: tạo/lấy lại đúng hội thoại 1–1. Mở lại không tạo bản trùng.
 4. Nhấn giữ tin: xoá ở phía tôi; tin của mình có thêm thu hồi với mọi người.
+   Sau khi thu hồi, nhấn giữ khối "Tin nhắn đã thu hồi": chỉ có Xoá ở phía tôi.
+   Xoá phải gỡ cả khối bên mình, mở lại vẫn mất; bên kia vẫn giữ khối thu hồi.
+   Kiểm tra thao tác này cho cả người gửi và người nhận.
 5. Thử mất mạng/lỗi API và nút Thử lại; quay lại màn danh sách phải cập nhật dữ liệu.
 
 Chạy bản mẫu: `flutter run -d <id> -t lib/main_preview.dart`.

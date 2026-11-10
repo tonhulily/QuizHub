@@ -260,6 +260,63 @@ void main() {
     expect(retainedImage.data, png);
   });
 
+  for (final deletingUser in [1, 2]) {
+    test(
+      'người $deletingUser xoá khối thu hồi chỉ mất phía mình, giữ đúng sau restart',
+      () async {
+        final an = client(1);
+        final lan = client(2);
+        await Future.wait([an.connect(), lan.connect()]);
+        final conv = await an.repo.direct(2, myId: 1);
+        an.live.send(
+          conversationId: conv.conversationId,
+          content: 'Thu hồi rồi xoá riêng',
+        );
+        await _until(
+          () => lan.events.any(
+            (e) => e.message?.content == 'Thu hồi rồi xoá riêng',
+          ),
+        );
+        final message = (await an.repo.messages(
+          conv.conversationId,
+        )).items.single;
+        await an.repo.deleteMessage(message.messageId, forEveryone: true);
+        for (final c in [an, lan]) {
+          expect(
+            (await c.repo.messages(conv.conversationId)).items.single.revoked,
+            isTrue,
+          );
+        }
+
+        final deleting = deletingUser == 1 ? an : lan;
+        final other = deletingUser == 1 ? lan : an;
+        await deleting.repo.deleteMessage(message.messageId);
+        expect(
+          (await deleting.repo.messages(conv.conversationId)).items,
+          isEmpty,
+        );
+        final retained = (await other.repo.messages(
+          conv.conversationId,
+        )).items.single;
+        expect(retained.messageId, message.messageId);
+        expect(retained.revoked, isTrue);
+        expect(retained.content, isEmpty);
+
+        await restart();
+        final reopened = client(deletingUser);
+        final peer = client(other.id);
+        expect(
+          (await reopened.repo.messages(conv.conversationId)).items,
+          isEmpty,
+        );
+        expect(
+          (await peer.repo.messages(conv.conversationId)).items.single,
+          retained,
+        );
+      },
+    );
+  }
+
   test('chặn hai chiều không cho gửi hoặc xem; bỏ chặn giữ lịch sử', () async {
     final an = client(1);
     final lan = client(2);

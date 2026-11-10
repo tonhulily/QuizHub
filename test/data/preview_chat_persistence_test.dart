@@ -284,8 +284,14 @@ void main() {
     () async {
       final removed = await session.send('Tin xoá riêng');
       final revoked = await session.send('Tin thu hồi');
+      final hiddenRevoked = await session.send('Tin thu hồi rồi xoá riêng');
       await session.repo.deleteMessage(removed.messageId);
       await session.repo.deleteMessage(revoked.messageId, forEveryone: true);
+      await session.repo.deleteMessage(
+        hiddenRevoked.messageId,
+        forEveryone: true,
+      );
+      await session.repo.deleteMessage(hiddenRevoked.messageId);
       await restart();
 
       final history = await session.repo.messages(removed.conversationId);
@@ -298,8 +304,12 @@ void main() {
       );
       expect(restored.revoked, isTrue);
       expect(restored.content, isEmpty);
+      expect(
+        history.items.any((m) => m.messageId == hiddenRevoked.messageId),
+        isFalse,
+      );
       final next = await session.send('Tin sau khi xoá');
-      expect(next.messageId, greaterThan(revoked.messageId));
+      expect(next.messageId, greaterThan(hiddenRevoked.messageId));
     },
   );
 
