@@ -11,6 +11,7 @@ import '../../../data/models/notification_models.dart';
 import '../../../di/locator.dart';
 import '../cubit/notification_cubit.dart';
 import '../cubit/notification_state.dart';
+import '../navigation/notification_navigator.dart';
 
 /// Tab danh sách thông báo của người dùng.
 /// Header tiêu đề đã được MainShell đảm nhiệm.
@@ -80,10 +81,16 @@ class _NotificationsBody extends StatelessWidget {
     NotificationModel item,
   ) async {
     final error = await context.read<NotificationCubit>().markAsRead(item);
-    if (!context.mounted || error == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error.message)),
-    );
+    if (!context.mounted) return;
+
+    // Lỗi đánh dấu đã đọc không nên chặn người dùng mở nội dung liên quan.
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    }
+
+    await NotificationNavigator.open(context, item);
   }
 }
 
