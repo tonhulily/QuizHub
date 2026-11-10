@@ -109,4 +109,8 @@ class AppIcons {
   static const offline = PhosphorIconsRegular.wifiSlash;
   static const radioOn = PhosphorIconsFill.radioButton;
   static const radioOff = PhosphorIconsRegular.circle;
+
+  // Search
+  static const history = PhosphorIconsRegular.clockCounterClockwise;
+  static const trendingUp = PhosphorIconsRegular.trendUp;
 }

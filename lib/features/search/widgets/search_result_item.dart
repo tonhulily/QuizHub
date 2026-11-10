@@ -1,77 +1,60 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_icons.dart';
 import '../../../core/design_system/design_tokens.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/widgets/fb_widgets.dart';
-import '../../../core/widgets/user_avatar.dart';
-import '../../friends/widgets/person_card.dart';
-
+import '../../../data/models/media_item.dart';
+import '../../../data/models/post_model.dart';
 import '../../../data/models/search_models.dart';
+import '../../../data/models/session_models.dart';
+import '../../../data/models/subject_model.dart';
+import '../../../shared/post/post_card.dart';
+import '../../friends/widgets/person_card.dart';
+import '../../question_bank/widgets/qbank_widgets.dart';
+import '../../question_bank/widgets/question_social_bar.dart';
 
+/// Một kết quả tìm kiếm toàn cục.
+///
+/// Ưu tiên widget dùng chung của từng feature để Search có cùng hành vi và
+/// giao diện với các màn còn lại. Mỗi item chỉ render payload tương ứng với
+/// [GlobalSearchItem.type], tránh trường hợp backend trả nhiều payload làm
+/// một kết quả bị hiển thị lặp.
 class SearchResultItem extends StatelessWidget {
   final GlobalSearchItem item;
 
-  const SearchResultItem({
-    super.key,
-    required this.item,
-  });
+  const SearchResultItem({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
-    final children = <Widget>[];
+    final content = switch (item.type) {
+      SearchType.post when item.post != null => _PostContent(post: item.post!),
+      SearchType.user when item.user != null => _UserContent(user: item.user!),
+      SearchType.question when item.question != null =>
+        _QuestionContent(question: item.question!),
+      SearchType.session when item.session != null =>
+        _SessionContent(session: item.session!),
+      SearchType.subject when item.subject != null =>
+        _SubjectContent(subject: item.subject!),
+      _ => _fallbackContent(),
+    };
 
-    if (item.post != null) {
-      children.add(_PostContent(post: item.post!));
-    }
-
-    if (item.user != null) {
-      children.add(_UserContent(user: item.user!));
-    }
-
-    if (item.question != null) {
-      children.add(_QuestionContent(question: item.question!));
-    }
-
-    if (item.session != null) {
-      children.add(_SessionContent(session: item.session!));
-    }
-
-    if (item.subject != null) {
-      children.add(_SubjectContent(subject: item.subject!));
-    }
-
-    if (children.isEmpty) {
-      children.add(
-        Text(
-          'Không có thông tin hiển thị cho kết quả này.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      );
-    }
+    // PostCard tự quản lý khối trắng và spacing theo chuẩn feed.
+    if (item.type == SearchType.post && item.post != null) return content;
 
     return FlatSection(
       padding: const EdgeInsets.all(DesignTokens.spacingMD),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: _joinWithDivider(children),
-      ),
+      child: content,
     );
   }
 
-  List<Widget> _joinWithDivider(List<Widget> children) {
-    final result = <Widget>[];
-
-    for (var i = 0; i < children.length; i++) {
-      if (i > 0) {
-        result.add(const Divider(height: 24));
-      }
-
-      result.add(children[i]);
-    }
-
-    return result;
-  }
+  Widget _fallbackContent() => Builder(
+    builder: (context) => Text(
+      'Không có thông tin hiển thị cho kết quả này.',
+      style: Theme.of(context).textTheme.bodyMedium,
+    ),
+  );
 }
 
 class _PostContent extends StatelessWidget {
@@ -81,55 +64,25 @@ class _PostContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _ResultTypeLabel(
-          icon: Icons.article_outlined,
-          label: 'Bài viết',
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            UserAvatar(
-              avatarUrl: post.author.avatarUrl,
-              frameUrl: post.author.frameUrl,
-              name: post.author.fullName,
-              size: 40,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    post.author.fullName,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  if (post.createdAt != null)
-                    Text(
-                      _formatDate(post.createdAt!),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(post.content),
-        if (post.mediaUrls.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          _MediaPreview(urls: post.mediaUrls),
-        ],
-        const SizedBox(height: 10),
-        _EngagementInfo(
-          firstIcon: Icons.favorite_border,
-          firstCount: post.reactCount,
-          secondIcon: Icons.chat_bubble_outline,
-          secondCount: post.commentCount,
-        ),
-      ],
+    // Search API trả media_urls dạng List<String>, trong khi PostCard dùng
+    // PostModel với List<MediaItem>. Dữ liệu chưa có type nên mặc định ảnh.
+    final model = PostModel(
+      postId: post.postId,
+      content: post.content,
+      postType: PostType.parse(post.postType),
+      author: post.author,
+      media: [for (final url in post.mediaUrls) MediaItem(url: url)],
+      reactCount: post.reactCount,
+      commentCount: post.commentCount,
+      createdAt: post.createdAt,
+    );
+
+    return PostCard(
+      post: model,
+      onTap: (p) => Navigator.of(context).pushNamed(
+        AppRoutes.postDetail,
+        arguments: p.postId,
+      ),
     );
   }
 }
@@ -147,7 +100,7 @@ class _UserContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _ResultTypeLabel(
-          icon: Icons.person_outline,
+          icon: AppIcons.person,
           label: 'Người dùng',
         ),
         const SizedBox(height: 8),
@@ -157,7 +110,11 @@ class _UserContent extends StatelessWidget {
           subtitle: subtitle,
           avatarUrl: user.avatarUrl,
           frameUrl: user.frameUrl,
-          onTap: () => _openProfile(context),
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.userProfile,
+            arguments: user.userId,
+          ),
           trailing: const Padding(
             padding: EdgeInsets.only(top: 20),
             child: Icon(
@@ -167,7 +124,7 @@ class _UserContent extends StatelessWidget {
             ),
           ),
         ),
-        if (user.bio != null && user.bio!.isNotEmpty) ...[
+        if (user.bio?.trim().isNotEmpty == true) ...[
           const SizedBox(height: 8),
           Text(
             user.bio!,
@@ -187,29 +144,13 @@ class _UserContent extends StatelessWidget {
   }
 
   String? _buildSubtitle(SearchUser user) {
-    final parts = <String>[];
-
-    if (user.studentLecturerCode?.isNotEmpty == true) {
-      parts.add(user.studentLecturerCode!);
-    }
-
-    if (user.schoolFaculty?.isNotEmpty == true) {
-      parts.add(user.schoolFaculty!);
-    }
-
-    if (user.major?.isNotEmpty == true) {
-      parts.add(user.major!);
-    }
-
+    final parts = <String>[
+      if (user.studentLecturerCode?.isNotEmpty == true)
+        user.studentLecturerCode!,
+      if (user.schoolFaculty?.isNotEmpty == true) user.schoolFaculty!,
+      if (user.major?.isNotEmpty == true) user.major!,
+    ];
     return parts.isEmpty ? null : parts.join(' • ');
-  }
-
-  void _openProfile(BuildContext context) {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.userProfile,
-      arguments: user.userId,
-    );
   }
 }
 
@@ -218,60 +159,79 @@ class _QuestionContent extends StatelessWidget {
 
   const _QuestionContent({required this.question});
 
+  void _openQuestion(BuildContext context) {
+    final sessionId = question.sessionId;
+    if (sessionId == null || sessionId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Câu hỏi này chưa có thông tin phiên để mở luyện tập.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).pushNamed(
+      AppRoutes.qbankPractice,
+      arguments: (sessionId: sessionId, questionId: question.questionId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _ResultTypeLabel(
-          icon: Icons.quiz_outlined,
-          label: 'Câu hỏi',
-        ),
-        const SizedBox(height: 8),
-        if (question.questionCode != null)
-          Text(
-            question.questionCode!,
-            style: Theme.of(context).textTheme.bodySmall,
+    final q = question;
+    return InkWell(
+      onTap: () => _openQuestion(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _ResultTypeLabel(
+            icon: AppIcons.quiz,
+            label: 'Câu hỏi',
           ),
-        Text(
-          question.content,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (q.questionCode?.isNotEmpty == true)
+                QbankChip(label: q.questionCode!),
+              if (q.subjectName?.isNotEmpty == true)
+                QbankChip(
+                  label: q.subjectName!,
+                  icon: AppIcons.subject,
+                  color: AppColors.primary700,
+                  background: AppColors.primary50,
+                ),
+              QbankChip(label: q.difficulty.label),
+            ],
+          ),
+          const SizedBox(height: 10),
+          QuestionBody(content: q.content, imageUrls: q.imageUrls),
+          if (q.topicName?.isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Chủ đề: ${q.topicName}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
               ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          children: [
-            if (question.subjectName != null)
-              _InfoChip(
-                icon: Icons.menu_book_outlined,
-                label: question.subjectName!,
-              ),
-            if (question.topicName != null)
-              _InfoChip(
-                icon: Icons.topic_outlined,
-                label: question.topicName!,
-              ),
-            _InfoChip(
-              icon: Icons.signal_cellular_alt,
-              label: _enumLabel(question.difficulty),
             ),
           ],
-        ),
-        if (question.imageUrls.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          _MediaPreview(urls: question.imageUrls),
+          const SizedBox(height: 8),
+          Text(
+            q.sessionId != null && q.sessionId! > 0
+                ? 'Nhấn nội dung để mở câu hỏi trong phiên luyện tập'
+                : 'Chưa có thông tin phiên để mở câu hỏi luyện tập',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppColors.primary600,
+            ),
+          ),
+          QuestionSocialBar(
+            questionId: q.questionId,
+            reactCount: q.reactCount,
+            commentCount: q.commentCount,
+          ),
         ],
-        const SizedBox(height: 10),
-        _EngagementInfo(
-          firstIcon: Icons.favorite_border,
-          firstCount: question.reactCount,
-          secondIcon: Icons.chat_bubble_outline,
-          secondCount: question.commentCount,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -283,153 +243,130 @@ class _SessionContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final status = SessionStatus.parse(session.status);
+    final summary = SubmissionSummary(
+      sessionId: session.sessionId,
+      title: session.title,
+      content: session.content,
+      subjectId: session.subjectId,
+      subjectName: session.subjectName,
+      questionCount: session.questionCount,
+      status: status,
+      createdAt: session.createdAt,
+      reactCount: session.reactCount,
+      commentCount: session.commentCount,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _ResultTypeLabel(
-          icon: Icons.groups_outlined,
+          icon: AppIcons.friends,
           label: 'Phiên đóng góp',
         ),
         const SizedBox(height: 8),
-        Text(
-          session.title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+        SessionTile(
+          session: summary,
+          onTap: () {
+            if (status == SessionStatus.resolved) {
+              Navigator.of(context).pushNamed(
+                AppRoutes.qbankPractice,
+                arguments: session.sessionId,
+              );
+              return;
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Phiên này chưa được duyệt nên chưa thể luyện tập.',
+                ),
               ),
+            );
+          },
         ),
-        if (session.content != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            session.content!,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
+        if (session.reactCount > 0 || session.commentCount > 0) ...[
+          const SizedBox(height: 8),
+          _EngagementInfo(
+            firstIcon: AppIcons.like,
+            firstCount: session.reactCount,
+            secondIcon: AppIcons.comment,
+            secondCount: session.commentCount,
           ),
         ],
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          children: [
-            if (session.subjectName != null)
-              _InfoChip(
-                icon: Icons.menu_book_outlined,
-                label: session.subjectName!,
-              ),
-            _InfoChip(
-              icon: Icons.quiz_outlined,
-              label: '${session.questionCount} câu hỏi',
-            ),
-            if (session.status != null)
-              _InfoChip(
-                icon: Icons.info_outline,
-                label: session.status!,
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        _EngagementInfo(
-          firstIcon: Icons.favorite_border,
-          firstCount: session.reactCount,
-          secondIcon: Icons.chat_bubble_outline,
-          secondCount: session.commentCount,
-        ),
       ],
     );
   }
 }
 
 class _SubjectContent extends StatelessWidget {
-  final dynamic subject;
+  final SubjectModel subject;
 
   const _SubjectContent({required this.subject});
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _ResultTypeLabel(
-          icon: Icons.menu_book_outlined,
-          label: 'Học phần',
-        ),
-        const SizedBox(height: 8),
-        Text(
-          subject.name,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        if (subject.code.isNotEmpty)
-          Text(
-            subject.code,
-            style: Theme.of(context).textTheme.bodySmall,
+  Widget build(BuildContext context) => InkWell(
+    onTap: () => Navigator.of(context).pushNamed(
+      AppRoutes.searchGlobal,
+      arguments: subject.code,
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _ResultTypeLabel(
+            icon: AppIcons.subject,
+            label: 'Môn học',
           ),
-      ],
-    );
-  }
+          const SizedBox(height: 8),
+          Text(
+            subject.name,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (subject.code.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              subject.code,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Text(
+            'Tìm câu hỏi thuộc môn học này',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppColors.primary600,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ResultTypeLabel extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _ResultTypeLabel({
-    required this.icon,
-    required this.label,
-  });
+  const _ResultTypeLabel({required this.icon, required this.label});
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 17, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 17, color: Theme.of(context).colorScheme.primary),
+      const SizedBox(width: 6),
+      Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w600,
         ),
-      ],
-    );
-  }
-}
-
-
-class _MediaPreview extends StatelessWidget {
-  final List<String> urls;
-
-  const _MediaPreview({required this.urls});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 110,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: urls.length > 4 ? 4 : urls.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              urls[index],
-              width: 110,
-              height: 110,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                width: 110,
-                height: 110,
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: const Icon(Icons.broken_image_outlined),
-              ),
-            ),
-          );
-        },
       ),
-    );
-  }
+    ],
+  );
 }
 
 class _EngagementInfo extends StatelessWidget {
@@ -446,52 +383,15 @@ class _EngagementInfo extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.bodySmall;
-
-    return Row(
-      children: [
-        Icon(firstIcon, size: 17, color: Theme.of(context).hintColor),
-        const SizedBox(width: 4),
-        Text('$firstCount', style: style),
-        const SizedBox(width: 16),
-        Icon(secondIcon, size: 17, color: Theme.of(context).hintColor),
-        const SizedBox(width: 4),
-        Text('$secondCount', style: style),
-      ],
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      visualDensity: VisualDensity.compact,
-      avatar: Icon(icon, size: 15),
-      label: Text(label),
-      labelStyle: Theme.of(context).textTheme.labelSmall,
-      padding: EdgeInsets.zero,
-    );
-  }
-}
-
-String _formatDate(DateTime date) {
-  final local = date.toLocal();
-
-  String twoDigits(int value) => value.toString().padLeft(2, '0');
-
-  return '${twoDigits(local.day)}/${twoDigits(local.month)}/${local.year}';
-}
-
-String _enumLabel(Object value) {
-  return value.toString().split('.').last;
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(firstIcon, size: 17, color: AppColors.textTertiary),
+      const SizedBox(width: 4),
+      Text('$firstCount', style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(width: 16),
+      Icon(secondIcon, size: 17, color: AppColors.textTertiary),
+      const SizedBox(width: 4),
+      Text('$secondCount', style: Theme.of(context).textTheme.bodySmall),
+    ],
+  );
 }

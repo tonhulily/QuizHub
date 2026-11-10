@@ -15,7 +15,14 @@ import '../widgets/search_result_list.dart';
 import '../widgets/search_suggestions.dart';
 
 class GlobalSearchView extends StatefulWidget {
-  const GlobalSearchView({super.key});
+  final String? initialQuery;
+  final SearchType initialType;
+
+  const GlobalSearchView({
+    super.key,
+    this.initialQuery,
+    this.initialType = SearchType.all,
+  });
 
   @override
   State<GlobalSearchView> createState() => _GlobalSearchViewState();
@@ -31,6 +38,20 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
 
     _cubit = GlobalSearchCubit(getIt<SearchRepository>())
       ..loadInitialData();
+
+    final query = widget.initialQuery?.trim() ?? '';
+    if (query.isNotEmpty) {
+      _searchController.text = query;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _cubit.search(
+            query,
+            type: widget.initialType,
+            saveToHistory: false,
+          );
+        }
+      });
+    }
   }
 
   @override

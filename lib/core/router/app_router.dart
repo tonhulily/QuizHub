@@ -7,6 +7,7 @@ import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
 import '../../features/friends/view/relationship_users_view.dart';
 import '../../data/models/post_model.dart';
+import '../../data/models/search_models.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/post/post_detail_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
@@ -67,7 +68,10 @@ class AppRouter {
       case AppRoutes.searchUsers:
         page = const SearchUsersView();
       case AppRoutes.searchGlobal:
-        page = const GlobalSearchView();
+        page = GlobalSearchView(
+          initialQuery: args is String ? args : null,
+          initialType: args is String ? SearchType.question : SearchType.all,
+        );
       case AppRoutes.conversations:
         page = const ConversationsView();
       case AppRoutes.chatDetail:

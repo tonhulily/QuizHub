@@ -238,6 +238,8 @@ class SearchUser extends Equatable {
 
 class SearchQuestion extends Equatable {
   final int questionId;
+  /// Phiên chứa câu hỏi; cần thiết để mở PracticeView từ kết quả tìm kiếm.
+  final int? sessionId;
   final String? questionCode;
   final int? subjectId;
   final String? subjectName;
@@ -257,6 +259,7 @@ class SearchQuestion extends Equatable {
 
   const SearchQuestion({
     required this.questionId,
+    this.sessionId,
     this.questionCode,
     this.subjectId,
     this.subjectName,
@@ -278,6 +281,7 @@ class SearchQuestion extends Equatable {
   factory SearchQuestion.fromJson(Map<String, dynamic> json) {
     return SearchQuestion(
       questionId: J.intOr(json['question_id']),
+      sessionId: J.asInt(json['session_id']),
       questionCode: J.asString(json['question_code']),
       subjectId: J.asInt(json['subject_id']),
       subjectName: J.asString(json['subject_name']),
@@ -300,6 +304,7 @@ class SearchQuestion extends Equatable {
   @override
   List<Object?> get props => [
     questionId,
+    sessionId,
     questionCode,
     subjectId,
     subjectName,
