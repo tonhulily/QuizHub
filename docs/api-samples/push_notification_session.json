@@ -1,0 +1,8 @@
+{
+  "title": "QuizHub - Phiên học",
+  "body": "Bạn có phiên học mới được duyệt!",
+  "targetType": "SESSION",
+  "targetId": "456",
+  "targetUrl": "https://snsqb.duckdns.org/sessions/456",
+  "pushType": "ACADEMIC"
+}

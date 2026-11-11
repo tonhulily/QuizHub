@@ -1,0 +1,8 @@
+{
+  "title": "QuizHub - Người dùng",
+  "body": "Bạn có một lời mời kết bạn!",
+  "targetType": "USER",
+  "targetId": "101",
+  "targetUrl": "https://snsqb.duckdns.org/users/101",
+  "pushType": "SOCIAL"
+}

@@ -1,0 +1,8 @@
+{
+  "title": "QuizHub - Tin nhắn mới",
+  "body": "Bạn có một tin nhắn mới!",
+  "targetType": "CONVERSATION",
+  "targetId": "202",
+  "targetUrl": "https://snsqb.duckdns.org/messages/202",
+  "pushType": "SOCIAL"
+}

@@ -1,6 +1,7 @@
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/services/device_service.dart';
+import '../../core/services/firebase_installation_service.dart';
 import '../../core/storage/credential_storage.dart';
 import '../../core/storage/local_storage.dart';
 import '../../core/storage/token_storage.dart';
@@ -18,6 +19,7 @@ class AuthRepository {
   final LocalStorage _storage;
   final DeviceService _device;
   final CredentialStorage _credentials;
+  final FirebaseInstallationService _firebaseInstallation;
 
   AuthRepository(
     this._api,
@@ -25,6 +27,7 @@ class AuthRepository {
     this._storage,
     this._device,
     this._credentials,
+    this._firebaseInstallation,
   );
 
   bool get hasSession => _tokens.hasTokens;
@@ -35,17 +38,26 @@ class AuthRepository {
     required String password,
   }) async {
     final device = await _device.getInfo();
+    final fid = await _firebaseInstallation.getFid();
+
+    final body = <String, dynamic>{
+      'email': email.trim(),
+      'password': password,
+      'device_id': device.deviceId,
+      'platform': device.platform,
+      'device_name': device.deviceName,
+      'os_version': device.osVersion,
+      'app_version': device.appVersion,
+    };
+
+    // Chỉ gửi FID khi Firebase trả về giá trị hợp lệ.
+    if (fid != null && fid.isNotEmpty) {
+      body['fid'] = fid;
+    }
+
     final session = await _api.post<AuthSession>(
       ApiEndpoints.login,
-      body: {
-        'email': email.trim(),
-        'password': password,
-        'device_id': device.deviceId,
-        'platform': device.platform,
-        'device_name': device.deviceName,
-        'os_version': device.osVersion,
-        'app_version': device.appVersion,
-      },
+      body: body,
       parser: (d) => AuthSession.fromJson(J.asMap(d) ?? const {}),
     );
     await _tokens.save(

@@ -7,6 +7,7 @@ import '../../../core/design_system/component_tokens.dart';
 import '../../../core/design_system/design_tokens.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/router/app_navigator.dart';
+import '../../../core/services/firebase_messaging_service.dart';
 import '../../../core/utils/time_format.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/profile_model.dart';
 import '../../../data/repositories/media_repository.dart';
+import '../../../di/locator.dart';
 import '../../../shared/media/image_picking.dart';
 import '../cubit/profile_cubit.dart';
 import '../widgets/info_grid.dart';
@@ -161,6 +163,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       AppFeedback.success(context, 'Đã cập nhật hồ sơ');
       if (widget.forceComplete) {
         AppNavigator.toMain();
+        await getIt<FirebaseMessagingService>().markNavigationReady();
       } else {
         Navigator.of(context).pop();
       }

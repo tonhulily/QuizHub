@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,6 +9,8 @@ import '../../../core/design_system/app_icons.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/router/app_navigator.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/services/firebase_fid_sync_service.dart';
+import '../../../core/services/firebase_messaging_service.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -182,6 +186,8 @@ class _LoginBodyState extends State<_LoginBody> {
         }
       }
       context.read<AuthCubit>().loggedIn();
+      // Đồng bộ FID (Firebase Installation ID) ngay khi đăng nhập thành công.
+      unawaited(getIt<FirebaseFidSyncService>().syncCurrentFid());
       context.read<ProfileCubit>().load(silent: true);
       final needsProfile = state.session?.profileCompleted == false;
       if (needsProfile) {
@@ -193,6 +199,7 @@ class _LoginBodyState extends State<_LoginBody> {
         );
       } else {
         AppNavigator.toMain();
+        getIt<FirebaseMessagingService>().markNavigationReady();
       }
     }
   }

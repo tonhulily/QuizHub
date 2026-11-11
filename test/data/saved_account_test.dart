@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quizhub/core/network/api_client.dart';
 import 'package:quizhub/core/network/session_events.dart';
 import 'package:quizhub/core/services/device_service.dart';
+import 'package:quizhub/core/services/firebase_installation_service.dart';
 import 'package:quizhub/core/storage/credential_storage.dart';
 import 'package:quizhub/core/storage/local_storage.dart';
 import 'package:quizhub/core/storage/token_storage.dart';
@@ -112,6 +113,7 @@ void main() {
       storage,
       DeviceService(storage),
       creds,
+      FirebaseInstallationService(),
     );
 
     test('remember / read / forget', () async {

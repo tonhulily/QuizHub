@@ -1,12 +1,15 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/services/firebase_messaging_service.dart';
 import 'core/storage/credential_storage.dart';
 import 'core/widgets/app_feedback.dart';
 import 'data/models/saved_account.dart';
 import 'dev/preview_backend.dart';
 import 'di/locator.dart';
+import 'firebase_options.dart';
 
 /// Chạy app với DỮ LIỆU MẪU (không cần tài khoản / backend) để xem và phát
 /// triển giao diện:
@@ -24,6 +27,19 @@ import 'di/locator.dart';
 /// Bản thật là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Firebase là dịch vụ bổ trợ, không để lỗi Firebase chặn app khởi động.
+  var firebaseInitialized = false;
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    firebaseInitialized = true;
+  } catch (error, stackTrace) {
+    debugPrint('[Firebase] Initialization failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+
   final preferences = await SharedPreferences.getInstance();
   final backend = PreviewBackend(preferences: preferences);
   await setupLocator(
@@ -32,6 +48,10 @@ Future<void> main() async {
     chatRealtime: backend.chat.realtime,
     blockStorageScope: 'preview',
   );
+  if (firebaseInitialized) {
+    // Chỉ khởi tạo FCM client, không đồng bộ FID với backend thật.
+    await getIt<FirebaseMessagingService>().initialize();
+  }
   AppFeedback.configureLoading();
 
   if (const bool.fromEnvironment('SEED_SAVED_ACCOUNT')) {

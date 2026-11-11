@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../data/models/chat_models.dart';
 import '../../../data/models/notification_models.dart';
+import '../../../data/models/push_notification_payload.dart';
 
 /// Chuyển notification target (hoặc target.url do backend cung cấp)
 /// thành route native của Flutter.
@@ -135,14 +136,27 @@ class NotificationNavigator {
     if (uri == null) return null;
 
     // Chấp nhận relative URL hoặc URL cùng host API/web; không mở host lạ.
-    if (uri.hasScheme &&
-        uri.host.isNotEmpty &&
-        !{
-          'snsqb.duckdns.org',
-          'localhost',
-          '127.0.0.1',
-        }.contains(uri.host.toLowerCase())) {
-      return null;
+    final allowedHosts = {
+      'snsqb.duckdns.org',
+      'localhost',
+      '127.0.0.1',
+    };
+    
+    if (uri.hasAuthority) {
+      if (!allowedHosts.contains(uri.host.toLowerCase())) {
+        return null;
+      }
+    }
+    
+    if (uri.hasScheme) {
+      if (!{'http', 'https'}.contains(uri.scheme.toLowerCase())) {
+        return null;
+      }
+    
+      if (!uri.hasAuthority ||
+          !allowedHosts.contains(uri.host.toLowerCase())) {
+        return null;
+      }
     }
 
     final parts = uri.pathSegments.where((p) => p.isNotEmpty).toList();
@@ -212,6 +226,88 @@ class NotificationNavigator {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
     return false;
+  }
+
+  static Future<bool> openPush(
+    BuildContext context,
+    PushNotificationPayload payload,
+  ) async {
+    final fromUrl = _routeFromUrl(payload.targetUrl);
+  
+    if (fromUrl != null) {
+      await Navigator.of(context).pushNamed(
+        fromUrl.route,
+        arguments: fromUrl.arguments,
+      );
+      return true;
+    }
+  
+    final id = payload.targetId;
+  
+    switch (payload.targetType) {
+      case 'POST':
+        if (id == null || id <= 0) {
+          return _unsupported(context);
+        }
+        await Navigator.of(context).pushNamed(
+          AppRoutes.postDetail,
+          arguments: id,
+        );
+        return true;
+  
+      case 'SESSION':
+        if (id == null || id <= 0) {
+          return _unsupported(context);
+        }
+        await Navigator.of(context).pushNamed(
+          AppRoutes.qbankSubmission,
+          arguments: id,
+        );
+        return true;
+  
+      case 'QUESTION':
+        if (id == null || id <= 0) {
+          return _unsupported(context);
+        }
+        await Navigator.of(context).pushNamed(
+          AppRoutes.qbankMySubmissions,
+        );
+        return true;
+  
+      case 'USER':
+        if (id == null || id <= 0) {
+          return _unsupported(context);
+        }
+        await Navigator.of(context).pushNamed(
+          AppRoutes.userProfile,
+          arguments: id,
+        );
+        return true;
+  
+      case 'CONVERSATION':
+        if (id == null || id <= 0) {
+          return _unsupported(context);
+        }
+        await Navigator.of(context).pushNamed(
+          AppRoutes.chatDetail,
+          arguments: ChatTarget.conversation(
+            ChatConversation(
+              conversationId: id,
+              title: 'Cuộc trò chuyện',
+            ),
+          ),
+        );
+        return true;
+  
+      case 'BADGE':
+        return _unsupported(
+          context,
+          'Mục Huy hiệu chưa được triển khai.',
+        );
+  
+      default:
+        return _unsupported(context);
+    }
   }
 }
 

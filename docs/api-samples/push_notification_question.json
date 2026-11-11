@@ -1,0 +1,8 @@
+{
+  "title": "QuizHub - Câu hỏi",
+  "body": "Một câu hỏi của bạn đã bị xác nhận có lỗi.",
+  "targetType": "QUESTION",
+  "targetId": "1",
+  "targetUrl": "https://snsqb.duckdns.org/sessions?questionId=1",
+  "pushType": "ACADEMIC"
+}

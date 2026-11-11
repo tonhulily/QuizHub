@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:quizhub/core/services/firebase_fid_sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/network/api_client.dart';
 import '../core/network/session_events.dart';
+import '../core/services/firebase_installation_service.dart';
 import '../core/services/device_service.dart';
+import '../core/services/firebase_messaging_service.dart';
 import '../core/services/post_events.dart';
 import '../core/services/social_events.dart';
 import '../core/services/chat_realtime.dart';
@@ -75,6 +78,21 @@ Future<void> setupLocator({
   getIt.registerLazySingleton<DeviceService>(
     () => DeviceService(getIt<LocalStorage>()),
   );
+  getIt.registerLazySingleton<FirebaseInstallationService>(
+    () => FirebaseInstallationService(),
+  );
+  getIt.registerLazySingleton<FirebaseFidSyncService>(
+    () => FirebaseFidSyncService(
+      getIt<ApiClient>(),
+      getIt<TokenStorage>(),
+      getIt<FirebaseInstallationService>(),
+    ),
+    dispose: (value) => value.dispose(),
+  );
+  getIt.registerLazySingleton<FirebaseMessagingService>(
+    () => FirebaseMessagingService(),
+    dispose: (value) => value.dispose(),
+  );
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(
       tokens: getIt<TokenStorage>(),
@@ -107,6 +125,7 @@ Future<void> setupLocator({
       getIt<LocalStorage>(),
       getIt<DeviceService>(),
       getIt<CredentialStorage>(),
+      getIt<FirebaseInstallationService>(),
     ),
   );
   getIt.registerLazySingleton<UserRepository>(
