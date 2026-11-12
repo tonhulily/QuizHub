@@ -25,11 +25,7 @@ class SearchRepository {
     }
 
     if (!SearchType.values.contains(type)) {
-      throw ArgumentError.value(
-        type,
-        'type',
-        'Loại tìm kiếm không hợp lệ',
-      );
+      throw ArgumentError.value(type, 'type', 'Loại tìm kiếm không hợp lệ');
     }
 
     return _api.get<GlobalSearchPage>(
@@ -72,8 +68,6 @@ class SearchRepository {
 
   /// Xóa một từ khóa khỏi lịch sử tìm kiếm.
   Future<void> deleteSavedSearch(int id) {
-    return _api.deleteVoid(
-      ApiEndpoints.searchSavedById(id),
-    );
+    return _api.deleteVoid(ApiEndpoints.searchSavedById(id));
   }
 }

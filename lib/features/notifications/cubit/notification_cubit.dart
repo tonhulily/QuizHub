@@ -26,10 +26,12 @@ class NotificationCubit extends Cubit<NotificationState> {
 
     // unread_count được backend trả kèm từng trang; luôn lấy giá trị mới nhất.
     if (!isClosed) {
-      emit(state.copyWith(
-        unreadCount: response.unreadCount,
-        clearActionError: true,
-      ));
+      emit(
+        state.copyWith(
+          unreadCount: response.unreadCount,
+          clearActionError: true,
+        ),
+      );
     }
 
     return response.page;
@@ -66,10 +68,12 @@ class NotificationCubit extends Cubit<NotificationState> {
         notification.markRead(readAt),
       );
 
-      emit(state.copyWith(
-        unreadCount: response.unreadCount,
-        clearActionError: true,
-      ));
+      emit(
+        state.copyWith(
+          unreadCount: response.unreadCount,
+          clearActionError: true,
+        ),
+      );
       return null;
     } on ApiException catch (e) {
       if (!isClosed) emit(state.copyWith(actionError: e));
@@ -88,10 +92,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       return null;
     }
 
-    emit(state.copyWith(
-      markingAllAsRead: true,
-      clearActionError: true,
-    ));
+    emit(state.copyWith(markingAllAsRead: true, clearActionError: true));
 
     try {
       await _repository.markAllAsRead();
@@ -102,17 +103,11 @@ class NotificationCubit extends Cubit<NotificationState> {
         (item) => item.isRead ? item : item.markRead(readAt),
       );
 
-      emit(state.copyWith(
-        unreadCount: 0,
-        markingAllAsRead: false,
-      ));
+      emit(state.copyWith(unreadCount: 0, markingAllAsRead: false));
       return null;
     } on ApiException catch (e) {
       if (!isClosed) {
-        emit(state.copyWith(
-          markingAllAsRead: false,
-          actionError: e,
-        ));
+        emit(state.copyWith(markingAllAsRead: false, actionError: e));
       }
       return e;
     }

@@ -26,8 +26,7 @@ class NotificationState extends Equatable {
   }) {
     return NotificationState(
       unreadCount: unreadCount ?? this.unreadCount,
-      busyNotificationIds:
-          busyNotificationIds ?? this.busyNotificationIds,
+      busyNotificationIds: busyNotificationIds ?? this.busyNotificationIds,
       markingAllAsRead: markingAllAsRead ?? this.markingAllAsRead,
       actionError: clearActionError ? null : (actionError ?? this.actionError),
     );
@@ -35,9 +34,9 @@ class NotificationState extends Equatable {
 
   @override
   List<Object?> get props => [
-        unreadCount,
-        busyNotificationIds,
-        markingAllAsRead,
-        actionError,
-      ];
+    unreadCount,
+    busyNotificationIds,
+    markingAllAsRead,
+    actionError,
+  ];
 }

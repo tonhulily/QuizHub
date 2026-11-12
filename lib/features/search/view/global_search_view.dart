@@ -36,19 +36,14 @@ class _GlobalSearchViewState extends State<GlobalSearchView> {
   void initState() {
     super.initState();
 
-    _cubit = GlobalSearchCubit(getIt<SearchRepository>())
-      ..loadInitialData();
+    _cubit = GlobalSearchCubit(getIt<SearchRepository>())..loadInitialData();
 
     final query = widget.initialQuery?.trim() ?? '';
     if (query.isNotEmpty) {
       _searchController.text = query;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _cubit.search(
-            query,
-            type: widget.initialType,
-            saveToHistory: false,
-          );
+          _cubit.search(query, type: widget.initialType, saveToHistory: false);
         }
       });
     }

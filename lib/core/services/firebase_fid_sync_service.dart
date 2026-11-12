@@ -24,11 +24,7 @@ class FirebaseFidSyncService {
 
   bool _started = false;
 
-  FirebaseFidSyncService(
-    this._api,
-    this._tokens,
-    this._installation,
-  );
+  FirebaseFidSyncService(this._api, this._tokens, this._installation);
 
   /// Bắt đầu theo dõi FID và đồng bộ FID hiện tại.
   Future<void> start() async {
@@ -66,10 +62,7 @@ class FirebaseFidSyncService {
     _inFlight.add(fid);
 
     try {
-      await _api.postVoid(
-        ApiEndpoints.deviceFid,
-        body: {'fid': fid},
-      );
+      await _api.postVoid(ApiEndpoints.deviceFid, body: {'fid': fid});
 
       _lastSyncedFid = fid;
       debugPrint('[FirebaseFidSync] FID synchronized successfully');

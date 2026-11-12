@@ -95,9 +95,7 @@ class NotificationModel extends Equatable {
       target: targetJson == null
           ? null
           : NotificationTarget.fromJson(targetJson),
-      actor: actorJson == null
-          ? null
-          : NotificationActor.fromJson(actorJson),
+      actor: actorJson == null ? null : NotificationActor.fromJson(actorJson),
       metadata: metadataJson == null
           ? null
           : Map<String, dynamic>.unmodifiable(metadataJson),
@@ -106,31 +104,31 @@ class NotificationModel extends Equatable {
 
   /// Tạo bản sao đã đọc sau khi API xác nhận thành công.
   NotificationModel markRead(DateTime readTime) => NotificationModel(
-        notificationId: notificationId,
-        type: type,
-        title: title,
-        body: body,
-        iconUrl: iconUrl,
-        readAt: readAt ?? readTime,
-        createdAt: createdAt,
-        target: target,
-        actor: actor,
-        metadata: metadata,
-      );
+    notificationId: notificationId,
+    type: type,
+    title: title,
+    body: body,
+    iconUrl: iconUrl,
+    readAt: readAt ?? readTime,
+    createdAt: createdAt,
+    target: target,
+    actor: actor,
+    metadata: metadata,
+  );
 
   @override
   List<Object?> get props => [
-        notificationId,
-        type,
-        title,
-        body,
-        iconUrl,
-        readAt,
-        createdAt,
-        target,
-        actor,
-        metadata,
-      ];
+    notificationId,
+    type,
+    title,
+    body,
+    iconUrl,
+    readAt,
+    createdAt,
+    target,
+    actor,
+    metadata,
+  ];
 }
 
 /// Response GET /notifications. unreadCount được tách khỏi CursorPage
@@ -139,10 +137,7 @@ class NotificationPageResponse extends Equatable {
   final CursorPage<NotificationModel> page;
   final int unreadCount;
 
-  const NotificationPageResponse({
-    required this.page,
-    this.unreadCount = 0,
-  });
+  const NotificationPageResponse({required this.page, this.unreadCount = 0});
 
   factory NotificationPageResponse.fromJson(dynamic data) {
     final map = J.asMap(data) ?? const <String, dynamic>{};

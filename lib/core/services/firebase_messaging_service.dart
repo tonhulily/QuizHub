@@ -12,12 +12,8 @@ import '../../firebase_options.dart';
 
 /// Handler chạy trong isolate riêng khi nhận message ở background.
 @pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(
-  RemoteMessage message,
-) async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   debugPrint(
     '[FCM][Background] messageId=${message.messageId}, '
@@ -41,18 +37,18 @@ class FirebaseMessagingService {
 
   bool _navigationReady = false;
   bool _handlingPending = false;
-  
+
   /// Gọi khi ứng dụng đã xác định người dùng được phép vào Main.
   Future<void> markNavigationReady() async {
     _navigationReady = true;
     await handlePendingNotification();
   }
-  
+
   /// Gọi khi người dùng đăng xuất hoặc chưa được phép vào Main.
   void markNavigationNotReady() {
     _navigationReady = false;
   }
-  
+
   /// Nhận payload từ notification tap.
   void _handleNotificationTap(RemoteMessage message) {
     debugPrint(
@@ -60,23 +56,23 @@ class FirebaseMessagingService {
       'messageId=${message.messageId}, '
       'data=${message.data}',
     );
-  
+
     _pendingPayload = PushNotificationPayload.fromRemoteMessage(message);
-  
+
     handlePendingNotification();
   }
-  
+
   /// Thử mở notification đang chờ.
   Future<void> handlePendingNotification() async {
     if (!_navigationReady || _handlingPending) return;
-  
+
     final payload = _pendingPayload;
     final context = AppNavigator.context;
-  
+
     if (payload == null || context == null) return;
-  
+
     _handlingPending = true;
-  
+
     try {
       // Chỉ xóa pending khi đã xử lý xong.
       await NotificationNavigator.openPush(context, payload);
@@ -95,9 +91,7 @@ class FirebaseMessagingService {
     _initialized = true;
 
     try {
-      FirebaseMessaging.onBackgroundMessage(
-        firebaseMessagingBackgroundHandler,
-      );
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       final settings = await _messaging.requestPermission(
         alert: true,
@@ -105,9 +99,7 @@ class FirebaseMessagingService {
         sound: true,
       );
 
-      debugPrint(
-        '[FCM] Permission: ${settings.authorizationStatus}',
-      );
+      debugPrint('[FCM] Permission: ${settings.authorizationStatus}');
 
       // Lắng nghe sự kiện đăng ký FCM và nhận registration token.
       _registeredSubscription = _messaging.onRegistered.listen(
@@ -164,20 +156,19 @@ class FirebaseMessagingService {
       _registeredSubscription = null;
 
       rethrow;
-
     }
   }
 
-//  void _handleNotificationTap(RemoteMessage message) {
-//    debugPrint(
-//      '[FCM][Opened] '
-//      'messageId=${message.messageId}, '
-//      'data=${message.data}',
-//    );
-//
-//    // Sẽ nối với NotificationNavigator sau khi thống nhất
-//    // cấu trúc payload push từ backend.
-//  }
+  //  void _handleNotificationTap(RemoteMessage message) {
+  //    debugPrint(
+  //      '[FCM][Opened] '
+  //      'messageId=${message.messageId}, '
+  //      'data=${message.data}',
+  //    );
+  //
+  //    // Sẽ nối với NotificationNavigator sau khi thống nhất
+  //    // cấu trúc payload push từ backend.
+  //  }
 
   Future<void> dispose() async {
     await _foregroundSubscription?.cancel();

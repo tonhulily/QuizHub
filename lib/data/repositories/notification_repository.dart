@@ -21,10 +21,7 @@ class NotificationRepository {
   }) {
     return _api.get<NotificationPageResponse>(
       ApiEndpoints.notifications,
-      query: {
-        'after': after,
-        'limit': limit.clamp(1, maxPageSize).toInt(),
-      },
+      query: {'after': after, 'limit': limit.clamp(1, maxPageSize).toInt()},
       parser: NotificationPageResponse.fromJson,
     );
   }

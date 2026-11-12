@@ -18,6 +18,5 @@ class FirebaseInstallationService {
   }
 
   /// Phát sự kiện khi Firebase Installation ID thay đổi.
-  Stream<String> get onFidChanged =>
-      FirebaseInstallations.instance.onIdChange;
+  Stream<String> get onFidChanged => FirebaseInstallations.instance.onIdChange;
 }

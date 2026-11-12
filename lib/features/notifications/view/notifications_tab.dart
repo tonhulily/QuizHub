@@ -71,9 +71,9 @@ class _NotificationsBody extends StatelessWidget {
   Future<void> _markAll(BuildContext context) async {
     final error = await context.read<NotificationCubit>().markAllAsRead();
     if (!context.mounted || error == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error.message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(error.message)));
   }
 
   Future<void> _openNotification(
@@ -85,9 +85,9 @@ class _NotificationsBody extends StatelessWidget {
 
     // Lỗi đánh dấu đã đọc không nên chặn người dùng mở nội dung liên quan.
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     }
 
     await NotificationNavigator.open(context, item);
@@ -113,11 +113,13 @@ class _NotificationActions extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              unreadCount > 0 ? '$unreadCount thông báo chưa đọc' : 'Tất cả đã đọc',
+              unreadCount > 0
+                  ? '$unreadCount thông báo chưa đọc'
+                  : 'Tất cả đã đọc',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           TextButton(
@@ -146,10 +148,7 @@ class _NotificationTile extends StatelessWidget {
   final NotificationModel notification;
   final VoidCallback onTap;
 
-  const _NotificationTile({
-    required this.notification,
-    required this.onTap,
-  });
+  const _NotificationTile({required this.notification, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +188,8 @@ class _NotificationTile extends StatelessWidget {
                               TextSpan(text: notification.title),
                             ],
                           ),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 color: AppColors.textPrimary,
                                 height: 1.35,
                               ),
@@ -200,7 +200,8 @@ class _NotificationTile extends StatelessWidget {
                             notification.body,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
                                   color: AppColors.textSecondary,
                                   height: 1.3,
                                 ),
@@ -209,7 +210,8 @@ class _NotificationTile extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           _formatNotificationTime(notification.createdAt),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
                                 color: AppColors.textTertiary,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -274,9 +276,9 @@ class _NotificationAvatar extends StatelessWidget {
   }
 
   Widget _fallbackIcon() => const ColoredBox(
-        color: AppColors.primary100,
-        child: Icon(AppIcons.notificationsActive, color: AppColors.primary600),
-      );
+    color: AppColors.primary100,
+    child: Icon(AppIcons.notificationsActive, color: AppColors.primary600),
+  );
 }
 
 class _EmptyNotifications extends StatelessWidget {

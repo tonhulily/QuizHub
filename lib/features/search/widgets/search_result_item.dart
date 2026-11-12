@@ -31,12 +31,15 @@ class SearchResultItem extends StatelessWidget {
     final content = switch (item.type) {
       SearchType.post when item.post != null => _PostContent(post: item.post!),
       SearchType.user when item.user != null => _UserContent(user: item.user!),
-      SearchType.question when item.question != null =>
-        _QuestionContent(question: item.question!),
-      SearchType.session when item.session != null =>
-        _SessionContent(session: item.session!),
-      SearchType.subject when item.subject != null =>
-        _SubjectContent(subject: item.subject!),
+      SearchType.question when item.question != null => _QuestionContent(
+        question: item.question!,
+      ),
+      SearchType.session when item.session != null => _SessionContent(
+        session: item.session!,
+      ),
+      SearchType.subject when item.subject != null => _SubjectContent(
+        subject: item.subject!,
+      ),
       _ => _fallbackContent(),
     };
 
@@ -79,10 +82,9 @@ class _PostContent extends StatelessWidget {
 
     return PostCard(
       post: model,
-      onTap: (p) => Navigator.of(context).pushNamed(
-        AppRoutes.postDetail,
-        arguments: p.postId,
-      ),
+      onTap: (p) => Navigator.of(
+        context,
+      ).pushNamed(AppRoutes.postDetail, arguments: p.postId),
     );
   }
 }
@@ -99,10 +101,7 @@ class _UserContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _ResultTypeLabel(
-          icon: AppIcons.person,
-          label: 'Người dùng',
-        ),
+        const _ResultTypeLabel(icon: AppIcons.person, label: 'Người dùng'),
         const SizedBox(height: 8),
         PersonCard(
           key: ValueKey('global_search_user_${user.userId}'),
@@ -184,10 +183,7 @@ class _QuestionContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _ResultTypeLabel(
-            icon: AppIcons.quiz,
-            label: 'Câu hỏi',
-          ),
+          const _ResultTypeLabel(icon: AppIcons.quiz, label: 'Câu hỏi'),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -211,9 +207,9 @@ class _QuestionContent extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Chủ đề: ${q.topicName}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
             ),
           ],
           const SizedBox(height: 8),
@@ -221,9 +217,9 @@ class _QuestionContent extends StatelessWidget {
             q.sessionId != null && q.sessionId! > 0
                 ? 'Nhấn nội dung để mở câu hỏi trong phiên luyện tập'
                 : 'Chưa có thông tin phiên để mở câu hỏi luyện tập',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.primary600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: AppColors.primary600),
           ),
           QuestionSocialBar(
             questionId: q.questionId,
@@ -260,10 +256,7 @@ class _SessionContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _ResultTypeLabel(
-          icon: AppIcons.friends,
-          label: 'Phiên đóng góp',
-        ),
+        const _ResultTypeLabel(icon: AppIcons.friends, label: 'Phiên đóng góp'),
         const SizedBox(height: 8),
         SessionTile(
           session: summary,
@@ -305,41 +298,37 @@ class _SubjectContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-    onTap: () => Navigator.of(context).pushNamed(
-      AppRoutes.searchGlobal,
-      arguments: subject.code,
-    ),
+    onTap: () => Navigator.of(
+      context,
+    ).pushNamed(AppRoutes.searchGlobal, arguments: subject.code),
     child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _ResultTypeLabel(
-            icon: AppIcons.subject,
-            label: 'Môn học',
-          ),
+          const _ResultTypeLabel(icon: AppIcons.subject, label: 'Môn học'),
           const SizedBox(height: 8),
           Text(
             subject.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           if (subject.code.isNotEmpty) ...[
             const SizedBox(height: 3),
             Text(
               subject.code,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
             ),
           ],
           const SizedBox(height: 6),
           Text(
             'Tìm câu hỏi thuộc môn học này',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.primary600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: AppColors.primary600),
           ),
         ],
       ),

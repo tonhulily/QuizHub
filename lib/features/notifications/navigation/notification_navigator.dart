@@ -22,10 +22,9 @@ class NotificationNavigator {
     // nhưng chuyển các URL nội bộ sang named route tương ứng.
     final fromUrl = _routeFromUrl(target?.url);
     if (fromUrl != null) {
-      await Navigator.of(context).pushNamed(
-        fromUrl.route,
-        arguments: fromUrl.arguments,
-      );
+      await Navigator.of(
+        context,
+      ).pushNamed(fromUrl.route, arguments: fromUrl.arguments);
       return true;
     }
 
@@ -35,45 +34,39 @@ class NotificationNavigator {
         // Với lời mời kết bạn, actor là người gửi lời mời.
         final actorId = notification.actor?.userId ?? id;
         if (actorId == null || actorId <= 0) return _unsupported(context);
-        await Navigator.of(context).pushNamed(
-          AppRoutes.userProfile,
-          arguments: actorId,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.userProfile, arguments: actorId);
         return true;
 
       case 'NEW_COMMENT':
       case 'LEADERBOARD_HONOR':
         if (id == null || id <= 0) return _unsupported(context);
-        await Navigator.of(context).pushNamed(
-          AppRoutes.postDetail,
-          arguments: id,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.postDetail, arguments: id);
         return true;
 
       case 'QUESTION_APPROVED':
         if (id == null || id <= 0) return _unsupported(context);
-        await Navigator.of(context).pushNamed(
-          AppRoutes.qbankSubmission,
-          arguments: id,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.qbankSubmission, arguments: id);
         return true;
 
       case 'QUESTION_ERROR_PENALTY':
         if (id == null || id <= 0) return _unsupported(context);
-        // Backend không có api lấy thông tin session từ questionId, 
+        // Backend không có api lấy thông tin session từ questionId,
         // nên mở tab My Submissions để người dùng tự tìm session liên quan.
-        await Navigator.of(context).pushNamed(
-          AppRoutes.qbankMySubmissions
-        );
+        await Navigator.of(context).pushNamed(AppRoutes.qbankMySubmissions);
         return true;
 
       case 'GAME5_SEMESTER_RECAP':
         // Backend đặt target USER; theo fallback của web, mở hồ sơ user.
         if (id == null || id <= 0) return _unsupported(context);
-        await Navigator.of(context).pushNamed(
-          AppRoutes.userProfile,
-          arguments: id,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.userProfile, arguments: id);
         return true;
 
       case 'EARNED_BADGE':
@@ -84,40 +77,32 @@ class NotificationNavigator {
         switch (target?.type.toUpperCase()) {
           case 'POST':
             if (id == null || id <= 0) return _unsupported(context);
-            await Navigator.of(context).pushNamed(
-              AppRoutes.postDetail,
-              arguments: id,
-            );
+            await Navigator.of(
+              context,
+            ).pushNamed(AppRoutes.postDetail, arguments: id);
             return true;
           case 'SESSION':
             if (id == null || id <= 0) return _unsupported(context);
-            await Navigator.of(context).pushNamed(
-              AppRoutes.qbankSubmission,
-              arguments: id,
-            );
+            await Navigator.of(
+              context,
+            ).pushNamed(AppRoutes.qbankSubmission, arguments: id);
             return true;
           case 'QUESTION':
             if (id == null || id <= 0) return _unsupported(context);
-            await Navigator.of(context).pushNamed(
-              AppRoutes.qbankMySubmissions,
-            );
+            await Navigator.of(context).pushNamed(AppRoutes.qbankMySubmissions);
             return true;
           case 'USER':
             if (id == null || id <= 0) return _unsupported(context);
-            await Navigator.of(context).pushNamed(
-              AppRoutes.userProfile,
-              arguments: id,
-            );
+            await Navigator.of(
+              context,
+            ).pushNamed(AppRoutes.userProfile, arguments: id);
             return true;
           case 'CONVERSATION':
             if (id == null || id <= 0) return _unsupported(context);
             await Navigator.of(context).pushNamed(
               AppRoutes.chatDetail,
               arguments: ChatTarget.conversation(
-                ChatConversation(
-                  conversationId: id,
-                  title: 'Cuộc trò chuyện',
-                ),
+                ChatConversation(conversationId: id, title: 'Cuộc trò chuyện'),
               ),
             );
             return true;
@@ -136,25 +121,20 @@ class NotificationNavigator {
     if (uri == null) return null;
 
     // Chấp nhận relative URL hoặc URL cùng host API/web; không mở host lạ.
-    final allowedHosts = {
-      'snsqb.duckdns.org',
-      'localhost',
-      '127.0.0.1',
-    };
-    
+    final allowedHosts = {'snsqb.duckdns.org', 'localhost', '127.0.0.1'};
+
     if (uri.hasAuthority) {
       if (!allowedHosts.contains(uri.host.toLowerCase())) {
         return null;
       }
     }
-    
+
     if (uri.hasScheme) {
       if (!{'http', 'https'}.contains(uri.scheme.toLowerCase())) {
         return null;
       }
-    
-      if (!uri.hasAuthority ||
-          !allowedHosts.contains(uri.host.toLowerCase())) {
+
+      if (!uri.hasAuthority || !allowedHosts.contains(uri.host.toLowerCase())) {
         return null;
       }
     }
@@ -179,12 +159,11 @@ class NotificationNavigator {
           return _NotificationRoute(AppRoutes.qbankSubmission, id);
         }
         // URL /sessions?questionId=... của frontend web.
-        final questionId = int.tryParse(uri.queryParameters['questionId'] ?? '');
+        final questionId = int.tryParse(
+          uri.queryParameters['questionId'] ?? '',
+        );
         return questionId != null && questionId > 0
-            ? _NotificationRoute(
-                AppRoutes.searchGlobal,
-                '$questionId',
-              )
+            ? _NotificationRoute(AppRoutes.searchGlobal, '$questionId')
             : null;
       case 'questions':
         final id = pathId(1);
@@ -233,57 +212,51 @@ class NotificationNavigator {
     PushNotificationPayload payload,
   ) async {
     final fromUrl = _routeFromUrl(payload.targetUrl);
-  
+
     if (fromUrl != null) {
-      await Navigator.of(context).pushNamed(
-        fromUrl.route,
-        arguments: fromUrl.arguments,
-      );
+      await Navigator.of(
+        context,
+      ).pushNamed(fromUrl.route, arguments: fromUrl.arguments);
       return true;
     }
-  
+
     final id = payload.targetId;
-  
+
     switch (payload.targetType) {
       case 'POST':
         if (id == null || id <= 0) {
           return _unsupported(context);
         }
-        await Navigator.of(context).pushNamed(
-          AppRoutes.postDetail,
-          arguments: id,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.postDetail, arguments: id);
         return true;
-  
+
       case 'SESSION':
         if (id == null || id <= 0) {
           return _unsupported(context);
         }
-        await Navigator.of(context).pushNamed(
-          AppRoutes.qbankSubmission,
-          arguments: id,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.qbankSubmission, arguments: id);
         return true;
-  
+
       case 'QUESTION':
         if (id == null || id <= 0) {
           return _unsupported(context);
         }
-        await Navigator.of(context).pushNamed(
-          AppRoutes.qbankMySubmissions,
-        );
+        await Navigator.of(context).pushNamed(AppRoutes.qbankMySubmissions);
         return true;
-  
+
       case 'USER':
         if (id == null || id <= 0) {
           return _unsupported(context);
         }
-        await Navigator.of(context).pushNamed(
-          AppRoutes.userProfile,
-          arguments: id,
-        );
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.userProfile, arguments: id);
         return true;
-  
+
       case 'CONVERSATION':
         if (id == null || id <= 0) {
           return _unsupported(context);
@@ -291,20 +264,14 @@ class NotificationNavigator {
         await Navigator.of(context).pushNamed(
           AppRoutes.chatDetail,
           arguments: ChatTarget.conversation(
-            ChatConversation(
-              conversationId: id,
-              title: 'Cuộc trò chuyện',
-            ),
+            ChatConversation(conversationId: id, title: 'Cuộc trò chuyện'),
           ),
         );
         return true;
-  
+
       case 'BADGE':
-        return _unsupported(
-          context,
-          'Mục Huy hiệu chưa được triển khai.',
-        );
-  
+        return _unsupported(context, 'Mục Huy hiệu chưa được triển khai.');
+
       default:
         return _unsupported(context);
     }

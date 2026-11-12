@@ -244,7 +244,8 @@ class _Header extends StatelessWidget {
           HeaderIconButton(
             icon: AppIcons.search,
             tooltip: 'Tìm kiếm',
-            onTap: () => Navigator.of(context).pushNamed(AppRoutes.searchGlobal),
+            onTap: () =>
+                Navigator.of(context).pushNamed(AppRoutes.searchGlobal),
           ),
           HeaderIconButton(
             icon: AppIcons.messenger,

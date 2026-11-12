@@ -78,6 +78,7 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
       );
 
   int _request = 0;
+
   /// Tải trang đầu. Nếu đã có dữ liệu (cache) thì không hiện loading toàn màn.
   Future<void> load() async {
     final hasData = state.items.isNotEmpty;

@@ -39,18 +39,19 @@ class GlobalSearchState extends Equatable {
       savedSearches: savedSearches ?? this.savedSearches,
       trendingSearches: trendingSearches ?? this.trendingSearches,
       isLoadingHistory: isLoadingHistory ?? this.isLoadingHistory,
-      historyError:
-          clearHistoryError ? null : historyError ?? this.historyError,
+      historyError: clearHistoryError
+          ? null
+          : historyError ?? this.historyError,
     );
   }
 
   @override
   List<Object?> get props => [
-        query,
-        selectedType,
-        savedSearches,
-        trendingSearches,
-        isLoadingHistory,
-        historyError,
-      ];
+    query,
+    selectedType,
+    savedSearches,
+    trendingSearches,
+    isLoadingHistory,
+    historyError,
+  ];
 }

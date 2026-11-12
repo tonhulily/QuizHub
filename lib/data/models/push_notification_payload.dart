@@ -20,15 +20,14 @@ class PushNotificationPayload {
     this.pushType,
   });
 
-  factory PushNotificationPayload.fromRemoteMessage(
-    RemoteMessage message,
-  ) {
+  factory PushNotificationPayload.fromRemoteMessage(RemoteMessage message) {
     final data = message.data;
 
     return PushNotificationPayload(
       title: message.notification?.title,
       body: message.notification?.body,
-      imageUrl: message.notification?.android?.imageUrl ??
+      imageUrl:
+          message.notification?.android?.imageUrl ??
           message.notification?.apple?.imageUrl,
       targetType: data['targetType']?.toString().toUpperCase(),
       targetId: int.tryParse(data['targetId']?.toString() ?? ''),

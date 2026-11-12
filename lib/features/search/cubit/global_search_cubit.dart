@@ -15,8 +15,7 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
   int _searchRequestId = 0;
   int _historyRequestId = 0;
 
-  GlobalSearchCubit(this._repository)
-      : super(const GlobalSearchState()) {
+  GlobalSearchCubit(this._repository) : super(const GlobalSearchState()) {
     resultsCubit = PagedCubit<GlobalSearchItem>((after) async {
       final query = state.query;
       final type = state.selectedType;
@@ -37,28 +36,24 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
   Future<void> loadInitialData() async {
     final requestId = ++_historyRequestId;
 
-    emit(state.copyWith(
-      isLoadingHistory: true,
-      clearHistoryError: true,
-    ));
+    emit(state.copyWith(isLoadingHistory: true, clearHistoryError: true));
 
     try {
       final response = await _repository.getSavedSearches();
 
       if (isClosed || requestId != _historyRequestId) return;
 
-      emit(state.copyWith(
-        savedSearches: response.savedSearches,
-        trendingSearches: response.trendingSearches,
-        isLoadingHistory: false,
-      ));
+      emit(
+        state.copyWith(
+          savedSearches: response.savedSearches,
+          trendingSearches: response.trendingSearches,
+          isLoadingHistory: false,
+        ),
+      );
     } catch (e) {
       if (isClosed || requestId != _historyRequestId) return;
 
-      emit(state.copyWith(
-        isLoadingHistory: false,
-        historyError: e.toString(),
-      ));
+      emit(state.copyWith(isLoadingHistory: false, historyError: e.toString()));
     }
   }
 
@@ -75,10 +70,7 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
 
     final requestId = ++_searchRequestId;
 
-    emit(state.copyWith(
-      query: normalizedQuery,
-      selectedType: selectedType,
-    ));
+    emit(state.copyWith(query: normalizedQuery, selectedType: selectedType));
 
     // Hủy hiệu lực request cũ và xóa kết quả cũ.
     resultsCubit.reset();
@@ -91,8 +83,7 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
     if (isClosed || requestId != _searchRequestId) return;
 
     // Chỉ lưu lịch sử nếu tải trang đầu thành công.
-    if (saveToHistory &&
-        resultsCubit.state.status == PagedStatus.loaded) {
+    if (saveToHistory && resultsCubit.state.status == PagedStatus.loaded) {
       await _saveSearchHistory(normalizedQuery);
     }
   }
@@ -106,11 +97,7 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
       return;
     }
 
-    await search(
-      state.query,
-      type: type,
-      saveToHistory: false,
-    );
+    await search(state.query, type: type, saveToHistory: false);
   }
 
   /// Chọn từ khóa trong lịch sử hoặc xu hướng.
@@ -125,11 +112,13 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
 
       if (isClosed) return;
 
-      emit(state.copyWith(
-        savedSearches: state.savedSearches
-            .where((item) => item.savedSearchId != id)
-            .toList(),
-      ));
+      emit(
+        state.copyWith(
+          savedSearches: state.savedSearches
+              .where((item) => item.savedSearchId != id)
+              .toList(),
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(historyError: e.toString()));
     }
@@ -143,10 +132,12 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
 
       if (isClosed) return;
 
-      emit(state.copyWith(
-        savedSearches: response.savedSearches,
-        trendingSearches: response.trendingSearches,
-      ));
+      emit(
+        state.copyWith(
+          savedSearches: response.savedSearches,
+          trendingSearches: response.trendingSearches,
+        ),
+      );
     } catch (_) {
       // Lỗi lưu lịch sử không ảnh hưởng kết quả tìm kiếm.
     }

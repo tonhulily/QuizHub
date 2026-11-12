@@ -20,7 +20,7 @@ enum SearchType {
 
   const SearchType(this.apiValue, this.label);
 
-    static SearchType fromJson(dynamic value) {
+  static SearchType fromJson(dynamic value) {
     final normalized = value?.toString().toUpperCase();
 
     return SearchType.values.firstWhere(
@@ -33,7 +33,8 @@ enum SearchType {
 /// Chuyển danh sách URL từ JSON, bỏ null và chuỗi "null".
 /// Chuyển danh sách chuỗi từ JSON, bỏ null và chuỗi "null".
 List<String> _searchStrings(dynamic value) {
-  return J.asList(value)
+  return J
+      .asList(value)
       .map((item) {
         final raw = J.asString(item);
         if (raw == null || raw.toLowerCase() == 'null') return null;
@@ -238,6 +239,7 @@ class SearchUser extends Equatable {
 
 class SearchQuestion extends Equatable {
   final int questionId;
+
   /// Phiên chứa câu hỏi; cần thiết để mở PracticeView từ kết quả tìm kiếm.
   final int? sessionId;
   final String? questionCode;
@@ -411,10 +413,7 @@ class GlobalSearchPage extends CursorPage<GlobalSearchItem> {
     final pagination = J.asMap(json['pagination']);
 
     return GlobalSearchPage(
-      items: J.list(
-        json['items'],
-        GlobalSearchItem.fromJson,
-      ),
+      items: J.list(json['items'], GlobalSearchItem.fromJson),
       // API trả after dạng int, CursorPage sử dụng String.
       after: J.asInt(pagination?['after'])?.toString(),
       hasNext: J.asBool(pagination?['has_next']),
@@ -425,12 +424,7 @@ class GlobalSearchPage extends CursorPage<GlobalSearchItem> {
   }
 
   @override
-  List<Object?> get props => [
-    ...super.props,
-    totalHits,
-    before,
-    hasPrev,
-  ];
+  List<Object?> get props => [...super.props, totalHits, before, hasPrev];
 }
 
 // -----------------------------------------------------------------------------
@@ -457,11 +451,7 @@ class SavedSearch extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        savedSearchId,
-        queryText,
-        lastSearchedAt,
-      ];
+  List<Object?> get props => [savedSearchId, queryText, lastSearchedAt];
 }
 
 class SavedSearchResponse extends Equatable {
@@ -477,10 +467,7 @@ class SavedSearchResponse extends Equatable {
     final json = J.asMap(data) ?? const <String, dynamic>{};
 
     return SavedSearchResponse(
-      savedSearches: J.list(
-        json['saved_searches'],
-        SavedSearch.fromJson,
-      ),
+      savedSearches: J.list(json['saved_searches'], SavedSearch.fromJson),
       trendingSearches: _searchStrings(json['trending_searches']),
     );
   }
