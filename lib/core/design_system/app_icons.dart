@@ -113,4 +113,10 @@ class AppIcons {
   // Search
   static const history = PhosphorIconsRegular.clockCounterClockwise;
   static const trendingUp = PhosphorIconsRegular.trendUp;
+
+  // ---- Thông báo đẩy ----
+  static const bellRinging = PhosphorIconsRegular.bellRinging;
+  static const moon = PhosphorIconsFill.moon;
+  static const speakerHigh = PhosphorIconsFill.speakerHigh;
+  static const vibrate = PhosphorIconsFill.vibrate;
 }

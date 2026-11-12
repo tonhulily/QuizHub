@@ -31,6 +31,7 @@ import '../data/repositories/reaction_repository.dart';
 import '../data/repositories/report_repository.dart';
 import '../data/repositories/search_repository.dart';
 import '../data/repositories/notification_repository.dart';
+import '../data/repositories/push_settings_repository.dart';
 import '../data/repositories/subject_repository.dart';
 import '../data/repositories/user_directory.dart';
 import '../data/repositories/submission_repository.dart';
@@ -170,6 +171,9 @@ Future<void> setupLocator({
   );
   getIt.registerLazySingleton<NotificationRepository>(
     () => NotificationRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PushSettingsRepository>(
+    () => PushSettingsRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<FeedRepository>(
     () => FeedRepository(

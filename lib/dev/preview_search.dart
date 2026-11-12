@@ -1,4 +1,3 @@
-
 import '../core/utils/json_utils.dart';
 
 /// Dữ liệu mẫu cho Global Search trong bản xem trước.
@@ -26,13 +25,10 @@ class PreviewSearch {
 
   late final List<Map<String, dynamic>> _documents = _buildDocuments();
 
-  static String _now() =>
-      DateTime.now().toUtc().toIso8601String();
+  static String _now() => DateTime.now().toUtc().toIso8601String();
 
-  static String _ago(int days) => DateTime.now()
-      .toUtc()
-      .subtract(Duration(days: days))
-      .toIso8601String();
+  static String _ago(int days) =>
+      DateTime.now().toUtc().subtract(Duration(days: days)).toIso8601String();
 
   // ------------------------------------------------------------------
   // Dữ liệu mẫu
@@ -93,11 +89,7 @@ class PreviewSearch {
         'code': 'IT3011',
         'name': 'Cấu trúc dữ liệu và thuật toán',
       },
-      {
-        'subject_id': 11,
-        'code': 'IT3070',
-        'name': 'Nguyên lý hệ điều hành',
-      },
+      {'subject_id': 11, 'code': 'IT3070', 'name': 'Nguyên lý hệ điều hành'},
       {
         'subject_id': 12,
         'code': 'IT3180',
@@ -267,7 +259,8 @@ class PreviewSearch {
       {
         'session_id': 3,
         'title': 'Kiểm thử phần mềm',
-        'content': 'Ôn tập kiểm thử đơn vị, kiểm thử tích hợp và kiểm thử hồi quy.',
+        'content':
+            'Ôn tập kiểm thử đơn vị, kiểm thử tích hợp và kiểm thử hồi quy.',
         'subject_id': 12,
         'subject_name': 'Nhập môn công nghệ phần mềm',
         'status': 'RESOLVED',
@@ -285,11 +278,8 @@ class PreviewSearch {
           'relevance_score': 1.0,
           'post': p,
           // Một kết quả có thể chứa nhiều entity cùng lúc.
-          'user': users.firstWhere(
-            (u) => u['user_id'] == p['author_id'],
-          ),
-          '_search_text':
-              '${p['content']} ${p['author_name']}',
+          'user': users.firstWhere((u) => u['user_id'] == p['author_id']),
+          '_search_text': '${p['content']} ${p['author_name']}',
         },
       for (final u in users)
         {
@@ -314,8 +304,7 @@ class PreviewSearch {
           'type': 'SESSION',
           'relevance_score': 1.0,
           'session': s,
-          '_search_text':
-              '${s['title']} ${s['content']} ${s['subject_name']}',
+          '_search_text': '${s['title']} ${s['content']} ${s['subject_name']}',
         },
       for (final s in subjects)
         {
@@ -357,8 +346,7 @@ class PreviewSearch {
     }
 
     final matched = _documents.where((item) {
-      final matchesType =
-          type == 'ALL' || item['type'] == type;
+      final matchesType = type == 'ALL' || item['type'] == type;
       final text = J.stringOr(item['_search_text']).toLowerCase();
       return matchesType && text.contains(keyword);
     }).toList();
@@ -376,8 +364,7 @@ class PreviewSearch {
         for (final item in pageItems)
           {
             for (final entry in item.entries)
-              if (!entry.key.startsWith('_'))
-                entry.key: entry.value,
+              if (!entry.key.startsWith('_')) entry.key: entry.value,
           },
       ],
       'pagination': {
@@ -407,8 +394,7 @@ class PreviewSearch {
 
   Map<String, dynamic> _getSavedSearches() => {
     'saved_searches': [
-      for (final item in _savedSearches)
-        Map<String, dynamic>.from(item),
+      for (final item in _savedSearches) Map<String, dynamic>.from(item),
     ],
     'trending_searches': _trendingSearches,
   };
@@ -420,8 +406,7 @@ class PreviewSearch {
     // Nếu từ khóa đã có, đưa nó lên đầu danh sách và cập nhật thời gian.
     _savedSearches.removeWhere(
       (item) =>
-          J.stringOr(item['query_text']).toLowerCase() ==
-          keyword.toLowerCase(),
+          J.stringOr(item['query_text']).toLowerCase() == keyword.toLowerCase(),
     );
 
     _savedSearches.insert(0, {
@@ -440,9 +425,7 @@ class PreviewSearch {
     final id = int.tryParse(path.split('/').last);
     if (id == null) return;
 
-    _savedSearches.removeWhere(
-      (item) => item['saved_search_id'] == id,
-    );
+    _savedSearches.removeWhere((item) => item['saved_search_id'] == id);
   }
 
   // ------------------------------------------------------------------

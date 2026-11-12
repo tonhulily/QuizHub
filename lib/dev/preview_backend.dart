@@ -154,6 +154,38 @@ class PreviewBackend implements HttpClientAdapter {
 
   /// Module thông báo (danh sách, đánh dấu đã đọc) dùng dữ liệu RAM.
   final PreviewNotifications _notifications = PreviewNotifications();
+
+  /// Cấu hình thông báo mẫu cho màn hình Push Settings.
+  /// Dữ liệu thay đổi khi PUT và được giữ trong RAM trong phiên preview.
+  Map<String, dynamic> _pushSettings = {
+    'push_enabled': true,
+    'categories': {
+      'SOCIAL': {
+        'enabled': true,
+        'description': 'Lời mời kết bạn, người theo dõi và tương tác xã hội.',
+      },
+      'GAMIFICATION': {
+        'enabled': true,
+        'description': 'Điểm thưởng, huy hiệu và bảng xếp hạng.',
+      },
+      'ACADEMIC': {
+        'enabled': false,
+        'description': 'Thông báo về câu hỏi, đề thi và hoạt động học tập.',
+      },
+      'SYSTEM': {
+        'enabled': true,
+        'description': 'Thông báo hệ thống và cập nhật quan trọng.',
+      },
+    },
+    'quiet_hours': {
+      'enabled': true,
+      'start_time': '22:00',
+      'end_time': '07:00',
+    },
+    'sound_enabled': true,
+    'vibration_enabled': false,
+  };
+
   late final PreviewChat chat = PreviewChat(
     person: _person,
     me: _me,
@@ -673,6 +705,42 @@ class PreviewBackend implements HttpClientAdapter {
             .map(_visiblePost)
             .toList(),
       );
+    }
+    // ---- Cài đặt thông báo đẩy ----
+    if (path == '/settings/push' && m == 'GET') {
+      // Trả về bản sao để tránh nơi gọi vô tình sửa dữ liệu gốc.
+      return jsonDecode(jsonEncode(_pushSettings));
+    }
+
+    if (path == '/settings/push' && m == 'PUT') {
+      final currentCategories =
+          _pushSettings['categories'] as Map<String, dynamic>;
+      final currentQuietHours =
+          _pushSettings['quiet_hours'] as Map<String, dynamic>;
+
+      final categories = body['categories'] is Map
+          ? Map<String, dynamic>.from(body['categories'] as Map)
+          : currentCategories;
+
+      final quietHours = body['quiet_hours'] is Map
+          ? Map<String, dynamic>.from(body['quiet_hours'] as Map)
+          : currentQuietHours;
+
+      _pushSettings = {
+        'push_enabled': body['push_enabled'] is bool
+            ? body['push_enabled']
+            : _pushSettings['push_enabled'],
+        'categories': categories,
+        'quiet_hours': quietHours,
+        'sound_enabled': body['sound_enabled'] is bool
+            ? body['sound_enabled']
+            : _pushSettings['sound_enabled'],
+        'vibration_enabled': body['vibration_enabled'] is bool
+            ? body['vibration_enabled']
+            : _pushSettings['vibration_enabled'],
+      };
+
+      return jsonDecode(jsonEncode(_pushSettings));
     }
     // ---- Bạn bè / tìm kiếm / theo dõi / chặn ----
     if (path == '/search' && m == 'GET') {

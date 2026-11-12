@@ -11,6 +11,7 @@ import '../auth/logout_action.dart';
 import '../shell/main_shell.dart';
 import '../profile/cubit/profile_cubit.dart';
 import '../../core/design_system/app_icons.dart';
+import 'push_settings_view.dart';
 
 /// Lối tắt hiển thị trong lưới của tab Menu.
 ///
@@ -126,6 +127,16 @@ class MenuTab extends StatelessWidget {
                 ),
               ),
               children: [
+                ListTile(
+                  leading: const Icon(AppIcons.bellRinging),
+                  title: const Text('Cài đặt thông báo'),
+                  subtitle: const Text(
+                    'Danh mục, giờ yên tĩnh, âm thanh và rung',
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PushSettingsView()),
+                  ),
+                ),
                 ListTile(
                   leading: const Icon(AppIcons.edit),
                   title: const Text('Chỉnh sửa trang cá nhân'),
