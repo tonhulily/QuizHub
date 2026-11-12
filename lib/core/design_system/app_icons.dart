@@ -119,4 +119,6 @@ class AppIcons {
   static const moon = PhosphorIconsFill.moon;
   static const speakerHigh = PhosphorIconsFill.speakerHigh;
   static const vibrate = PhosphorIconsFill.vibrate;
+  static const circleFilled = PhosphorIconsFill.circle;
+  static const doneAll = PhosphorIconsRegular.checks;
 }

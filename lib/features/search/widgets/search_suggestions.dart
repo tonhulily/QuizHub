@@ -107,9 +107,7 @@ class SearchSuggestions extends StatelessWidget {
             error == null)
           const Padding(
             padding: EdgeInsets.only(top: DesignTokens.spacingXL * 2),
-            child: Center(
-              child: Text('Nhập từ khóa để bắt đầu tìm kiếm'),
-            ),
+            child: Center(child: Text('Nhập từ khóa để bắt đầu tìm kiếm')),
           ),
       ],
     );
@@ -120,27 +118,20 @@ class _SectionHeader extends StatelessWidget {
   final String title;
   final IconData icon;
 
-  const _SectionHeader({
-    required this.title,
-    required this.icon,
-  });
+  const _SectionHeader({required this.title, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: AppColors.textSecondary,
-        ),
+        Icon(icon, size: 20, color: AppColors.textSecondary),
         const SizedBox(width: DesignTokens.spacingSM),
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
       ],
     );
@@ -155,14 +146,10 @@ class _HistoryError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        bottom: DesignTokens.spacingMD,
-      ),
+      padding: const EdgeInsets.only(bottom: DesignTokens.spacingMD),
       child: Text(
         'Không thể tải lịch sử tìm kiếm: $message',
-        style: const TextStyle(
-          color: AppColors.error,
-        ),
+        style: const TextStyle(color: AppColors.error),
       ),
     );
   }

@@ -8,7 +8,7 @@ import '../../../core/widgets/fb_widgets.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/notification_models.dart';
-import '../../../di/locator.dart';
+import '../../menu/push_settings_view.dart';
 import '../cubit/notification_cubit.dart';
 import '../cubit/notification_state.dart';
 import '../navigation/notification_navigator.dart';
@@ -20,17 +20,11 @@ class NotificationsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => NotificationCubit(getIt())..load(),
-      child: Builder(
-        builder: (context) {
-          final notificationCubit = context.read<NotificationCubit>();
-          return BlocProvider<PagedCubit<NotificationModel>>.value(
-            value: notificationCubit.notificationsCubit,
-            child: const _NotificationsBody(),
-          );
-        },
-      ),
+    final notificationCubit = context.read<NotificationCubit>();
+
+    return BlocProvider<PagedCubit<NotificationModel>>.value(
+      value: notificationCubit.notificationsCubit,
+      child: const _NotificationsBody(),
     );
   }
 }
@@ -47,8 +41,7 @@ class _NotificationsBody extends StatelessWidget {
           BlocBuilder<NotificationCubit, NotificationState>(
             builder: (context, state) => _NotificationActions(
               unreadCount: state.unreadCount,
-              isMarkingAll: state.markingAllAsRead,
-              onMarkAll: () => _markAll(context),
+              onShowMenu: () => _showMenu(context),
             ),
           ),
           Expanded(
@@ -68,9 +61,59 @@ class _NotificationsBody extends StatelessWidget {
     );
   }
 
-  Future<void> _markAll(BuildContext context) async {
-    final error = await context.read<NotificationCubit>().markAllAsRead();
+  void _showMenu(BuildContext context) {
+    final notificationCubit = context.read<NotificationCubit>();
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: BlocBuilder<NotificationCubit, NotificationState>(
+          bloc: notificationCubit,
+          builder: (context, state) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(AppIcons.doneAll),
+                title: const Text('Đánh dấu tất cả đã đọc'),
+                enabled: state.unreadCount > 0 && !state.markingAllAsRead,
+                trailing: state.markingAllAsRead
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : null,
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _markAll(context, notificationCubit);
+                },
+              ),
+              ListTile(
+                leading: const Icon(AppIcons.settings),
+                title: const Text('Cài đặt'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PushSettingsView()),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _markAll(
+    BuildContext context,
+    NotificationCubit notificationCubit,
+  ) async {
+    final error = await notificationCubit.markAllAsRead();
+
     if (!context.mounted || error == null) return;
+
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(error.message)));
@@ -96,49 +139,40 @@ class _NotificationsBody extends StatelessWidget {
 
 class _NotificationActions extends StatelessWidget {
   final int unreadCount;
-  final bool isMarkingAll;
-  final VoidCallback onMarkAll;
+  final VoidCallback onShowMenu;
 
   const _NotificationActions({
     required this.unreadCount,
-    required this.isMarkingAll,
-    required this.onMarkAll,
+    required this.onShowMenu,
   });
 
   @override
   Widget build(BuildContext context) {
     return FlatSection(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              unreadCount > 0
-                  ? '$unreadCount thông báo chưa đọc'
-                  : 'Tất cả đã đọc',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                  unreadCount > 0
+                      ? '$unreadCount thông báo chưa đọc'
+                      : 'Bạn đã đọc tất cả thông báo',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
               ),
             ),
-          ),
-          TextButton(
-            onPressed: unreadCount == 0 || isMarkingAll ? null : onMarkAll,
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary600,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            IconButton(
+              icon: const Icon(AppIcons.more),
+              color: AppColors.textSecondary,
+              onPressed: onShowMenu,
             ),
-            child: isMarkingAll
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Đánh dấu đã đọc'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -228,7 +262,7 @@ class _NotificationTile extends StatelessWidget {
                     )
                   else if (!notification.isRead)
                     const Icon(
-                      AppIcons.info,
+                      AppIcons.circleFilled,
                       size: 10,
                       color: AppColors.primary600,
                     ),

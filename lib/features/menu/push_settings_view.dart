@@ -281,10 +281,7 @@ class _IntroCard extends StatelessWidget {
             color: AppColors.white,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            AppIcons.bellRinging,
-            color: AppColors.primary600,
-          ),
+          child: const Icon(AppIcons.bellRinging, color: AppColors.primary600),
         ),
         SpacingHelper.hMD,
         const Expanded(
@@ -522,11 +519,7 @@ class _LoadError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            AppIcons.offline,
-            size: 42,
-            color: AppColors.textTertiary,
-          ),
+          const Icon(AppIcons.offline, size: 42, color: AppColors.textTertiary),
           SpacingHelper.vMD,
           Text(message, textAlign: TextAlign.center),
           SpacingHelper.vMD,

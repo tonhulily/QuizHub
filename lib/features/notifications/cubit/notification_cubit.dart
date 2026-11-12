@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/bloc/paged_cubit.dart';
@@ -17,8 +18,29 @@ class NotificationCubit extends Cubit<NotificationState> {
 
   late final PagedCubit<NotificationModel> notificationsCubit;
 
+  bool _syncingPush = false;
+
   NotificationCubit(this._repository) : super(const NotificationState()) {
     notificationsCubit = PagedCubit<NotificationModel>(_loadPage);
+  }
+
+  /// Đồng bộ danh sách và unread count khi nhận push ở foreground.
+  ///
+  /// Không tự tăng unreadCount theo số push vì backend mới là nguồn dữ liệu
+  /// chính xác, đồng thời tránh đếm trùng khi FCM gửi lại message.
+  Future<void> onPushReceived() async {
+    if (isClosed || _syncingPush) return;
+
+    _syncingPush = true;
+    try {
+      await notificationsCubit.refresh();
+      debugPrint('[NotificationCubit] Synced notifications after push');
+    } on ApiException {
+      // Giữ nguyên trạng thái hiện tại nếu không thể đồng bộ.
+      // Người dùng vẫn có thể refresh thủ công khi mở tab Thông báo.
+    } finally {
+      _syncingPush = false;
+    }
   }
 
   Future<CursorPage<NotificationModel>> _loadPage(String? after) async {

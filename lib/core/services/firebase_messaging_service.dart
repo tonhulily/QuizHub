@@ -24,6 +24,11 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class FirebaseMessagingService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
+  final StreamController<void> _foregroundEvents =
+      StreamController<void>.broadcast();
+
+  Stream<void> get foregroundEvents => _foregroundEvents.stream;
+
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _openedSubscription;
   StreamSubscription<String>? _registeredSubscription;
@@ -124,6 +129,9 @@ class FirebaseMessagingService {
             'body=${message.notification?.body}, '
             'data=${message.data}',
           );
+
+          // Báo cho MainShell đồng bộ unread count với backend.
+          _foregroundEvents.add(null);
         },
         onError: (Object error) {
           debugPrint('[FCM] Foreground error: $error');
