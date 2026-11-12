@@ -15,6 +15,7 @@ import 'package:quizhub/data/models/profile_model.dart';
 import 'package:quizhub/data/repositories/chat_repository.dart';
 import 'package:quizhub/data/repositories/feed_repository.dart';
 import 'package:quizhub/data/repositories/friend_repository.dart';
+import 'package:quizhub/data/repositories/notification_repository.dart';
 import 'package:quizhub/data/repositories/post_repository.dart';
 import 'package:quizhub/data/repositories/user_repository.dart';
 import 'package:quizhub/di/locator.dart';
@@ -60,6 +61,7 @@ void main() {
     getIt.registerSingleton<ChatRepository>(f.chat);
     getIt.registerSingleton<PostEvents>(postEvents);
     getIt.registerSingleton<SocialEvents>(social);
+    getIt.registerSingleton<NotificationRepository>(f.notifications);
   });
   tearDown(() async {
     await getIt.reset();

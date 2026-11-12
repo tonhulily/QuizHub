@@ -150,7 +150,14 @@ class PreviewBackend implements HttpClientAdapter {
   /// Module Ngân hàng câu hỏi + Đề thi + AI (dữ liệu mẫu riêng).
   final PreviewQbank _qbank = PreviewQbank();
 
-  final PreviewSearch _search = PreviewSearch();
+  late final PreviewSearch _search = PreviewSearch(
+    users: () => [for (var id = 2; id < 2 + _totalUsers; id++) _person(id)],
+    posts: () => _posts.values.toList(growable: false),
+    questions: () => _qbank.searchQuestions,
+    sessions: () => _qbank.searchSessions,
+    subjects: () => _qbank.searchSubjects,
+    isBlocked: _blocked.contains,
+  );
 
   /// Module thông báo (danh sách, đánh dấu đã đọc) dùng dữ liệu RAM.
   final PreviewNotifications _notifications = PreviewNotifications();
@@ -743,39 +750,7 @@ class PreviewBackend implements HttpClientAdapter {
       return jsonDecode(jsonEncode(_pushSettings));
     }
     // ---- Bạn bè / tìm kiếm / theo dõi / chặn ----
-    if (path == '/search' && m == 'GET') {
-      final query = _fold((q['query'] ?? '').toString());
-      final all = [
-        for (var id = 2; id < 2 + _totalUsers; id++)
-          if (!_blocked.contains(id)) _person(id),
-      ];
-      final matched = query.isEmpty
-          ? all
-          : all
-                .where(
-                  (u) =>
-                      _fold(u['full_name'] as String).contains(query) ||
-                      (u['student_lecturer_code'] as String).contains(query),
-                )
-                .toList();
-      final from = int.tryParse('${q['after'] ?? 0}') ?? 0;
-      final limit = int.tryParse('${q['limit'] ?? 20}') ?? 20;
-      final slice = matched.skip(from).take(limit).toList();
-      final next = from + slice.length;
-      return {
-        'items': [
-          for (final u in slice)
-            {'type': 'USER', 'relevance_score': 1.0, 'user': u},
-        ],
-        'pagination': {
-          'before': null,
-          'after': next < matched.length ? next : null,
-          'has_prev': from > 0,
-          'has_next': next < matched.length,
-        },
-        'total_hits': matched.length,
-      };
-    }
+    // GET /search được PreviewSearch xử lý tập trung ở đầu router.
     if (path == '/friendships' && m == 'GET') {
       return {
         ...page([
@@ -1131,20 +1106,6 @@ class PreviewBackend implements HttpClientAdapter {
       };
     }
     return null;
-  }
-
-  /// Chữ thường + bỏ dấu tiếng Việt (để tìm "tung" ra "Tùng").
-  static String _fold(String input) {
-    const from =
-        'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
-    const to =
-        'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd';
-    final buf = StringBuffer();
-    for (final ch in input.toLowerCase().split('')) {
-      final i = from.indexOf(ch);
-      buf.write(i >= 0 ? to[i] : ch);
-    }
-    return buf.toString().trim();
   }
 
   @override

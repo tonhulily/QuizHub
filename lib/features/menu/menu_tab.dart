@@ -55,8 +55,7 @@ class MenuTab extends StatelessWidget {
     showAboutDialog(
       context: context,
       applicationName: info.appName,
-      applicationVersion:
-          '${info.version} (${info.buildNumber})',
+      applicationVersion: '${info.version} (${info.buildNumber})',
       applicationIcon: const Icon(
         AppIcons.quizActive,
         size: 40,
@@ -66,9 +65,7 @@ class MenuTab extends StatelessWidget {
         const SizedBox(height: 12),
         Text('Package ID: ${info.packageName}'),
         const SizedBox(height: 8),
-        const Text(
-          'QuizHub - Mạng xã hội học tập và ngân hàng câu hỏi.',
-        ),
+        const Text('QuizHub - Mạng xã hội học tập và ngân hàng câu hỏi.'),
       ],
     );
   }
@@ -88,9 +85,7 @@ class MenuTab extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Thoát QuizHub?'),
-        content: const Text(
-          'Bạn có chắc chắn muốn thoát ứng dụng không?',
-        ),
+        content: const Text('Bạn có chắc chắn muốn thoát ứng dụng không?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -234,9 +229,7 @@ class MenuTab extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
                 title: const Text('Thông tin ứng dụng'),
-                subtitle: const Text(
-                  'Phiên bản, thông tin QuizHub',
-                ),
+                subtitle: const Text('Phiên bản, thông tin QuizHub'),
                 onTap: () => _showAppInfo(context),
               ),
               ListTile(
@@ -245,9 +238,7 @@ class MenuTab extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
                 title: const Text('Thoát ứng dụng'),
-                subtitle: const Text(
-                  'Đóng QuizHub trên thiết bị',
-                ),
+                subtitle: const Text('Đóng QuizHub trên thiết bị'),
                 onTap: () => _confirmExit(context),
               ),
             ],

@@ -11,6 +11,7 @@ import 'package:quizhub/data/models/saved_account.dart';
 import 'package:quizhub/data/repositories/chat_repository.dart';
 import 'package:quizhub/data/repositories/feed_repository.dart';
 import 'package:quizhub/data/repositories/friend_repository.dart';
+import 'package:quizhub/data/repositories/notification_repository.dart';
 import 'package:quizhub/data/repositories/post_repository.dart';
 import 'package:quizhub/data/repositories/user_repository.dart';
 import 'package:quizhub/data/repositories/user_search_repository.dart';
@@ -191,7 +192,7 @@ class BlockingFixture {
   );
   late final search = UserSearchRepository(api, friends, blocks: blocks);
   late final chat = ChatRepository(api, blocks: blocks);
-
+  late final notifications = NotificationRepository(api);
   BlockingFixture._(
     this.preferences,
     this.storage,
