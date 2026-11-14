@@ -93,7 +93,6 @@ class FirebaseMessagingService {
   /// Khởi tạo FCM và đăng ký các listener.
   Future<void> initialize() async {
     if (_initialized) return;
-    _initialized = true;
 
     try {
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -166,17 +165,6 @@ class FirebaseMessagingService {
       rethrow;
     }
   }
-
-  //  void _handleNotificationTap(RemoteMessage message) {
-  //    debugPrint(
-  //      '[FCM][Opened] '
-  //      'messageId=${message.messageId}, '
-  //      'data=${message.data}',
-  //    );
-  //
-  //    // Sẽ nối với NotificationNavigator sau khi thống nhất
-  //    // cấu trúc payload push từ backend.
-  //  }
 
   Future<void> dispose() async {
     await _foregroundSubscription?.cancel();

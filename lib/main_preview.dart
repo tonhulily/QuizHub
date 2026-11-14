@@ -50,7 +50,12 @@ Future<void> main() async {
   );
   if (firebaseInitialized) {
     // Chỉ khởi tạo FCM client, không đồng bộ FID với backend thật.
-    await getIt<FirebaseMessagingService>().initialize();
+    try {
+      await getIt<FirebaseMessagingService>().initialize();
+    } catch (error, stackTrace) {
+      debugPrint('[FCM] Initialization failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
   AppFeedback.configureLoading();
 

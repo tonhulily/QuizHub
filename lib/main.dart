@@ -40,9 +40,23 @@ Future<void> main() async {
 
   // Chỉ theo dõi và đồng bộ FID nếu Firebase đã khởi tạo.
   if (firebaseInitialized) {
-    await getIt<FirebaseFidSyncService>().start();
-    await getIt<FirebaseMessagingService>().initialize();
+    // Đồng bộ Firebase Installation ID.
+    try {
+      await getIt<FirebaseFidSyncService>().start();
+    } catch (error, stackTrace) {
+      debugPrint('[FirebaseFID] Startup failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    // Khởi tạo Firebase Messaging độc lập với FID sync.
+    try {
+      await getIt<FirebaseMessagingService>().initialize();
+    } catch (error, stackTrace) {
+      debugPrint('[FCM] Initialization failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
+
   AppFeedback.configureLoading();
 
   runApp(const QuizHubApp());
