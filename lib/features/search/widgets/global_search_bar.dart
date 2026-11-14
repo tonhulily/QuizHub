@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:quizhub/core/design_system/app_colors.dart';
-import 'package:quizhub/core/design_system/app_icons.dart';
-import 'package:quizhub/core/design_system/design_tokens.dart';
+
+import '../../../core/design_system/app_colors.dart';
+import '../../../core/design_system/app_icons.dart';
+import '../../../core/design_system/design_tokens.dart';
 
 class GlobalSearchBar extends StatelessWidget {
   final TextEditingController controller;

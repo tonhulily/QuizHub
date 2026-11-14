@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:quizhub/core/services/firebase_fid_sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/network/api_client.dart';
 import '../core/network/session_events.dart';
 import '../core/services/firebase_installation_service.dart';
 import '../core/services/device_service.dart';
+import '../core/services/firebase_fid_sync_service.dart';
 import '../core/services/firebase_messaging_service.dart';
 import '../core/services/post_events.dart';
 import '../core/services/social_events.dart';
