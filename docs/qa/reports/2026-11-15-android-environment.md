@@ -1,6 +1,6 @@
 # Báo cáo QA: Android SDK và cache — 2026-11-15
 
-**Trạng thái mới nhất:** dependency restore thành công cho main (Flutter 3.47.9) và Nam preview (Flutter 3.41.6); `assembleDebug` đang chạy qua coordinator. Build chưa có kết quả và native QA chưa PASS. Audit ban đầu bị `BLOCKED` do package config cũ không khớp lockfile; lịch sử và mốc SHA được tách bên dưới.
+**Trạng thái mới nhất:** dependency restore thành công cho main (Flutter 3.47.9) và Nam preview (Flutter 3.41.6); preview APK build và cài đặt QA app đã thành công. Native UI QA bị chặn vì overlay ứng dụng khác chiếm focus; tester dừng đọc/điều khiển thiết bị. Không có case UI nào PASS.
 
 ## Phạm vi và mốc SHA
 
@@ -69,5 +69,6 @@ cd "$PWD/.qa-tools/android-preview"
 ## Cập nhật sau khi coordinator restore dependency và discovery thiết bị — 2026-11-15
 
 - Coordinator báo `flutter pub get --enforce-lockfile` exit 0 cho main với Flutter 3.47.9 và cho preview Nam với Flutter 3.41.6. Preview source giữ SHA `639da129d89e8290c13b63af3d36045309b38fd6`; không thay lockfile.
-- Mobile MCP mới nhất báo `RMX3370`, Android 13, online. Không ghi serial/ID hoặc suy đoán loại thiết bị.
-- Lệnh Android `assembleDebug` đang chạy trong coordinator; chưa có exit/result. **APK build chưa PASS; native QA chưa PASS.** Ghi SHA/build result khi có kết quả hoàn tất.
+- Mobile MCP báo `RMX3370`, Android 13, online. Không ghi serial/ID hoặc suy đoán loại thiết bị.
+- Coordinator báo preview `assembleDebug` exit 0 (772.3 giây), APK SHA-256 `c09122a2c64d4e76650176c330b4494d090f822bd0357dc2b76b512fe7718603`; package `vn.edu.hust.quizhub.qa.preview`; source snapshot SHA `639da129d89e8290c13b63af3d36045309b38fd6`. Coordinator xác nhận cài đặt bằng ADB exit 0 và gỡ QA app qua Mobile MCP. Lệnh `timeout 20s adb -s [masked] shell pm path vn.edu.hust.quizhub.qa.preview` thoát mã 1, output rỗng, xác nhận package không còn. Đây là build/install thành công, không phải UI QA PASS; app chính không bị thao tác.
+- UI QA bắt đầu khi coordinator xác nhận QA package là foreground. Tap tìm kiếm tại `(820,180)` tiếp theo trả về overlay ứng dụng khác; coordinator kiểm tra sau đó thấy overlay vẫn giữ focus. Tester dừng đọc/điều khiển ngay. Không lưu màn hình hoặc nội dung ngoài scope. Native case hiện `BLOCKED` do môi trường thiết bị bị che; chi tiết ở [native UI report](2026-11-15-native-ui.md).

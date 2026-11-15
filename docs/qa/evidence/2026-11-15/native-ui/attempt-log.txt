@@ -1,0 +1,23 @@
+Native UI attempt log — 2026-11-15
+
+Source snapshot: 639da129d89e8290c13b63af3d36045309b38fd6
+Application ID: vn.edu.hust.quizhub.qa.preview
+APK SHA-256: c09122a2c64d4e76650176c330b4494d090f822bd0357dc2b76b512fe7718603
+Build command: flutter build apk -t lib/main_preview.dart --dart-define=PREVIEW_ROLE=LECTURER --debug --no-pub --target-platform android-arm64
+Build exit: 0 (reported by coordinator; 772.3 sec)
+Install command: adb install -r -t .qa-tools/android-preview/build/app/outputs/flutter-apk/app-debug.apk
+Install exit: 0 (reported by coordinator)
+Cleanup: Mobile MCP uninstall reported success; timeout 20s adb -s [masked] shell pm path vn.edu.hust.quizhub.qa.preview exited 1 with empty output, confirming package absence. Main app was not touched.
+Device: Mobile MCP reported RMX3370, Android 13; device identifier redacted.
+API host: none; preview/mock target. Firebase initialization may contact Firebase.
+
+Coordinator confirmed QA MainActivity foreground before test. Initial accessibility inspection showed QuizHub Home and a Search button. Tester tapped (820,180). The next accessibility inspection showed an overlay from another application rather than QuizHub. Coordinator later confirmed that overlay still held focus after one Back attempt. Tester stopped device interaction. No screenshot or out-of-scope UI content was persisted.
+
+Result: interruption/environment blocker. No native UI test case completed; do not infer an app defect from this attempt.
+
+Case status:
+NAT-FEED-01 — BLOCKED
+NAT-POST-EDIT-01 — NOT RUN
+NAT-CHAT-DELETE-ME-01 — NOT RUN
+NAT-SEARCH-01 — BLOCKED
+NAT-NOTIF-EMPTY-01 — NOT RUN
