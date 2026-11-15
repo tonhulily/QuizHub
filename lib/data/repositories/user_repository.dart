@@ -1,4 +1,5 @@
 import '../../core/network/api_client.dart';
+import '../../core/services/blocked_users.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/storage/credential_storage.dart';
 import '../../core/storage/local_storage.dart';
@@ -10,8 +11,14 @@ class UserRepository {
   final ApiClient _api;
   final LocalStorage _storage;
   final CredentialStorage _credentials;
+  final BlockedUsers? _blocks;
 
-  UserRepository(this._api, this._storage, this._credentials);
+  UserRepository(
+    this._api,
+    this._storage,
+    this._credentials, {
+    BlockedUsers? blocks,
+  }) : _blocks = blocks;
 
   /// Hồ sơ cache gần nhất (hiển thị ngay khi mở app, trước khi gọi API).
   ProfileModel? get cachedMe {
@@ -38,10 +45,15 @@ class UserRepository {
   }
 
   /// `GET /users/{id}`
-  Future<ProfileModel> getUser(int userId) => _api.get<ProfileModel>(
-    ApiEndpoints.user(userId),
-    parser: (d) => ProfileModel.fromJson(J.asMap(d) ?? const {}),
-  );
+  Future<ProfileModel> getUser(int userId) async {
+    _blocks?.requireVisible(userId);
+    final profile = await _api.get<ProfileModel>(
+      ApiEndpoints.user(userId),
+      parser: (d) => ProfileModel.fromJson(J.asMap(d) ?? const {}),
+    );
+    _blocks?.requireVisible(userId);
+    return profile;
+  }
 
   /// `PUT /users/me` - chỉ gửi những field có giá trị.
   Future<ProfileModel> updateMe({

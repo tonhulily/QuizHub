@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/design_system/app_colors.dart';
 import '../../core/design_system/component_tokens.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/services/blocked_users.dart';
+import '../widgets/blocked_content.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/app_feedback.dart';
 import '../../core/widgets/state_views.dart';
@@ -11,6 +13,7 @@ import '../../core/widgets/user_avatar.dart';
 import '../../data/models/comment_model.dart';
 import '../../data/repositories/comment_repository.dart';
 import '../../data/repositories/report_repository.dart';
+import '../../data/repositories/reaction_repository.dart';
 import '../../di/locator.dart';
 import '../../features/profile/cubit/profile_cubit.dart';
 import '../report/report_sheet.dart';
@@ -26,6 +29,7 @@ Future<void> showCommentsSheet(
   BuildContext context, {
   required TargetType targetType,
   required int targetId,
+  int? ownerUserId,
   void Function(int delta)? onCountChanged,
 }) async {
   // Lấy ProfileCubit trước (sheet nằm trên Overlay khác nhưng vẫn kế thừa context)
@@ -40,15 +44,26 @@ Future<void> showCommentsSheet(
         top: Radius.circular(ComponentTokens.bottomSheetRadius),
       ),
     ),
-    builder: (sheetContext) => BlocProvider(
-      create: (_) => CommentsCubit(
-        getIt<CommentRepository>(),
-        targetType: targetType,
-        targetId: targetId,
-      )..load(),
-      child: FractionallySizedBox(
+    builder: (sheetContext) => BlockedContent(
+      userIds: [ownerUserId],
+      blockedChild: const FractionallySizedBox(
         heightFactor: 0.88,
-        child: const _CommentsSheet(),
+        child: EmptyView(icon: AppIcons.lock, title: 'Bài viết không khả dụng'),
+      ),
+      child: BlocProvider(
+        create: (_) => CommentsCubit(
+          getIt<CommentRepository>(),
+          reactions: getIt<ReactionRepository>(),
+          blocks: getIt.isRegistered<BlockedUsers>()
+              ? getIt<BlockedUsers>()
+              : null,
+          targetType: targetType,
+          targetId: targetId,
+        )..load(),
+        child: FractionallySizedBox(
+          heightFactor: 0.88,
+          child: const _CommentsSheet(),
+        ),
       ),
     ),
   );
@@ -117,6 +132,11 @@ class _CommentsSheetState extends State<_CommentsSheet> {
     );
     if (!ok || !mounted) return;
     final error = await context.read<CommentsCubit>().delete(c);
+    if (error != null && mounted) AppFeedback.error(context, error);
+  }
+
+  Future<void> _like(CommentModel comment) async {
+    final error = await context.read<CommentsCubit>().toggleLike(comment);
     if (error != null && mounted) AppFeedback.error(context, error);
   }
 
@@ -229,7 +249,10 @@ class _CommentsSheetState extends State<_CommentsSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CommentTile(
-              comment: c,
+              key: ValueKey('comment_${c.commentId}'),
+              comment: state.withReaction(c),
+              liking: state.reactingIds.contains(c.commentId),
+              onLike: () => _like(c),
               isMine: c.author?.userId == myId,
               onReply: () {
                 cubit.startReply(c);
@@ -243,58 +266,65 @@ class _CommentsSheetState extends State<_CommentsSheet> {
               ),
               onTapAuthor: () => _openAuthor(c),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 46),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final r in loadedReplies)
-                    CommentTile(
-                      comment: r,
-                      isReply: true,
-                      isMine: r.author?.userId == myId,
-                      onReply: () {
-                        cubit.startReply(r);
-                        _focus.requestFocus();
-                      },
-                      onDelete: () => _delete(r),
-                      onReport: () => showReportSheet(
-                        context,
-                        target: ReportTarget.comment,
-                        targetId: r.commentId,
-                      ),
-                      onTapAuthor: () => _openAuthor(r),
-                    ),
-                  if (thread?.loading ?? false)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 6),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  else if (remaining > 0 || (thread?.hasNext ?? false))
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => cubit.loadReplies(c),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Text(
-                          loadedReplies.isEmpty
-                              ? 'Xem ${c.replyCount} phản hồi'
-                              : 'Xem thêm phản hồi',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textSecondary,
-                              ),
+            if (!c.hidden && c.author != null)
+              BlockedContent(
+                userIds: [c.author?.userId],
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 46),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final r in loadedReplies)
+                        CommentTile(
+                          key: ValueKey('comment_${r.commentId}'),
+                          comment: state.withReaction(r),
+                          liking: state.reactingIds.contains(r.commentId),
+                          onLike: () => _like(r),
+                          isReply: true,
+                          isMine: r.author?.userId == myId,
+                          onReply: () {
+                            cubit.startReply(r);
+                            _focus.requestFocus();
+                          },
+                          onDelete: () => _delete(r),
+                          onReport: () => showReportSheet(
+                            context,
+                            target: ReportTarget.comment,
+                            targetId: r.commentId,
+                          ),
+                          onTapAuthor: () => _openAuthor(r),
                         ),
-                      ),
-                    ),
-                ],
+                      if (thread?.loading ?? false)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 6),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      else if (remaining > 0 || (thread?.hasNext ?? false))
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => cubit.loadReplies(c),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text(
+                              loadedReplies.isEmpty
+                                  ? 'Xem ${c.replyCount} phản hồi'
+                                  : 'Xem thêm phản hồi',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ),
           ],
         );
       },

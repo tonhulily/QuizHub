@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../../core/network/api_client.dart';
+import '../../core/services/blocked_users.dart';
 import '../../core/network/api_endpoints.dart';
 import '../models/auth_session.dart';
 import '../models/social_models.dart';
@@ -20,8 +21,10 @@ class UserSearchRepository {
 
   final ApiClient _api;
   final FriendRepository _friends;
+  final BlockedUsers? _blocks;
 
-  UserSearchRepository(this._api, this._friends);
+  UserSearchRepository(this._api, this._friends, {BlockedUsers? blocks})
+    : _blocks = blocks;
 
   /// `GET /search?type=USER`. [query] rỗng = liệt kê toàn bộ người dùng.
   Future<UserSearchPage> searchUsers(
@@ -36,7 +39,17 @@ class UserSearchRepository {
       'after': after,
       'limit': limit.clamp(1, maxPageSize),
     },
-    parser: UserSearchPage.fromJson,
+    parser: (d) {
+      final page = UserSearchPage.fromJson(d);
+      return UserSearchPage(
+        items: page.items
+            .where((u) => !(_blocks?.contains(u.userId) ?? false))
+            .toList(),
+        nextOffset: page.nextOffset,
+        hasNext: page.hasNext,
+        totalHits: page.totalHits,
+      );
+    },
   );
 
   // ---------------- Tìm bằng email ----------------

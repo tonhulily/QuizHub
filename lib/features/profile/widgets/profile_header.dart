@@ -27,6 +27,8 @@ class ProfileHeader extends StatelessWidget {
   /// Nút nổi góc trên (Back / Menu)
   final Widget? topLeft;
   final Widget? topRight;
+  final VoidCallback? onTapFollowers;
+  final VoidCallback? onTapFollowing;
 
   const ProfileHeader({
     super.key,
@@ -34,6 +36,8 @@ class ProfileHeader extends StatelessWidget {
     this.actions,
     this.topLeft,
     this.topRight,
+    this.onTapFollowers,
+    this.onTapFollowing,
   });
 
   static const double _coverHeight = 200;
@@ -65,9 +69,11 @@ class ProfileHeader extends StatelessWidget {
                   child: GestureDetector(
                     onTap: (p.coverUrl ?? '').isEmpty
                         ? null
-                        : () => MediaViewer.open(context, [
-                            MediaItem(url: p.coverUrl!),
-                          ]),
+                        : () => MediaViewer.open(
+                            context,
+                            [MediaItem(url: p.coverUrl!)],
+                            userIds: [p.userId],
+                          ),
                     child: _Cover(url: p.coverUrl),
                   ),
                 ),
@@ -92,9 +98,11 @@ class ProfileHeader extends StatelessWidget {
                     showBorder: true,
                     onTap: (p.avatarUrl ?? '').isEmpty
                         ? null
-                        : () => MediaViewer.open(context, [
-                            MediaItem(url: p.avatarUrl!),
-                          ]),
+                        : () => MediaViewer.open(
+                            context,
+                            [MediaItem(url: p.avatarUrl!)],
+                            userIds: [p.userId],
+                          ),
                   ),
                 ),
               ],
@@ -122,19 +130,22 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 8),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      _count(p.friendsCount, 'bạn bè'),
-                      const TextSpan(text: '  ·  '),
-                      _count(p.followersCount, 'người theo dõi'),
-                      const TextSpan(text: '  ·  '),
-                      _count(p.followingCount, 'đang theo dõi'),
-                    ],
-                  ),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [
+                    _ProfileCount(value: p.friendsCount, label: 'bạn bè'),
+                    _ProfileCount(
+                      value: p.followersCount,
+                      label: 'người theo dõi',
+                      onTap: onTapFollowers,
+                    ),
+                    _ProfileCount(
+                      value: p.followingCount,
+                      label: 'đang theo dõi',
+                      onTap: onTapFollowing,
+                    ),
+                  ],
                 ),
                 if (actions != null) ...[const SizedBox(height: 12), actions!],
               ],
@@ -205,19 +216,45 @@ class ProfileHeader extends StatelessWidget {
   }
 
   static bool _has(String? v) => (v ?? '').trim().isNotEmpty;
+}
 
-  static TextSpan _count(int value, String label) => TextSpan(
-    children: [
+class _ProfileCount extends StatelessWidget {
+  final int value;
+  final String label;
+  final VoidCallback? onTap;
+
+  const _ProfileCount({required this.value, required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final child = Text.rich(
       TextSpan(
-        text: TimeFormat.compact(value),
-        style: const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
+        children: [
+          TextSpan(
+            text: TimeFormat.compact(value),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          TextSpan(text: ' $label'),
+        ],
       ),
-      TextSpan(text: ' $label'),
-    ],
-  );
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+    );
+    return onTap == null
+        ? child
+        : InkWell(
+            borderRadius: BorderRadius.circular(4),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: child,
+            ),
+          );
+  }
 }
 
 class _Cover extends StatelessWidget {

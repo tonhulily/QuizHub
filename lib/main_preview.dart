@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/storage/credential_storage.dart';
@@ -16,13 +17,20 @@ import 'di/locator.dart';
 /// flutter run -t lib/main_preview.dart --dart-define=SEED_SAVED_ACCOUNT=true
 /// ```
 ///
-/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Mọi thay đổi chỉ nằm
-/// trong RAM. Bản chạy thật vẫn là `lib/main.dart`.
+/// Đã đăng nhập sẵn với người dùng mẫu "Nguyễn Văn An". Bài viết, reaction
+/// bình luận, quan hệ xã hội và lịch sử chat được lưu trên máy; dữ liệu khác trong RAM.
+/// Chat ở bản này chỉ lưu trên từng thiết bị, không có bot. Test hai tài khoản dùng
+/// `lib/main_chat_demo.dart` cùng mock API trên Mac.
+/// Bản thật là `lib/main.dart`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final preferences = await SharedPreferences.getInstance();
+  final backend = PreviewBackend(preferences: preferences);
   await setupLocator(
     tokenStorage: PreviewTokens(),
-    httpAdapter: PreviewBackend(),
+    httpAdapter: backend,
+    chatRealtime: backend.chat.realtime,
+    blockStorageScope: 'preview',
   );
   AppFeedback.configureLoading();
 

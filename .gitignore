@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Dữ liệu và ảnh của mock chat dùng chung trên máy phát triển.
+/.local/chat-demo/
+
 # Symbolication related
 app.*.symbols
 

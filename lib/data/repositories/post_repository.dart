@@ -1,4 +1,5 @@
 import '../../core/config/app_config.dart';
+import '../../core/services/blocked_users.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/network/api_exception.dart';
@@ -12,8 +13,10 @@ import '../models/post_model.dart';
 class PostRepository {
   final ApiClient _api;
   final LocalStorage _storage;
+  final BlockedUsers? _blocks;
 
-  PostRepository(this._api, this._storage);
+  PostRepository(this._api, this._storage, {BlockedUsers? blocks})
+    : _blocks = blocks;
 
   /// `POST /posts`
   Future<PostModel> create({
@@ -35,10 +38,14 @@ class PostRepository {
   );
 
   /// `GET /posts/{id}`
-  Future<PostModel> getById(int id) => _api.get<PostModel>(
-    ApiEndpoints.post(id),
-    parser: (d) => PostModel.fromJson(J.asMap(d) ?? const {}),
-  );
+  Future<PostModel> getById(int id) async {
+    final post = await _api.get<PostModel>(
+      ApiEndpoints.post(id),
+      parser: (d) => PostModel.fromJson(J.asMap(d) ?? const {}),
+    );
+    _blocks?.requireVisible(post.author.userId);
+    return post;
+  }
 
   /// `PUT /posts/{id}` (chỉ tác giả)
   Future<void> update(
@@ -77,8 +84,11 @@ class PostRepository {
 
   CursorPage<PostModel> _withoutDeleted(CursorPage<PostModel> page) {
     final deleted = _storage.deletedPostIds;
-    if (deleted.isEmpty) return page;
-    return page.filtered((p) => !deleted.contains(p.postId));
+    return page.filtered(
+      (p) =>
+          !deleted.contains(p.postId) &&
+          !(_blocks?.contains(p.author.userId) ?? false),
+    );
   }
 
   /// `GET /posts/me`
@@ -96,9 +106,13 @@ class PostRepository {
     int userId, {
     String? after,
     int limit = AppConfig.defaultPageSize,
-  }) => _api.get<CursorPage<PostModel>>(
-    ApiEndpoints.userPosts(userId),
-    query: {'after': after, 'limit': limit},
-    parser: (d) => _withoutDeleted(CursorPage.fromJson(d, PostModel.fromJson)),
-  );
+  }) {
+    _blocks?.requireVisible(userId);
+    return _api.get<CursorPage<PostModel>>(
+      ApiEndpoints.userPosts(userId),
+      query: {'after': after, 'limit': limit},
+      parser: (d) =>
+          _withoutDeleted(CursorPage.fromJson(d, PostModel.fromJson)),
+    );
+  }
 }

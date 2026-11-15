@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../data/models/social_models.dart';
 import '../../../data/repositories/user_search_repository.dart';
+import '../../../core/services/blocked_users.dart';
 
 enum UserSearchStatus { idle, loading, loaded, failure }
 
@@ -77,6 +78,7 @@ class UserSearchCubit extends Cubit<UserSearchState> {
   final UserSearchRepository _repo;
   final Duration debounce;
   Timer? _timer;
+  StreamSubscription<void>? _blocksSub;
 
   /// Tăng mỗi lần bắt đầu tìm; kết quả của lần cũ bị bỏ qua.
   int _seq = 0;
@@ -84,7 +86,18 @@ class UserSearchCubit extends Cubit<UserSearchState> {
   UserSearchCubit(
     this._repo, {
     this.debounce = const Duration(milliseconds: 400),
-  }) : super(const UserSearchState());
+    BlockedUsers? blocks,
+  }) : super(const UserSearchState()) {
+    _blocksSub = blocks?.onChanged.listen((_) {
+      if (isClosed) return;
+      emit(
+        state.copyWith(
+          items: state.items.where((u) => !blocks.contains(u.userId)).toList(),
+        ),
+      );
+      if (state.query.isNotEmpty) unawaited(submit(state.query));
+    });
+  }
 
   void onQueryChanged(String raw) {
     _timer?.cancel();
@@ -180,6 +193,7 @@ class UserSearchCubit extends Cubit<UserSearchState> {
   @override
   Future<void> close() {
     _timer?.cancel();
+    _blocksSub?.cancel();
     return super.close();
   }
 }

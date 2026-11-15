@@ -7,6 +7,7 @@ import '../../core/design_system/app_colors.dart';
 import '../../core/utils/time_format.dart';
 import '../../data/models/media_item.dart';
 import '../../core/design_system/app_icons.dart';
+import '../widgets/blocked_content.dart';
 
 /// Xem ảnh / video toàn màn hình (trải nghiệm giống Facebook):
 /// vuốt ngang để chuyển, pinch/double-tap để zoom, chạm để ẩn/hiện thanh công cụ,
@@ -14,14 +15,21 @@ import '../../core/design_system/app_icons.dart';
 class MediaViewer extends StatefulWidget {
   final List<MediaItem> items;
   final int initialIndex;
+  final Iterable<int> userIds;
 
-  const MediaViewer({super.key, required this.items, this.initialIndex = 0});
+  const MediaViewer({
+    super.key,
+    required this.items,
+    this.initialIndex = 0,
+    this.userIds = const [],
+  });
 
   /// Mở viewer. [heroTagBuilder] (tuỳ chọn) để có hiệu ứng Hero từ thumbnail.
   static Future<void> open(
     BuildContext context,
     List<MediaItem> items, {
     int initialIndex = 0,
+    Iterable<int> userIds = const [],
   }) {
     return Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder<void>(
@@ -29,8 +37,11 @@ class MediaViewer extends StatefulWidget {
         barrierColor: AppColors.black,
         transitionDuration: const Duration(milliseconds: 220),
         reverseTransitionDuration: const Duration(milliseconds: 180),
-        pageBuilder: (_, _, _) =>
-            MediaViewer(items: items, initialIndex: initialIndex),
+        pageBuilder: (_, _, _) => MediaViewer(
+          items: items,
+          initialIndex: initialIndex,
+          userIds: userIds,
+        ),
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
       ),
@@ -64,7 +75,16 @@ class _MediaViewerState extends State<MediaViewer> {
   void _toggleChrome() => setState(() => _chromeVisible = !_chromeVisible);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => BlockedContent(
+    userIds: widget.userIds,
+    blockedChild: Scaffold(
+      appBar: AppBar(title: const Text('Ảnh và video')),
+      body: const Center(child: Text('Nội dung không khả dụng')),
+    ),
+    child: _buildViewer(context),
+  );
+
+  Widget _buildViewer(BuildContext context) {
     final total = widget.items.length;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,

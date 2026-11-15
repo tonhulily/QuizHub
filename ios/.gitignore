@@ -19,6 +19,8 @@ Flutter/App.framework
 Flutter/Flutter.framework
 Flutter/Flutter.podspec
 Flutter/Generated.xcconfig
+# Team ký app riêng của từng người, chỉ lưu trên máy chạy.
+Flutter/Signing.xcconfig
 Flutter/ephemeral/
 Flutter/app.flx
 Flutter/app.zip

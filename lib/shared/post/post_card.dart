@@ -20,6 +20,7 @@ import '../../features/profile/cubit/profile_cubit.dart';
 import '../comment/comments_sheet.dart';
 import '../report/report_sheet.dart';
 import '../widgets/expandable_text.dart';
+import '../widgets/blocked_content.dart';
 import 'post_media_grid.dart';
 import '../../core/design_system/app_icons.dart';
 
@@ -42,7 +43,8 @@ class PostCard extends StatefulWidget {
   final ValueChanged<PostModel>? onDeleted;
   final ValueChanged<PostModel>? onEdit;
 
-  /// Bấm vào thân bài (mặc định không làm gì; Home có thể mở chi tiết)
+  /// Bấm nội dung/khoảng trắng trong thẻ để mở chi tiết. Ảnh, tác giả và các
+  /// nút tương tác giữ thao tác riêng. Mặc định không điều hướng.
   final ValueChanged<PostModel>? onTap;
 
   /// Ghi đè hành vi bấm vào tác giả (mặc định mở trang cá nhân)
@@ -128,6 +130,7 @@ class _PostCardState extends State<PostCard> {
       context,
       targetType: TargetType.post,
       targetId: _post.postId,
+      ownerUserId: _post.author.userId,
       onCountChanged: (delta) {
         if (!mounted) return;
         _update(
@@ -239,50 +242,58 @@ class _PostCardState extends State<PostCard> {
 
     // Kiểu Facebook: khối trắng tràn cạnh, không bo góc, không đổ bóng;
     // khoảng xám giữa các bài do danh sách chèn (PagedListView.itemSpacing).
-    return Container(
-      color: AppColors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(theme, p),
-          if (p.content.trim().isNotEmpty || p.hasSubject)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: widget.onTap == null ? null : () => widget.onTap!(p),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (p.hasSubject) ...[
-                      _SubjectChip(
-                        label: [
-                          if (p.subjectCode != null) p.subjectCode!,
-                          if (p.subjectName != null) p.subjectName!,
-                        ].join(' · '),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    if (p.content.trim().isNotEmpty)
-                      ExpandableText(
-                        p.content,
-                        maxLines: ComponentTokens.postCollapsedLines,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontSize: 15,
-                          height: 1.35,
+    return BlockedContent(
+      userIds: [p.author.userId],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap == null ? null : () => widget.onTap!(p),
+        child: Container(
+          color: AppColors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(theme, p),
+              if (p.content.trim().isNotEmpty || p.hasSubject)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (p.hasSubject) ...[
+                        _SubjectChip(
+                          label: [
+                            if (p.subjectCode != null) p.subjectCode!,
+                            if (p.subjectName != null) p.subjectName!,
+                          ].join(' · '),
                         ),
-                      ),
-                  ],
+                        const SizedBox(height: 8),
+                      ],
+                      if (p.content.trim().isNotEmpty)
+                        ExpandableText(
+                          p.content,
+                          maxLines: ComponentTokens.postCollapsedLines,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontSize: 15,
+                            height: 1.35,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-          // Ảnh/video tràn hết chiều ngang như Facebook
-          if (p.media.isNotEmpty) PostMediaGrid(media: p.media),
-          if ((p.lecturerNote ?? '').isNotEmpty) _LecturerNote(post: p),
-          _buildCounts(theme, p),
-          const Divider(indent: 12, endIndent: 12, height: 1),
-          _buildActions(p),
-        ],
+              // Ảnh/video tràn hết chiều ngang như Facebook
+              if (p.media.isNotEmpty)
+                PostMediaGrid(media: p.media, ownerUserId: p.author.userId),
+              if ((p.lecturerNote ?? '').isNotEmpty)
+                BlockedContent(
+                  userIds: [p.notedLecturer?.userId],
+                  child: _LecturerNote(post: p),
+                ),
+              _buildCounts(theme, p),
+              const Divider(indent: 12, endIndent: 12, height: 1),
+              _buildActions(p),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -305,13 +316,13 @@ class _PostCardState extends State<PostCard> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _openAuthor,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _openAuthor,
+                  child: Text(
                     p.author.fullName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -320,34 +331,34 @@ class _PostCardState extends State<PostCard> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          meta,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 13,
-                          ),
+                ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Text('·', style: theme.textTheme.bodySmall),
-                      const SizedBox(width: 4),
-                      Icon(
-                        switch (p.visibility) {
-                          PostVisibility.public => AppIcons.audienceEveryone,
-                          PostVisibility.friends => AppIcons.audienceFriends,
-                          PostVisibility.onlyMe => AppIcons.audienceOnlyMe,
-                        },
-                        size: 15,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text('·', style: theme.textTheme.bodySmall),
+                    const SizedBox(width: 4),
+                    Icon(
+                      switch (p.visibility) {
+                        PostVisibility.public => AppIcons.audienceEveryone,
+                        PostVisibility.friends => AppIcons.audienceFriends,
+                        PostVisibility.onlyMe => AppIcons.audienceOnlyMe,
+                      },
+                      size: 15,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           IconButton(

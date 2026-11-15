@@ -49,6 +49,7 @@ class ApiEndpoints {
   static const String conversations = '/conversations';
   static const String conversationsDirect = '/conversations/direct';
   static String conversationMessages(int id) => '/conversations/$id/messages';
+  static String conversationMembers(int id) => '/conversations/$id/members';
   static String message(int id) => '/messages/$id';
 
   // ---- 12. Notifications / Push ----

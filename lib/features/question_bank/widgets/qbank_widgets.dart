@@ -473,6 +473,6 @@ class QbankBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FlatSection(
     padding: const EdgeInsets.all(DesignTokens.spacingMD),
-    child: child,
+    child: Material(type: MaterialType.transparency, child: child),
   );
 }

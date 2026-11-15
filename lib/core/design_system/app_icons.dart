@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' show Icons;
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// App Icons - Core Design System
 ///
@@ -59,6 +59,7 @@ class AppIcons {
   static const dropdown = PhosphorIconsFill.caretDown;
   static const refresh = PhosphorIconsBold.arrowClockwise;
   static const edit = PhosphorIconsRegular.pencilSimple;
+  static const copy = PhosphorIconsRegular.copy;
   static const delete = PhosphorIconsRegular.trash;
   static const flag = PhosphorIconsRegular.flag;
   static const settings = PhosphorIconsFill.gear;

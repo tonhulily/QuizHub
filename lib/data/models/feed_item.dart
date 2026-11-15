@@ -60,6 +60,18 @@ class FeedItem extends Equatable {
 
   bool get isPost => targetType.toUpperCase() == 'POST';
 
+  FeedItem copyWith({PostModel? localPost}) => FeedItem(
+    feedId: feedId,
+    targetType: targetType,
+    targetId: targetId,
+    actionType: actionType,
+    actor: actor,
+    content: content,
+    createdAt: createdAt,
+    weight: weight,
+    localPost: localPost ?? this.localPost,
+  );
+
   /// Id bài viết nếu phần tử này là bài viết, ngược lại null.
   int? get postId => localPost?.postId ?? (isPost ? targetId : null);
 
@@ -92,5 +104,11 @@ class FeedItem extends Equatable {
   }
 
   @override
-  List<Object?> get props => [feedId, targetType, targetId, actionType];
+  List<Object?> get props => [
+    feedId,
+    targetType,
+    targetId,
+    actionType,
+    localPost,
+  ];
 }

@@ -5,6 +5,9 @@ import '../../../core/design_system/app_colors.dart';
 import '../../../core/design_system/app_icons.dart';
 import '../../../core/design_system/component_tokens.dart';
 import '../../../core/services/social_events.dart';
+import '../../../core/router/app_routes.dart';
+import '../../../data/models/chat_models.dart';
+import '../../../data/models/author_model.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../data/models/profile_model.dart';
@@ -143,6 +146,28 @@ class _Body extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                label: 'Nhắn tin',
+                icon: AppIcons.messenger,
+                small: true,
+                variant: AppButtonVariant.neutral,
+                onPressed: busy
+                    ? null
+                    : () => Navigator.of(context).pushNamed(
+                        AppRoutes.chatDetail,
+                        arguments: ChatTarget.user(
+                          AuthorModel(
+                            userId: profile.userId,
+                            fullName: profile.fullName,
+                            avatarUrl: profile.avatarUrl,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 ...main,
