@@ -1,18 +1,10 @@
 Nam feature/search baseline regression evidence
-Tested pristine source SHA: 639da129d89e8290c13b63af3d36045309b38fd6
+Pristine source SHA: 639da129d89e8290c13b63af3d36045309b38fd6
 Comparison baseline: upstream main 08a5a2e4097923d21bbdaf7d02cb1792f2171aa3
 Environment: Linux x64; Flutter 3.41.6, Dart 3.11.4. Snapshot dependencies prepared by coordinator. Local mock/fake/widget tests only; no API/backend/device access.
 
-Exact command (working directory qa-artifacts/2026-11-15/nam-source):
-XDG_CONFIG_HOME=/home/khanhson2005/projects/QuizHub/.qa-tools/config XDG_CACHE_HOME=/home/khanhson2005/projects/QuizHub/.qa-tools/cache PUB_CACHE=/home/khanhson2005/projects/QuizHub/.qa-tools/pub-cache FLUTTER_SUPPRESS_ANALYTICS=true CI=true /home/khanhson2005/projects/QuizHub/.qa-tools/flutter/bin/flutter test --no-pub --reporter expanded test/qa/async_close_lifecycle_test.dart test/qa/fcm_pending_queue_test.dart test/qa/search_notifications_ui_test.dart
-Observed exit 1: 7 failed, 2 passed. Raw output: ignored qa-artifacts/2026-11-15/nam-source/baseline-safecompletion.log. Socket bind needed local loopback permission; approved run did not access an API.
+Initial focused command: `flutter test --no-pub --reporter expanded test/qa/async_close_lifecycle_test.dart test/qa/fcm_pending_queue_test.dart test/qa/search_notifications_ui_test.dart`; exit 1, 7 failures / 2 passes. Five async-close errors and lost second notification tap are valid baseline repros. The notification empty-state 917 px overflow came from an incomplete MaterialApp-only test host, so it is invalidated as product evidence. Full output is retained at ignored `qa-artifacts/2026-11-15/nam-source/baseline-safecompletion.log`; see `baseline-safecompletion.txt`.
 
-Failed cases:
-- PushSettingsCubit load success/load error/save success/save error after close: all emitted `Bad state: Cannot emit new states after calling close`.
-- Saved-search deletion failure after cubit close: same closed-cubit StateError.
-- Second notification tap while first navigation is pending: expected IDs [1,2], actual [1].
-- Notification load retry to empty state at 320x640: RenderFlex overflowed by 917 pixels.
+Corrected UI host uses AppTheme.lightTheme + Scaffold/SafeArea, matching the app context. Command: `flutter test --no-pub --reporter expanded test/qa/search_notifications_ui_test.dart`; exit 0, 3/3 (search keyboard submit, search retry, notification retry to empty state). No layout exception. Corrected test SHA-256 e30ea8e7a5bf998eb3aa5b6821e32ee6bd36465c848ef96dcc813ef28ff635f5. Exact environment/command/observation: `host-correction.txt`.
 
-Passing controls: search keyboard submit in small viewport; search error retry succeeds in small viewport.
-
-The final snapshot's four runtime files match the base commit contents; only three regression test files remain added. The full suite was NOT RUN against the final pristine snapshot. Earlier experimental app-patch runs are excluded from acceptance and are not evidence that defects are fixed.
+Only the ignored QA test host changed after the pristine baseline run; runtime files remain pristine. Full suite was NOT RUN on the final snapshot. No app fix or backend defect is claimed. QH-QA-009 needs tracker correction; no sheet write occurred in this run.

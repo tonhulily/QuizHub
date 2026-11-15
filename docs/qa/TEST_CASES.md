@@ -9,21 +9,27 @@ Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là bi
 
 ## Handoff mới nhất — 2026-11-15
 
-- QA HEAD / compile-check `TESTED_SHA`: `999a1678206a6b0d5589cf2c97a0f677ef8bb017`; upstream `main` tích hợp:
-  `08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`. Current commit contains only QA probes beyond the merge; app/runtime and dependencies have no delta from main.
+- QA test-source snapshot / compile-check `TESTED_SHA`: `999a1678206a6b0d5589cf2c97a0f677ef8bb017`; upstream `main` tích hợp:
+  `08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`. Snapshot này chỉ thêm QA probes; app/runtime và dependencies không khác main.
 - QUESTION-01, EXAM-01 và CHAT-01 **NOT RUN**: module/docs đã có, nhưng Flutter regression bị
   chặn ở bước compile trước test execution: Flutter 3.47.9 / Dart 3.13.7 không resolve
   `CupertinoPageTransitionsBuilder` trong `app_theme.dart:196-197`. API/UI acceptance chưa có
   host/tài khoản/realtime payload. Assertion cần owner chốt contract vẫn `WAITING` riêng.
 - SEARCH-01, PUSH-01 và ADV-01 **WAITING** vì chưa có trong upstream `main` snapshot này.
 - Current compile command exited 1 before tests ran; full suite/analyze and QH-QA-001..004
-  retest **NOT RUN**. API, native, build also NOT RUN. Main deps are now restored; earlier
+  retest **NOT RUN**. API and main build **NOT RUN**. Separate Nam preview APK build/install
+  succeeded, but native UI is **BLOCKED / NOT RUN** because an overlay prevented QA from
+  regaining focus after relaunch + Back. QA app was uninstalled successfully; details in
+  [native UI report](reports/2026-11-15-native-ui.md). Main deps are now restored; earlier
   cache mismatch audit is historical, not current blocker. See [current handoff summary](reports/2026-11-15-summary.md),
   [compile evidence](evidence/2026-11-15/regression/theme-baseline.txt), and
   [upstream review](reports/2026-11-15-upstream-review.md).
 - Separate Nam snapshot `639da129d89e8290c13b63af3d36045309b38fd6`: focused mock/widget suite
-  exited 1 with 7 baseline failures / 2 passing search controls, reproducing four client
-  defects. No fixes were retained. See [Nam report](reports/2026-11-15-nam-review.md).
+  first exited 1 with 7 failures / 2 passing controls. Five lifecycle emits and lost second
+  notification tap remain confirmed. Notification empty-state overflow was a false positive
+  from a missing Scaffold/theme in the test host; corrected UI host passed 3/3. QH-QA-009
+  awaits tracker correction. See [Nam report](reports/2026-11-15-nam-review.md) and
+  [host-correction evidence](evidence/2026-11-15/nam/host-correction.txt).
 
 ## Baseline và quy tắc kết luận
 

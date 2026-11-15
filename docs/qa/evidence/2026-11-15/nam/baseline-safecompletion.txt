@@ -13,3 +13,5 @@ Failed cases (pristine runtime):
 Passing controls: search keyboard submit in small viewport; search error retry succeeds in small viewport.
 
 Final snapshot has pristine runtime files and the three regression test files. Full suite was not run against this final snapshot. Historical experimental app-patch runs are excluded from acceptance. No app fix is included or claimed.
+
+Correction to the initial run: its notification overflow case used an incomplete host (MaterialApp without the app's Scaffold or AppTheme.lightTheme). Do not treat that 917 px output as a product defect. After matching the app host, `flutter test --no-pub --reporter expanded test/qa/search_notifications_ui_test.dart` exited 0, 3/3 on pristine runtime, and the notification empty-state case had no layout exception. See host-correction.txt. The five async-close errors and lost second notification tap remain valid reproductions. The 7-fail / 2-pass total above is historical for the pre-correction test host, not the final UI harness.

@@ -1,0 +1,17 @@
+Notification empty-state test host correction
+Nam pristine runtime source SHA: 639da129d89e8290c13b63af3d36045309b38fd6
+Only changed file: ignored test/qa/search_notifications_ui_test.dart. Runtime source remained pristine. The previous UI test used MaterialApp(home: BlocProvider(... NotificationsTab)) directly, missing the Scaffold and AppTheme.lightTheme used by the app. The corrected host wraps NotificationsTab in Scaffold/SafeArea under AppTheme.lightTheme.
+
+Corrected test file SHA-256: e30ea8e7a5bf998eb3aa5b6821e32ee6bd36465c848ef96dcc813ef28ff635f5
+Previous pre-correction test hash preserved as search_notifications_ui_test.pre-host-correction.dart.txt: f5f2c52a15e19d658cd692b27f0190a967b3a5d5a9e576b15e32f10d8a48c7bb
+
+Command (cwd qa-artifacts/2026-11-15/nam-source):
+XDG_CONFIG_HOME=/home/khanhson2005/projects/QuizHub/.qa-tools/config XDG_CACHE_HOME=/home/khanhson2005/projects/QuizHub/.qa-tools/cache PUB_CACHE=/home/khanhson2005/projects/QuizHub/.qa-tools/pub-cache FLUTTER_SUPPRESS_ANALYTICS=true CI=true /home/khanhson2005/projects/QuizHub/.qa-tools/flutter/bin/flutter test --no-pub --reporter expanded test/qa/search_notifications_ui_test.dart
+Observed result: exit 0, 3/3 tests passed (keyboard submit, search error retry, notification error retry to empty state) on Flutter 3.41.6 / Dart 3.11.4, Linux x64. The test framework reported no layout overflow. No backend/API/device access.
+
+Independent coordinator review rerun command (cwd `qa-artifacts/2026-11-15/nam-source`; prior environment variables above):
+`timeout 90s /home/khanhson2005/projects/QuizHub/.qa-tools/flutter/bin/flutter test --no-pub --reporter expanded test/qa/search_notifications_ui_test.dart | tee /home/khanhson2005/projects/QuizHub/qa-artifacts/2026-11-15/nam-ui-host-review.log`
+
+Observed exit 0, 3/3. Compact stdout: `All tests passed!`; cases were small-viewport keyboard submit, search error retry, and notification error retry to empty state. Full stdout is retained at ignored `qa-artifacts/2026-11-15/nam-ui-host-review.log`. The coordinator also compared all 244 tracked `lib/`, `android/`, `ios/`, `pubspec.yaml`, and `pubspec.lock` files against `git show 639da129d89e8290c13b63af3d36045309b38fd6`; exit 0, zero mismatches. These checks confirm the observed result used pristine Nam runtime files; the only source difference was the QA test host.
+
+Correction: The earlier 917 px overflow was produced by the incomplete test host and does not establish a product defect. Reclassify QH-QA-009 as `Other / harness`, owner Sơn, with observed test-host correction and 3/3 passing cases; it is not a Nam/product defect. The tracker has not yet been changed. Preserve the old raw baseline log as historical evidence, with this correction attached.

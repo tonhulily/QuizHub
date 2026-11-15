@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:quizhub/core/network/api_exception.dart';
+import 'package:quizhub/core/design_system/app_theme.dart';
 import 'package:quizhub/data/models/cursor_page.dart';
 import 'package:quizhub/data/models/notification_models.dart';
 import 'package:quizhub/data/models/search_models.dart';
@@ -149,9 +150,15 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: AppTheme.lightTheme,
           home: BlocProvider<NotificationCubit>.value(
             value: cubit,
-            child: const NotificationsTab(),
+            child: const Scaffold(
+              body: SafeArea(
+                bottom: false,
+                child: NotificationsTab(),
+              ),
+            ),
           ),
         ),
       );

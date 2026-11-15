@@ -6,14 +6,17 @@ Runtime files match pristine source contents; hashes:
 - lib/core/firebase/firebase_messaging_service.dart 44578bf1e4518dc3289745c7597541243fa63ca712772c9cc381b63f5efe0643
 - lib/features/notifications/view/notifications_tab.dart a80ba9db9bebefc46cea09f38fd809838a3232882c94021c46788d81ef70aa77
 
-Added narrow regression tests (unchanged between source-baseline run):
+QA regression probes (async lifecycle and FCM files unchanged; notification UI host was corrected after first baseline run):
 - test/qa/async_close_lifecycle_test.dart a1dc9e7531f805074686975776c169aa87cb64beb36fd30331e8d4e1d0c134f3
 - test/qa/fcm_pending_queue_test.dart 0d1fb7bd4f5a0fa166fb3cdfc675b91847defeb6d0bab27aca3783f25ff6b765
-- test/qa/search_notifications_ui_test.dart f5f2c52a15e19d658cd692b27f0190a967b3a5d5a9e576b15e32f10d8a48c7bb
+- test/qa/search_notifications_ui_test.dart e30ea8e7a5bf998eb3aa5b6821e32ee6bd36465c848ef96dcc813ef28ff635f5
 
 No app fix is included in the final review snapshot. An exploratory patch created during investigation was moved out of tracked evidence into ignored qa-artifacts/2026-11-15/nam-review-archive/ and is not part of QA acceptance.
 
 Tracked readable copies for post-push review:
 - repros/async_close_lifecycle_test.dart.txt SHA-256 a1dc9e7531f805074686975776c169aa87cb64beb36fd30331e8d4e1d0c134f3
 - repros/fcm_pending_queue_test.dart.txt SHA-256 0d1fb7bd4f5a0fa166fb3cdfc675b91847defeb6d0bab27aca3783f25ff6b765
-- repros/search_notifications_ui_test.dart.txt SHA-256 f5f2c52a15e19d658cd692b27f0190a967b3a5d5a9e576b15e32f10d8a48c7bb
+- repros/search_notifications_ui_test.dart.txt SHA-256 e30ea8e7a5bf998eb3aa5b6821e32ee6bd36465c848ef96dcc813ef28ff635f5
+
+Pre-host-correction UI test kept for history:
+- repros/search_notifications_ui_test.pre-host-correction.dart.txt SHA-256 f5f2c52a15e19d658cd692b27f0190a967b3a5d5a9e576b15e32f10d8a48c7bb

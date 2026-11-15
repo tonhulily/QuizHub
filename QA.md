@@ -9,6 +9,7 @@ tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệ
 
 Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (handoff 2026-11-15),
 [tóm tắt QA hiện tại](docs/qa/reports/2026-11-15-summary.md),
+[ghi nhận cập nhật tracker](docs/qa/reports/2026-11-15-tracker-update.md),
 [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
 [22 case NOT RUN + 3 case WAITING](docs/qa/TEST_CASES.md),
 [bộ request API Postman và hướng dẫn](qa/api/README.md),
@@ -180,17 +181,18 @@ không kiểm chứng định dạng media thực, nội dung file hay dịch v�
 
 ## Bug list và mẫu ghi nhận
 
-Chưa có defect server/backend được xác nhận. Bốn client defect được tái hiện trên Nam
-snapshot bằng mock/widget, không phải API thật. Ba UI overflow từ exploratory run khác
+Chưa có defect server/backend được xác nhận. Ba client defect được tái hiện trên Nam
+snapshot bằng mock/fake, không phải API thật. Ba UI overflow từ exploratory run khác
 SHA cần xác minh lại trên source sạch; không coi là confirmed ở đây. Hai invariant client
 tái hiện bằng fake transport được ghi ở [RISKS.md](docs/qa/RISKS.md); không phải bằng chứng
 đã gọi server. Ghi nhận:
 
 | ID | Liên quan | Quan sát | Cách xác nhận / trạng thái |
 |---|---|---|---|
-| QH-QA-006..009 (draft) | Nam / Push settings, search, FCM, notifications | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng; notifications empty state overflow 917 px ở 320×640 | Reproduced qua mock/widget trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6`; chi tiết và draft rows ở [QA summary](docs/qa/reports/2026-11-15-summary.md). Chưa fix/retest; chờ owner. |
-| QH-QA-010..012 (draft) | Chat filters / shared empty view / PostCard | Overflow observations từ run tại SHA khác với temporary SDK compatibility edit | Chưa retest trên source sạch; giữ pending, không filed/confirmed. |
-| QH-QA-005 (draft) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Compile-only failure tại QA SHA `999a167`; expected platform behavior chưa chạy. [Evidence](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt). |
+| QH-QA-006..008 (logged, Open / Not retested) | Nam / Push settings, search, FCM | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng | Reproduced qua mock/widget trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6`; [QA summary](docs/qa/reports/2026-11-15-summary.md). Chưa fix/retest. |
+| QH-QA-009 (tracker correction pending) | Sơn / test harness | Host thiếu app `Scaffold`/`AppTheme` gây false positive overflow 917 px; corrected UI test 3/3, independent rerun passed, 244 runtime/config files match pristine source | [Host-correction evidence](docs/qa/evidence/2026-11-15/nam/host-correction.txt). Reclassify Other / harness; không phải bug sản phẩm. |
+| QH-QA-010..012 (pending, not logged) | Chat filters / shared empty view / PostCard | Overflow observations từ run tại SHA khác với temporary SDK compatibility edit | Chưa retest trên source sạch; không filed/confirmed. |
+| QH-QA-005 (logged, Open / Not retested) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Compile-only failure tại QA SHA `999a167`; expected platform behavior chưa chạy. [Evidence](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt). |
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |
 | QA-ENV-01 | Môi trường | Persistent Flutter SDK 3.41.6/Dart 3.11.4 và cache/config đã sẵn. Android JDK/adb, backend test/tài khoản/thiết bị chưa sẵn hoặc chưa xác nhận. OpenAPI đã được đọc tĩnh; xem [PROGRESS](docs/qa/PROGRESS.md) và [ENVIRONMENT](docs/qa/ENVIRONMENT.md) | Không dùng production credentials/data |
 
