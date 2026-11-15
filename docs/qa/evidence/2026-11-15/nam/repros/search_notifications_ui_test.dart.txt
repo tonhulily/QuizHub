@@ -1,0 +1,169 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
+import 'package:quizhub/core/network/api_exception.dart';
+import 'package:quizhub/data/models/cursor_page.dart';
+import 'package:quizhub/data/models/notification_models.dart';
+import 'package:quizhub/data/models/search_models.dart';
+import 'package:quizhub/data/repositories/notification_repository.dart';
+import 'package:quizhub/data/repositories/search_repository.dart';
+import 'package:quizhub/features/notifications/cubit/notification_cubit.dart';
+import 'package:quizhub/features/notifications/view/notifications_tab.dart';
+import 'package:quizhub/features/search/view/global_search_view.dart';
+
+class _SearchRepo implements SearchRepository {
+  final queries = <String>[];
+  final types = <SearchType>[];
+  bool failFirstSearch = false;
+  int _searchCount = 0;
+
+  @override
+  Future<GlobalSearchPage> search({
+    required String query,
+    SearchType type = SearchType.all,
+    int? after,
+    int limit = SearchRepository.defaultPageSize,
+  }) async {
+    queries.add(query);
+    types.add(type);
+    _searchCount++;
+    if (failFirstSearch && _searchCount == 1) {
+      throw const ApiException(
+        type: ApiErrorType.noConnection,
+        message: 'Offline',
+      );
+    }
+    return GlobalSearchPage(
+      items: [
+        GlobalSearchItem(
+          type: SearchType.user,
+          user: const SearchUser(userId: 7, fullName: 'Ada Lovelace'),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<SavedSearchResponse> getSavedSearches() async =>
+      const SavedSearchResponse();
+
+  @override
+  Future<void> saveSearch(String query) async {}
+
+  @override
+  Future<void> deleteSavedSearch(int id) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _NotificationRepo implements NotificationRepository {
+  int calls = 0;
+
+  @override
+  Future<NotificationPageResponse> getNotifications({
+    String? after,
+    int limit = 20,
+  }) async {
+    calls++;
+    if (calls == 1) {
+      throw const ApiException(
+        type: ApiErrorType.noConnection,
+        message: 'Offline',
+      );
+    }
+    return const NotificationPageResponse(
+      page: CursorPage<NotificationModel>(),
+    );
+  }
+
+  @override
+  Future<MarkNotificationReadResponse> markAsRead(int notificationId) async =>
+      MarkNotificationReadResponse(notificationId: notificationId);
+
+  @override
+  Future<void> markAllAsRead() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+void _useSmallViewport(WidgetTester tester) {
+  tester.view.physicalSize = const Size(320, 640);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
+
+void main() {
+  final locator = GetIt.instance;
+
+  tearDown(() async {
+    await locator.reset();
+  });
+
+  testWidgets('search keyboard submit works in a small viewport', (
+    tester,
+  ) async {
+    _useSmallViewport(tester);
+    final repository = _SearchRepo();
+    locator.registerSingleton<SearchRepository>(repository);
+
+    await tester.pumpWidget(const MaterialApp(home: GlobalSearchView()));
+    await tester.enterText(find.byType(TextField), '  calculus  ');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(repository.queries, ['calculus']);
+    expect(find.text('Ada Lovelace'), findsOneWidget);
+  });
+
+  testWidgets('search error retry succeeds in a small viewport', (
+    tester,
+  ) async {
+    _useSmallViewport(tester);
+    final repository = _SearchRepo()..failFirstSearch = true;
+    locator.registerSingleton<SearchRepository>(repository);
+
+    await tester.pumpWidget(const MaterialApp(home: GlobalSearchView()));
+    await tester.enterText(find.byType(TextField), 'graph theory');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Thử lại'), findsOneWidget);
+    await tester.tap(find.text('Thử lại'));
+    await tester.pumpAndSettle();
+
+    expect(repository.queries, ['graph theory', 'graph theory']);
+    expect(find.text('Ada Lovelace'), findsOneWidget);
+  });
+
+  testWidgets(
+    'notification error retry reaches empty state in a small viewport',
+    (tester) async {
+      _useSmallViewport(tester);
+      final repository = _NotificationRepo();
+      final cubit = NotificationCubit(repository);
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<NotificationCubit>.value(
+            value: cubit,
+            child: const NotificationsTab(),
+          ),
+        ),
+      );
+      await cubit.load();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Thử lại'), findsOneWidget);
+      await tester.tap(find.text('Thử lại'));
+      await tester.pumpAndSettle();
+
+      expect(repository.calls, 2);
+      expect(find.text('Chưa có thông báo'), findsOneWidget);
+    },
+  );
+}

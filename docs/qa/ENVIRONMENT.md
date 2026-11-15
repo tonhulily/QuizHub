@@ -1,5 +1,13 @@
 # Môi trường QA
 
+## Cập nhật QA ngày 2026-11-15 — lịch sử audit và trạng thái mới nhất
+
+- **Audit ban đầu tại SHA `adde556e2ef6e481fd7145588db878012673b059`:** package config có 135 package so với 136 trong lockfile; Flutter test/analyze khi đó **BLOCKED / NOT RUN**. Chi tiết: [báo cáo regression](reports/2026-11-15-regression.md). Đây là trạng thái trước khi coordinator khôi phục cache.
+- **Trạng thái mới nhất theo coordinator:** `flutter pub get --enforce-lockfile` thành công cho main với Flutter 3.47.9 và cho preview Nam với Flutter 3.41.6; preview source SHA `639da129d89e8290c13b63af3d36045309b38fd6`. JDK17 có tại `.qa-tools/java17`; Android SDK tại `.qa-tools/android-build-sdk`.
+- Mobile MCP hiện thấy thiết bị `RMX3370`, Android 13, online. Không ghi serial/ID hoặc khẳng định loại thiết bị.
+- `assembleDebug` đang chạy coordinator; APK/build chưa có kết quả và native QA chưa PASS. Cấu hình preview biệt lập có application ID `vn.edu.hust.quizhub.qa.preview`; theo dõi [báo cáo môi trường Android](reports/2026-11-15-android-environment.md) và [evidence](evidence/2026-11-15/android-environment.txt).
+- Package roots hiện hữu không chứng minh cache khớp lockfile. Các kết quả setup và kiểm tra Flutter ở các mục lịch sử bên dưới chỉ áp dụng cho SHA được ghi tại từng kết quả; không dùng chúng để kết luận runner hiện tại sẵn sàng offline.
+
 Ghi nhận cập nhật **2026-10-22** trên nhánh `qa/khanhson2005`. Flutter persistent đã được setup và xác minh; thư mục `.qa-tools/` được ignore bởi Git. Phiên bản, archive checksum, pub get và lockfile evidence: [sdk-setup.log](../../qa-artifacts/2026-10-22/sdk-setup.log).
 
 ## Cập nhật QA ngày 2026-10-26

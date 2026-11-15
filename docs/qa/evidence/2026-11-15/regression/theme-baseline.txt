@@ -1,0 +1,7 @@
+Current QA compile baseline
+Source SHA: 999a1678206a6b0d5589cf2c97a0f677ef8bb017
+Upstream main snapshot: 08a5a2e4097923d21bbdaf7d02cb1792f2171aa3
+Environment: Linux x86_64; Flutter 3.47.9 / Dart 3.13.7 (coordinator-provided SDK; no install by this run). No app/runtime source changes relative to upstream main.
+Command: flutter test --no-pub test/features/exam_ui_test.dart
+Observed exit: 1. No test cases ran; loading/compilation failed at lib/core/design_system/app_theme.dart:196-197 because `CupertinoPageTransitionsBuilder` was not found for Android/iOS target entries. Full log: ignored qa-artifacts/2026-11-15/regression-final/theme-baseline-999a167.log.
+Classification: SDK/source compile compatibility blocker; this run provides no exam UI test result and no app behavior pass/fail.

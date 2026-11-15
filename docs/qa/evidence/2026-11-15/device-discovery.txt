@@ -1,0 +1,12 @@
+QuizHub Android device discovery — 2026-11-15
+Scope: read-only discovery only; no app launch/install, build, download, or external write.
+Branch/SHA observed: qa/khanhson2005 / adde556e2ef6e481fd7145588db878012673b059.
+IDs/serials are omitted.
+
+- Initial Mobile MCP `mobile_list_available_devices` returned `devices: []`; no local device was listed in that first discovery.
+- `.qa-tools/android-sdk/platform-tools/adb devices` (Windows ADB via WSL shim) exited 1 before enumeration: `WSL ... UtilBindVsockAnyPort ... socket failed 1`. No model, OS version, screen size, or online status could be confirmed. This does not establish that the phone is absent.
+- `.qa-tools/java17/bin/java -version` exited 0: OpenJDK Temurin 17.0.20.1 (64-bit).
+- `.qa-tools/gradle-home` absent. Preview wrapper JAR exists at `.qa-tools/android-preview/android/gradle/wrapper/gradle-wrapper.jar` and requests Gradle 8.14; current checkout wrapper JAR absent. No Gradle 8.14 distribution/archive or executable found in targeted `.qa-tools` search. Checked common Windows Android Studio/JBR and user Gradle cache locations were absent; search was not exhaustive.
+- No Gradle/build command was run. Reusable JDK exists, but Gradle distribution cache was not found.
+
+Later coordinator discovery (2026-11-15): Mobile MCP reported model RMX3370, Android 13, online. No serial/device ID was retained; this evidence does not assert physical-device subtype. This supersedes the initial empty Mobile MCP result for current availability. Native QA has not passed.

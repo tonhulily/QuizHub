@@ -1,0 +1,11 @@
+test_generator_refuses_output_and_file_symlinks (test_generate_fixtures.FixtureGeneratorTest.test_generator_refuses_output_and_file_symlinks) ... ok
+test_generator_refuses_to_overwrite_different_existing_content (test_generate_fixtures.FixtureGeneratorTest.test_generator_refuses_to_overwrite_different_existing_content) ... ok
+test_gif_fixtures_have_palette_and_valid_one_pixel_lzw_index (test_generate_fixtures.FixtureGeneratorTest.test_gif_fixtures_have_palette_and_valid_one_pixel_lzw_index) ... ok
+test_password_fixture_lengths_and_invalid_characters (test_generate_fixtures.FixtureGeneratorTest.test_password_fixture_lengths_and_invalid_characters) ... ok
+test_pngs_are_decodable_chunks_at_exact_byte_boundaries (test_generate_fixtures.FixtureGeneratorTest.test_pngs_are_decodable_chunks_at_exact_byte_boundaries) ... ok
+test_word_boundary_and_whitespace_fixtures (test_generate_fixtures.FixtureGeneratorTest.test_word_boundary_and_whitespace_fixtures) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.224s
+
+OK

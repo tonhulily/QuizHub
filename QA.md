@@ -2,13 +2,15 @@
 
 Nhánh: `qa/khanhson2005`. Phạm vi: test, tài liệu và cấu hình chạy phục vụ QA.
 Đây là nhánh cá nhân lâu dài; chỉ nhận thay đổi từ upstream `main`. Nhánh QA không
-được merge vào `main` hoặc nhánh khác, không dùng để mở PR, và không được push nếu
-chưa có yêu cầu rõ ràng sau này. Mã runtime QA mặc định theo đúng snapshot `main` đã
+được merge vào `main` hoặc nhánh khác, không dùng để mở PR nếu chưa có yêu cầu rõ ràng.
+Thay đổi QA đúng phạm vi được phép commit/push thường lệ lên `origin/qa/khanhson2005`;
+tuyệt đối không push QA lên `main` hoặc nhánh khác. Mã runtime QA mặc định theo đúng snapshot `main` đã
 tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệu. Không thay đổi nghiệp vụ app.
 
-Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md),
+Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (handoff 2026-11-15),
+[tóm tắt QA hiện tại](docs/qa/reports/2026-11-15-summary.md),
 [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
-[19 test case chi tiết + 6 case chờ bàn giao](docs/qa/TEST_CASES.md),
+[22 case NOT RUN + 3 case WAITING](docs/qa/TEST_CASES.md),
 [bộ request API Postman và hướng dẫn](qa/api/README.md),
 [fixture biên và self-check](qa/fixtures/README.md),
 [repro rủi ro network phía client](qa/repro/README.md),
@@ -87,10 +89,14 @@ P0: ưu tiên phiên đăng nhập, quyền truy cập và dữ liệu. P1: lu�
 P2: giao diện phụ và chức năng sau core. Đây là thứ tự test, không phải severity bug.
 
 `NOT RUN`: đã có để kiểm tra nhưng chưa chạy; `BLOCKED`: thiếu môi trường/tài khoản;
-`WAITING`: chưa triển khai; `PASS`/`FAIL`: chỉ ghi sau khi chạy kèm bằng chứng.
+`WAITING`: chưa triển khai hoặc assertion cụ thể còn thiếu expected/contract; `PASS`/`FAIL`: chỉ ghi sau khi chạy kèm bằng chứng.
 
-Mọi dòng dưới đây chưa được chạy trong đợt thiết lập nhánh. Cột tự động là file test
-có liên quan, không có nghĩa file đó bao phủ toàn bộ acceptance criteria của dòng.
+Handoff 2026-11-15 ghi **22 NOT RUN, 3 WAITING, 0 PASS, 0 FAIL**; xem [PROGRESS](docs/qa/PROGRESS.md)
+để biết SHA và giới hạn môi trường. Lần compile-only hiện tại tại SHA `999a167` bị lỗi
+SDK/API symbol trước khi test chạy; không đổi trạng thái matrix. Có bốn client defect đã
+tái hiện bằng mock/widget trên Nam snapshot SHA `639da12`, chưa fix. Xem
+[tóm tắt QA](docs/qa/reports/2026-11-15-summary.md). Cột tự động là file test có liên quan,
+không có nghĩa file đó bao phủ toàn bộ acceptance criteria của dòng.
 
 | ID | Mức / owner | Ca kiểm thử và kết quả mong đợi | Tự động / môi trường | Trạng thái |
 |---|---|---|---|---|
@@ -113,11 +119,11 @@ có liên quan, không có nghĩa file đó bao phủ toàn bộ acceptance crit
 | MEDIA-02 | P1 / Quốc Anh | Từ chối quyền camera/gallery, huỷ chọn ảnh, upload timeout: không crash, có thông báo/retry phù hợp | Hai điện thoại thật | NOT RUN |
 | REL-01 | P1 / Quốc Anh | Kết bạn cùng vai trò; accept/decline/cancel; follow khác vai trò; search tên/mã/email | `friends_test`, `friend_actions_test`, backend test | NOT RUN |
 | REL-02 | P0 / Quốc Anh | Block/unblock: đối chiếu contract về feed/profile/tương tác; cả hai chiều và hai tài khoản | Backend test; cần thống nhất contract chi tiết | NOT RUN |
-| QUESTION-01 | P1 / Dũng | Tạo/sửa/xoá submission, câu trùng, answer/rating; chốt expected từ contract khi bàn giao | Chưa triển khai module | WAITING |
-| EXAM-01 | P1 / Dũng | Sinh/xem/export đề; validation và lỗi API; chốt expected khi bàn giao | Chưa triển khai module | WAITING |
-| CHAT-01 | P1 / Quốc Anh | Send/read/delete, block và mất mạng/reconnect không mất/trùng tin nhắn; chốt contract | Chưa triển khai module | WAITING |
+| QUESTION-01 | P1 / Dũng | Tạo/sửa/xoá submission, câu trùng, answer/rating; một số expected cần xác nhận contract | Module đã có; acceptance API/UI chưa chạy, schema/role/side effects còn cần chốt | NOT RUN |
+| EXAM-01 | P1 / Dũng | Sinh/xem/export đề; validation và lỗi API; một số expected cần xác nhận contract | Module đã có; acceptance API/UI chưa chạy, tham số/range/file behavior cần chốt | NOT RUN |
+| CHAT-01 | P1 / Quốc Anh | Send/read/delete, block và mất mạng/reconnect không mất/trùng tin nhắn | Client và [API contract](docs/chat/API_CONTRACT.md) đã có; acceptance chưa chạy do thiếu API/tài khoản/realtime evidence. Một số delivery/retry/receipt/delete/block assertions chờ owner xác nhận | NOT RUN |
 | PUSH-01 | P1 / Nam | FCM foreground/background/terminated, permission, token đăng ký và deep link | Chưa triển khai; hai điện thoại thật | WAITING |
-| SEARCH-01 | P1 / Nam | Search/history/saved search, refresh/load more; tìm người đã có kiểm tra riêng ở REL-01 | Chưa đủ phạm vi search theo kế hoạch | WAITING |
+| SEARCH-01 | P1 / Nam | Search/history/saved search, refresh/load more; tìm người đã có kiểm tra riêng ở REL-01 | Chưa tích hợp vào upstream main snapshot `08a5a2e` | WAITING |
 | ADV-01 | P2 / Dũng | Gamification/AI sau core, test theo contract lúc bàn giao | Chưa triển khai module | WAITING |
 
 Quy tắc biên trong code dùng byte: 4 MiB = 4,194,304; 15 MiB = 15,728,640.
@@ -174,12 +180,17 @@ không kiểm chứng định dạng media thực, nội dung file hay dịch v�
 
 ## Bug list và mẫu ghi nhận
 
-Chưa có defect server/backend được xác nhận. Hai invariant client tái hiện bằng fake
-transport được ghi ở [RISKS.md](docs/qa/RISKS.md); không phải bằng chứng đã gọi server.
-Ghi nhận ban đầu:
+Chưa có defect server/backend được xác nhận. Bốn client defect được tái hiện trên Nam
+snapshot bằng mock/widget, không phải API thật. Ba UI overflow từ exploratory run khác
+SHA cần xác minh lại trên source sạch; không coi là confirmed ở đây. Hai invariant client
+tái hiện bằng fake transport được ghi ở [RISKS.md](docs/qa/RISKS.md); không phải bằng chứng
+đã gọi server. Ghi nhận:
 
 | ID | Liên quan | Quan sát | Cách xác nhận / trạng thái |
 |---|---|---|---|
+| QH-QA-006..009 (draft) | Nam / Push settings, search, FCM, notifications | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng; notifications empty state overflow 917 px ở 320×640 | Reproduced qua mock/widget trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6`; chi tiết và draft rows ở [QA summary](docs/qa/reports/2026-11-15-summary.md). Chưa fix/retest; chờ owner. |
+| QH-QA-010..012 (draft) | Chat filters / shared empty view / PostCard | Overflow observations từ run tại SHA khác với temporary SDK compatibility edit | Chưa retest trên source sạch; giữ pending, không filed/confirmed. |
+| QH-QA-005 (draft) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Compile-only failure tại QA SHA `999a167`; expected platform behavior chưa chạy. [Evidence](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt). |
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |
 | QA-ENV-01 | Môi trường | Persistent Flutter SDK 3.41.6/Dart 3.11.4 và cache/config đã sẵn. Android JDK/adb, backend test/tài khoản/thiết bị chưa sẵn hoặc chưa xác nhận. OpenAPI đã được đọc tĩnh; xem [PROGRESS](docs/qa/PROGRESS.md) và [ENVIRONMENT](docs/qa/ENVIRONMENT.md) | Không dùng production credentials/data |
 

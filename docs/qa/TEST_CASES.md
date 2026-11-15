@@ -1,9 +1,29 @@
 # Bộ test case chấp nhận — Sơn (TV4)
 
-Bộ case này triển khai chi tiết 19 ID đang `NOT RUN` trong [QA.md](../../QA.md#test-matrix-khởi-đầu).
+Bộ case này ghi acceptance IDs của [matrix QA](../../QA.md#test-matrix-khởi-đầu). Handoff
+2026-11-15: **22 NOT RUN, 3 WAITING**; 19 case có bước chi tiết, ba module Question/Exam/Chat
+đã có implementation nhưng acceptance chưa chạy và được ghi trong mục handoff bên dưới.
 Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là biến thể cùng phạm vi.
 [TEST_PLAN.md](TEST_PLAN.md) mô tả chuẩn bị phiên chạy, evidence, bug và thứ tự QA;
 [PROGRESS.md](PROGRESS.md) là nguồn duy nhất cho trạng thái và số liệu chạy hiện thời.
+
+## Handoff mới nhất — 2026-11-15
+
+- QA HEAD / compile-check `TESTED_SHA`: `999a1678206a6b0d5589cf2c97a0f677ef8bb017`; upstream `main` tích hợp:
+  `08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`. Current commit contains only QA probes beyond the merge; app/runtime and dependencies have no delta from main.
+- QUESTION-01, EXAM-01 và CHAT-01 **NOT RUN**: module/docs đã có, nhưng Flutter regression bị
+  chặn ở bước compile trước test execution: Flutter 3.47.9 / Dart 3.13.7 không resolve
+  `CupertinoPageTransitionsBuilder` trong `app_theme.dart:196-197`. API/UI acceptance chưa có
+  host/tài khoản/realtime payload. Assertion cần owner chốt contract vẫn `WAITING` riêng.
+- SEARCH-01, PUSH-01 và ADV-01 **WAITING** vì chưa có trong upstream `main` snapshot này.
+- Current compile command exited 1 before tests ran; full suite/analyze and QH-QA-001..004
+  retest **NOT RUN**. API, native, build also NOT RUN. Main deps are now restored; earlier
+  cache mismatch audit is historical, not current blocker. See [current handoff summary](reports/2026-11-15-summary.md),
+  [compile evidence](evidence/2026-11-15/regression/theme-baseline.txt), and
+  [upstream review](reports/2026-11-15-upstream-review.md).
+- Separate Nam snapshot `639da129d89e8290c13b63af3d36045309b38fd6`: focused mock/widget suite
+  exited 1 with 7 baseline failures / 2 passing search controls, reproducing four client
+  defects. No fixes were retained. See [Nam report](reports/2026-11-15-nam-review.md).
 
 ## Baseline và quy tắc kết luận
 
@@ -11,10 +31,9 @@ Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là bi
   `2af89368608946ac8949766776f527d589495fe8`; local `main` và `origin/main` đều trỏ
   `0cfa3fba4cb1a8858e448b81b62954ebec9c277e`. Không fetch; độ mới của ref remote chưa
   được xác minh.
-- Không có ca nào được chạy trong lúc soạn. Matrix vẫn giữ 19 ID `NOT RUN` như lịch sử
-  thực thi; readiness hiện tách riêng là `BLOCKED` vì Flutter/Dart vắng mặt và backend,
-  tài khoản/thiết bị chưa được xác minh/cấp. Ghi blocker đã biết mà không ám chỉ app case
-  đã được thử. Không ghi `PASS` từ code, mock hay nội dung case.
+- Tại snapshot lúc soạn, matrix có 19 ID `NOT RUN` và 6 ID `WAITING`. Đây là trạng thái lịch
+  sử; snapshot handoff hiện tại ở trên có 22 NOT RUN / 3 WAITING. Không ghi `PASS` từ code,
+  mock hay nội dung case.
 - Expected bắt buộc đến từ requirement đã duyệt trong [README — quy tắc nghiệp vụ](../../README.md#quy-tắc-nghiệp-vụ-phải-giữ)
   hoặc contract backend mà owner đã xác nhận. Code links bên dưới chỉ cho biết nơi
   quan sát UI/request hiện tại; khi code và requirement khác nhau, không dùng code làm
@@ -224,20 +243,20 @@ trong [PROGRESS.md](PROGRESS.md). Đây không phải lỗi app.
 - **Nguồn kỹ thuật:** [README scope](../../README.md#phạm-vi), [FriendRepository block endpoints](../../lib/data/repositories/friend_repository.dart#L94), [FriendActions dialog](../../lib/features/profile/widgets/friend_actions.dart#L236), [FriendRepository tests](../../test/data/friends_test.dart#L495). Mô tả trong code/UI là observation, không thay contract.
 - **Dọn dẹp/evidence:** unblock A/B, restore friendship/follow chỉ theo policy; xác nhận trạng thái cuối cùng cả hai account, lưu request/response đã che token và screenshot.
 
-## 8. Sáu ID chờ bàn giao
+## 8. Acceptance handoff cho module mới tích hợp và module còn chờ
 
-Các ID sau hiện là `WAITING` trong matrix. Chỉ đổi sang `NOT RUN` khi có code/build tích hợp,
-acceptance criteria được duyệt, test host/fixture và expected response. Đây là câu hỏi
-để chốt trước; chưa phải bộ test chi tiết hoặc API spec.
+Ba ID đầu đã có module trong upstream, nên trạng thái case là `NOT RUN`; API/UI readiness bị
+`BLOCKED` do thiếu môi trường/test data. Các assertion chưa có expected/contract xác nhận vẫn
+`WAITING` riêng. Ba ID cuối vẫn `WAITING` vì feature chưa tích hợp.
 
-| ID / owner | Draft phạm vi acceptance | Cần chốt với owner / prerequisite |
+| ID / owner / trạng thái | Draft phạm vi acceptance | Cần chốt với owner / prerequisite |
 |---|---|---|
-| QUESTION-01 · Dũng | Tạo submission, duplicate question, moderation/approval, answer và rating; xác nhận feed cập nhật sau trạng thái được duyệt. | Vai trò được tạo/duyệt; định nghĩa câu trùng; trạng thái, ai được trả lời/rate, range rating và cách sửa/xoá; fixture subject/session. Routes chỉ được khai báo tại [ApiEndpoints](../../lib/core/network/api_endpoints.dart#L64), chưa đủ xác nhận behavior. |
-| EXAM-01 · Dũng | Sinh đề từ nguồn đã chọn; mở danh sách/detail và export; xác nhận quyền sở hữu và kết quả export. | Tham số bắt buộc, số câu/subject/range; đồng bộ hay async; file format/size; quyền tải/xoá; dữ liệu test. Route declarations [exam](../../lib/core/network/api_endpoints.dart#L80) không xác định schema. |
-| CHAT-01 · Quốc Anh | Send/receive/read/delete qua hai user; thử reconnect, duplicate/lost message, block behavior. | WebSocket URL/auth/protocol, ordering/delivery guarantee, retry/idempotency, receipts, delete semantics, block policy và test account/device; chưa có client implementation. |
-| PUSH-01 · Nam | Permission, device token registration/unregistration, foreground/background/terminated delivery và deep link. | FCM project/test credentials qua kênh bảo mật, payload contract, token refresh, denied-permission behavior, supported OS/devices; endpoint declarations [devices/settings](../../lib/core/network/api_endpoints.dart#L54) không chứng minh push integration. |
-| SEARCH-01 · Nam | Search nội dung câu hỏi/bài, pagination/history/saved search; xác nhận refresh và quyền riêng tư kết quả. | Searchable entity/fields, ranking, offset/cursor, history retention/delete, saved search API schema, private content filtering; không trùng REL-01 search người dùng đã có. |
-| ADV-01 · Dũng | Khi AI/gamification/badges/cosmetics được tích hợp: kiểm tra action tạo reward, leaderboard, inventory/badge và consistency sau reload. | Tính năng nào thuộc release; rules/eligibility, idempotency, ranking tie-break, reward ledger, AI fallback/quota/privacy; endpoints được khai báo trong [ApiEndpoints](../../lib/core/network/api_endpoints.dart#L86) nhưng chưa phải scope đã nghiệm thu. |
+| QUESTION-01 · Dũng · NOT RUN | Tạo/sửa/xoá submission, câu trùng, moderation/approval, answer và rating; xác nhận feed cập nhật sau trạng thái được duyệt. | Module đã có; chốt vai trò được tạo/duyệt, định nghĩa câu trùng, trạng thái/ai được trả lời hoặc rate, range rating và cách sửa/xoá; cần fixture subject/session và API host/tài khoản. Routes [ApiEndpoints](../../lib/core/network/api_endpoints.dart#L64) không xác nhận schema/behavior. |
+| EXAM-01 · Dũng · NOT RUN | Sinh đề từ nguồn đã chọn; mở danh sách/detail và export; xác nhận quyền sở hữu và kết quả export. | Module đã có; chốt tham số/số câu/subject/range, đồng bộ hay async, file format/size, quyền tải/xoá; cần API host/tài khoản. Route declarations [exam](../../lib/core/network/api_endpoints.dart#L80) không xác định schema. |
+| CHAT-01 · Quốc Anh · NOT RUN | Send/receive/read/delete qua hai user; thử reconnect và block behavior. Client đã có; tham chiếu [chat API contract](../chat/API_CONTRACT.md) và [QA chat](chat.md). | Cần API host, hai tài khoản và realtime payload thực để verify. Chốt thêm expected cho ordering/delivery guarantee, retry/idempotency, receipts, delete semantics và block policy; các assertion này WAITING tới khi owner xác nhận. |
+| PUSH-01 · Nam · WAITING | Permission, device token registration/unregistration, foreground/background/terminated delivery và deep link. | Chưa tích hợp ở upstream snapshot; khi có implementation cần FCM project/test credentials qua kênh bảo mật, payload contract, token refresh, denied-permission behavior, supported OS/devices. |
+| SEARCH-01 · Nam · WAITING | Search nội dung câu hỏi/bài, pagination/history/saved search; xác nhận refresh và quyền riêng tư kết quả. | Chưa tích hợp ở upstream snapshot; chốt searchable entity/fields, ranking, offset/cursor, history retention/delete, saved search schema, private content filtering; không trùng REL-01 search người dùng. |
+| ADV-01 · Dũng · WAITING | Khi AI/gamification/badges/cosmetics được tích hợp: kiểm tra action tạo reward, leaderboard, inventory/badge và consistency sau reload. | Chưa tích hợp scope này; chốt release scope, rules/eligibility, idempotency, ranking tie-break, reward ledger, AI fallback/quota/privacy. |
 
 ## Phiếu ghi kết quả mỗi case
 

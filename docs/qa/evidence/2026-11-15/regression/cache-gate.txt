@@ -1,0 +1,24 @@
+Offline package-config/lockfile comparison; command exit 0. This read-only check uses the installed Python/PyYAML and does not invoke Flutter.
+
+```sh
+python3 - <<'PY'
+import json, pathlib, urllib.parse, yaml
+pc_path=pathlib.Path('.dart_tool/package_config.json')
+lock=yaml.safe_load(pathlib.Path('pubspec.lock').read_text())['packages']
+pc=json.loads(pc_path.read_text())['packages']; by_name={p['name']:p for p in pc}
+lock_names=set(lock); names=set(by_name)-{'quizhub'}
+print('package_config_count',len(pc),'dependency_count',len(names),'lock_count',len(lock))
+print('lock_only',sorted(lock_names-names),'config_only',sorted(names-lock_names))
+for name in sorted(lock_names & names):
+ p=by_name[name]; u=p['rootUri']; root=pathlib.Path(urllib.parse.urlparse(u).path) if u.startswith('file:') else (pc_path.parent/u).resolve()
+ pubspec=root/'pubspec.yaml'; version=yaml.safe_load(pubspec.read_text()).get('version') if pubspec.exists() else 'MISSING'
+ if version != lock[name].get('version'): print('version_drift',name,version,'->',lock[name].get('version'))
+cache=pathlib.Path('.qa-tools/pub-cache/hosted/pub.dev')
+for name in sorted(lock_names-names):
+ ver=lock[name].get('version'); print('locked_cache',name,ver,(cache/f'{name}-{ver}').exists())
+PY
+```
+
+Observed: package config 135 entries (134 dependencies excluding root `quizhub`), lockfile 136 packages. Lock-only: `phosphor_icons`, `stomp_dart_client`, `web_socket`; config-only dependency: `phosphor_flutter`. Locked package directories for `phosphor_icons` 3.0.1 and `stomp_dart_client` 3.0.1 are absent; `web_socket` 1.0.1 exists in cache but is not configured. Hosted version drift: `intl` 0.20.2 → 0.20.3, `matcher` 0.12.19 → 0.12.20, `meta` 1.17.0 → 1.19.0, `test_api` 0.7.10 → 0.7.12, `vector_math` 2.2.0 → 2.4.4. The configured roots exist; mismatched versions and package-set membership still block no-pub Flutter checks.
+
+`.qa-tools/flutter/bin/dart --version` exited 0: Dart 3.11.4 stable, linux_x64. Read-only `.qa-tools/flutter/bin/cache/flutter.version.json`: Flutter 3.41.6 stable, framework revision `db50e20168db8fee486b9abf32fc912de3bc5b6a`.

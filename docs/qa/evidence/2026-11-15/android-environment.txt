@@ -1,0 +1,34 @@
+QuizHub Android/cache availability evidence — 2026-11-15
+Scope: read-only availability checks only. No build/test, install, download, cleanup, or external write.
+Branch: qa/khanhson2005.
+Inventory SHA at audit start: aa48b9f08ff611eac3a3bf3eed761d4a62e3cd02.
+Read-only partial recheck after branch advanced: adde556e2ef6e481fd7145588db878012673b059. The coordinator advanced HEAD during the audit; the full inventory was not rerun on the newer SHA.
+Environment: Linux x86_64 / WSL2; /dev/sdd 1007G total, 48G used, 909G free (5%).
+
+Observed at initial inventory SHA:
+- Flutter SDK files under .qa-tools/flutter; local marker Flutter 3.41.6 stable / Dart 3.11.4. `timeout 5s .qa-tools/flutter/bin/cache/dart-sdk/bin/dart --version` — exit 0.
+- Flutter engine cache directories for linux-x64, android-arm64, android-x64 exist.
+- `.dart_tool/package_config.json`: 135 package entries, 0 missing roots (read-only Python check); `.qa-tools/pub-cache`: 299M. Root existence alone does not establish cache readiness for the current lockfile.
+- `.qa-tools/android-build-sdk`: 2.9G; platforms 34/35/36, build-tools 35/36, NDK 27.0.12077973, platform-tools 37.0.1, command-line tools 22.0.
+- `android/local.properties` has `flutter.sdk` targeting an existing path and no `sdk.dir`; `ANDROID_HOME` and `ANDROID_SDK_ROOT` unset.
+- `timeout 5s .qa-tools/android-build-sdk/platform-tools/adb version` — exit 0, ADB 1.0.41 / platform-tools 37.0.1-15733141.
+- `timeout 8s .qa-tools/android-build-sdk/platform-tools/adb devices` — exit 0, 0 devices. Serial/device identifiers were not retained.
+- `command -v java`, `command -v gradle` — not found. `$HOME/.gradle/caches` and `$HOME/.gradle/wrapper/dists` absent. `android/gradle/wrapper/` contains only gradle-wrapper.properties (Gradle 8.14 URL), no wrapper JAR. `.qa-tools/android-preview/android/.gradle` is 5.0M of preview Gradle state metadata.
+- `df -h . "$HOME"` — exit 0; figures above.
+
+Current cache gate at SHA adde556e2ef6e481fd7145588db878012673b059 (from regression report): pubspec.lock has 136 packages while package_config has 135; `phosphor_icons`, `stomp_dart_client`, and `web_socket` are present only in the lockfile, while `quizhub` is only in package_config. Flutter test/analyze were BLOCKED and NOT RUN. Details: `../../reports/2026-11-15-regression.md`.
+
+Read-only partial recheck at SHA adde556e2ef6e481fd7145588db878012673b059:
+- `command -v java`, `command -v gradle` — not found.
+- `test -f android/gradle/wrapper/gradle-wrapper.jar` — absent.
+- Search `android/local.properties` for `sdk.dir` — absent.
+- Check `ANDROID_HOME` / `ANDROID_SDK_ROOT` — unset.
+
+Status: offline Android build readiness BLOCKED based on current observed prerequisites. APK build NOT RUN; no build failure is claimed. Flutter/Dart tests and analyzer BLOCKED / NOT RUN due to lockfile/package_config mismatch. No before-inventory exists, so this evidence does not attribute removal of any particular cache to a person or action.
+
+QA preview prep update (2026-11-15): `.qa-tools/android-preview` now uses the Nam snapshot at source SHA 639da129d89e8290c13b63af3d36045309b38fd6. Preview pubspec.yaml/pubspec.lock were copied from that snapshot; existing lib/assets symlinks were retargeted only after confirming both were symlinks. Preview Android applicationId remains `vn.edu.hust.quizhub.qa.preview`; there is no product flavor. Root lib/android/pubspec.yaml/pubspec.lock were untouched. The preview's `local.properties` points at `.qa-tools/flutter` (Flutter 3.41.6) and `.qa-tools/android-build-sdk`; reusable JDK is `.qa-tools/java17` (Temurin 17.0.20.1). The REST client uses `PreviewBackend`; Firebase initialization and FCM registration may still contact Firebase services. No pub get, Gradle, Flutter build, or app launch was run by this audit.
+
+Coordinator command after configuring the isolated environment above:
+`flutter build apk -t lib/main_preview.dart --dart-define=PREVIEW_ROLE=LECTURER --debug --no-pub --target-platform android-arm64`
+
+Coordinator follow-up (2026-11-15): `flutter pub get --enforce-lockfile` reported exit 0 for main on Flutter 3.47.9 and Nam preview on Flutter 3.41.6; preview source SHA 639da129d89e8290c13b63af3d36045309b38fd6. Mobile MCP reported RMX3370 / Android 13 / online; no serial or device ID recorded. `assembleDebug` was still running when this note was updated. APK build and native QA are not PASS yet.
