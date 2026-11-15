@@ -11,7 +11,7 @@ import 'core/services/chat_realtime.dart';
 import 'core/router/app_navigator.dart';
 import 'core/router/app_router.dart';
 import 'core/router/app_routes.dart';
-import 'core/services/firebase_messaging_service.dart';
+import 'core/firebase/firebase_messaging_service.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/user_directory.dart';
 import 'data/repositories/user_repository.dart';

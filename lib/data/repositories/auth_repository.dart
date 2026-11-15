@@ -1,7 +1,7 @@
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/services/device_service.dart';
-import '../../core/services/firebase_installation_service.dart';
+import '../../core/firebase/firebase_installation_service.dart';
 import '../../core/storage/credential_storage.dart';
 import '../../core/storage/local_storage.dart';
 import '../../core/storage/token_storage.dart';

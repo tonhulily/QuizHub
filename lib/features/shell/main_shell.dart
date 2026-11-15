@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/design_system/app_colors.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/router/app_routes.dart';
-import '../../core/services/firebase_messaging_service.dart';
+import '../../core/firebase/firebase_messaging_service.dart';
 import '../../core/widgets/fb_widgets.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/repositories/friend_repository.dart';

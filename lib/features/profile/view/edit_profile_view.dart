@@ -7,7 +7,7 @@ import '../../../core/design_system/component_tokens.dart';
 import '../../../core/design_system/design_tokens.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/router/app_navigator.dart';
-import '../../../core/services/firebase_messaging_service.dart';
+import '../../../core/firebase/firebase_messaging_service.dart';
 import '../../../core/utils/time_format.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';

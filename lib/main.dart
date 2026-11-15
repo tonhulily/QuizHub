@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app.dart';
-import 'core/services/firebase_fid_sync_service.dart';
-import 'core/services/firebase_messaging_service.dart';
+import 'core/firebase/firebase_fid_sync_service.dart';
+import 'core/firebase/firebase_messaging_service.dart';
 import 'core/widgets/app_feedback.dart';
 import 'di/locator.dart';
 import 'firebase_options.dart';

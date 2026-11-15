@@ -33,15 +33,10 @@ enum SearchType {
 /// Chuyển danh sách URL từ JSON, bỏ null và chuỗi "null".
 /// Chuyển danh sách chuỗi từ JSON, bỏ null và chuỗi "null".
 List<String> _searchStrings(dynamic value) {
-  return J
-      .asList(value)
-      .map((item) {
-        final raw = J.asString(item);
-        if (raw == null || raw.toLowerCase() == 'null') return null;
-        return raw;
-      })
-      .whereType<String>()
-      .toList();
+  return J.asList(value).whereType<String>().where((item) {
+    final normalized = item.trim().toLowerCase();
+    return normalized.isNotEmpty && normalized != 'null';
+  }).toList();
 }
 
 // -----------------------------------------------------------------------------

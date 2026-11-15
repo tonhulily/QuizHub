@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
-import 'core/services/firebase_messaging_service.dart';
+import 'core/firebase/firebase_messaging_service.dart';
 import 'core/storage/credential_storage.dart';
 import 'core/widgets/app_feedback.dart';
 import 'data/models/saved_account.dart';

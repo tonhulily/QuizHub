@@ -7,7 +7,7 @@ import '../../core/router/app_routes.dart';
 import '../auth/cubit/auth_cubit.dart';
 import '../auth/widgets/brand_logo.dart';
 import '../profile/cubit/profile_cubit.dart';
-import '../../core/services/firebase_messaging_service.dart';
+import '../../core/firebase/firebase_messaging_service.dart';
 import '../../di/locator.dart';
 
 /// Màn hình khởi động: quyết định vào Login hay Main.

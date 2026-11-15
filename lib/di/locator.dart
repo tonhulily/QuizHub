@@ -4,10 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/network/api_client.dart';
 import '../core/network/session_events.dart';
-import '../core/services/firebase_installation_service.dart';
+import '../core/firebase/firebase_installation_service.dart';
 import '../core/services/device_service.dart';
-import '../core/services/firebase_fid_sync_service.dart';
-import '../core/services/firebase_messaging_service.dart';
+import '../core/firebase/firebase_fid_sync_service.dart';
+import '../core/firebase/firebase_messaging_service.dart';
 import '../core/services/post_events.dart';
 import '../core/services/social_events.dart';
 import '../core/services/chat_realtime.dart';
