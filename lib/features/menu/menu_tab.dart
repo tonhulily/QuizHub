@@ -51,6 +51,12 @@ class MenuTab extends StatelessWidget {
     }
   }
 
+  static void _openMinigame(BuildContext context) =>
+      Navigator.of(context).pushNamed(AppRoutes.minigameHub);
+
+  static void _openLeaderboard(BuildContext context) =>
+      Navigator.of(context).pushNamed(AppRoutes.leaderboard);
+
   static const List<MenuShortcut> shortcuts = [
     MenuShortcut(
       icon: AppIcons.friendsActive,
@@ -65,9 +71,16 @@ class MenuTab extends StatelessWidget {
       onTap: _goToQuestionBank,
     ),
     MenuShortcut(
+      icon: AppIcons.bolt,
+      color: AppColors.warningDark,
+      label: 'Minigame',
+      onTap: _openMinigame,
+    ),
+    MenuShortcut(
       icon: AppIcons.leaderboard,
       color: AppColors.secondary600,
       label: 'Bảng xếp hạng',
+      onTap: _openLeaderboard,
     ),
     MenuShortcut(
       icon: AppIcons.badge,
