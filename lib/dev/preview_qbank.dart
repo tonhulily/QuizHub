@@ -1,4 +1,5 @@
 import '../core/utils/json_utils.dart';
+import 'preview_games.dart';
 
 /// Dữ liệu mẫu cho module Ngân hàng câu hỏi + Đề thi + AI trong bản xem trước
 /// (`lib/main_preview.dart`). Tách khỏi `PreviewBackend` để file đó khỏi phình;
@@ -64,6 +65,18 @@ class PreviewQbank {
   /// editLogId -> bản gợi ý của AI đang chờ áp dụng
   final Map<int, Map<String, dynamic>> _aiLogs = {};
   final Map<int, Map<String, dynamic>> _exams = {};
+
+  /// Minigame dự đoán (`/games/...`), cần biết nguồn câu của phiên cho Game 2.
+  late final PreviewGames _games = PreviewGames(
+    mySessionSources: (id) {
+      final s = _sessions[id];
+      if (s == null || s['author_id'] != _meId) return null;
+      return [
+        for (final q in _questionsOf(s['question_ids']))
+          J.stringOr(q['source'], 'HOMO_SAPIENS'),
+      ];
+    },
+  );
 
   PreviewQbank() {
     Map<String, dynamic> opt(String key, String text, [bool correct = false]) =>
@@ -531,6 +544,9 @@ class PreviewQbank {
   ) {
     final seg = path.split('/'); // ['', 'sessions', '12', 'questions']
 
+    if (path.startsWith('/games/') && path != '/games/check-in') {
+      return _games.route(m, path, q, body);
+    }
     if (path == '/subjects') return _subjects;
     if (path == '/sessions/my-enrolled-subjects') {
       return [

@@ -96,6 +96,11 @@ class ApiEndpoints {
   static const String leaderboard = '/games/leaderboard';
   static const String myPredictions = '/games/my-predictions';
   static const String checkIn = '/games/check-in';
+  static const String game1Classes = '/games/prediction/game-1/classes';
+  static const String predictParticipants = '/games/prediction/participants';
+  static const String predictApprovedQuestions =
+      '/games/prediction/approved-questions';
+  static const String predictBankSize = '/games/prediction/bank-size';
 
   // ---- 22-23. Badges / Cosmetics ----
   static const String badgesMe = '/badges/me';
