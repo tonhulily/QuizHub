@@ -37,6 +37,14 @@ class AppRoutes {
   // arguments: AiRefineArgs; pop -> true nếu đã lưu bản AI
   static const qbankAiRefine = '/qbank/ai-refine';
 
+  // Minigame dự đoán + bảng xếp hạng (Swagger mục 21)
+  static const minigameHub = '/games';
+  static const minigameParticipants = '/games/participants'; // Game 1
+  static const minigameApprovedQuestions = '/games/approved-questions'; // G2
+  static const minigameBankSize = '/games/bank-size'; // Game 4
+  static const minigamePredictions = '/games/my-predictions';
+  static const leaderboard = '/games/leaderboard';
+
   // Đề thi (chỉ giảng viên)
   static const examMyExams = '/exam/my-exams';
   static const examGenerator = '/exam/generate';

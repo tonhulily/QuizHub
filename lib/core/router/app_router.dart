@@ -13,6 +13,12 @@ import '../../features/profile/widgets/friend_actions.dart';
 import '../../features/exam/view/exam_detail_view.dart';
 import '../../features/exam/view/exam_generator_view.dart';
 import '../../features/exam/view/my_exams_view.dart';
+import '../../features/minigame/view/game1_view.dart';
+import '../../features/minigame/view/game2_view.dart';
+import '../../features/minigame/view/game4_view.dart';
+import '../../features/minigame/view/leaderboard_view.dart';
+import '../../features/minigame/view/minigame_hub_view.dart';
+import '../../features/minigame/view/my_predictions_view.dart';
 import '../../features/question_bank/cubit/ai_refine_cubit.dart';
 import '../../features/question_bank/view/ai_refine_view.dart';
 import '../../features/question_bank/view/my_submissions_view.dart';
@@ -143,6 +149,18 @@ class AppRouter {
             QuestionStatsView(questionId: questionId, correctKeys: correctKeys),
           _ => _NotFoundView(name: settings.name),
         };
+      case AppRoutes.minigameHub:
+        page = const MinigameHubView();
+      case AppRoutes.minigameParticipants:
+        page = const Game1View();
+      case AppRoutes.minigameApprovedQuestions:
+        page = const Game2View();
+      case AppRoutes.minigameBankSize:
+        page = const Game4View();
+      case AppRoutes.minigamePredictions:
+        page = const MyPredictionsView();
+      case AppRoutes.leaderboard:
+        page = const LeaderboardView();
       default:
         page = _NotFoundView(name: settings.name);
     }
