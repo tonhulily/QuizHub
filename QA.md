@@ -1,5 +1,7 @@
 # Góc làm việc của Sơn — Tester / QA
 
+[Kế hoạch phiên sau Quốc Anh — chuẩn bị/NOT RUN](docs/qa/reports/2026-11-19-quoc-anh-next-session.md)
+
 Nhánh: `qa/khanhson2005`. Phạm vi: test, tài liệu và cấu hình chạy phục vụ QA.
 Đây là nhánh cá nhân lâu dài; chỉ nhận thay đổi từ upstream `main`. Nhánh QA không
 được merge vào `main` hoặc nhánh khác, không dùng để mở PR nếu chưa có yêu cầu rõ ràng.
@@ -190,7 +192,7 @@ tái hiện bằng fake transport được ghi ở [RISKS.md](docs/qa/RISKS.md);
 | ID | Liên quan | Quan sát | Cách xác nhận / trạng thái |
 |---|---|---|---|
 | QH-QA-006..008 (logged, Open / Not retested) | Nam / Push settings, search, FCM | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng | Reproduced qua mock/widget trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6`; [QA summary](docs/qa/reports/2026-11-15-summary.md). Chưa fix/retest. |
-| QH-QA-009 (tracker correction pending) | Sơn / test harness | Host thiếu app `Scaffold`/`AppTheme` gây false positive overflow 917 px; corrected UI test 3/3, independent rerun passed, 244 runtime/config files match pristine source | [Host-correction evidence](docs/qa/evidence/2026-11-15/nam/host-correction.txt). Reclassify Other / harness; không phải bug sản phẩm. |
+| QH-QA-009 (Closed / Retest Pass) | Sơn / test harness | Host thiếu app `Scaffold`/`AppTheme` gây false positive overflow 917 px; corrected UI test 3/3, independent rerun passed, 244 runtime/config files match pristine source | [Host-correction evidence](docs/qa/evidence/2026-11-15/nam/host-correction.txt). Đóng lỗi harness đã sửa; không phải bug sản phẩm. |
 | QH-QA-010..012 (pending, not logged) | Chat filters / shared empty view / PostCard | Overflow observations từ run tại SHA khác với temporary SDK compatibility edit | Chưa retest trên source sạch; không filed/confirmed. |
 | QH-QA-005 (logged, Open / Not retested) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Compile-only failure tại QA SHA `999a167`; expected platform behavior chưa chạy. [Evidence](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt). |
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |

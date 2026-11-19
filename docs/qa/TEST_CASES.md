@@ -9,7 +9,7 @@ Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là bi
 
 ## Handoff mới nhất — 2026-11-15
 
-- QA test-source snapshot / compile-check `TESTED_SHA`: `999a1678206a6b0d5589cf2c97a0f677ef8bb017`; upstream `main` tích hợp:
+- QA test-source snapshot / compile-check `TESTED_SHA`: `999a1678206a6b0d5589cf2c97a0f677ef8bb017`; current QA report/docs snapshot `f3661a2db84c3e4fb544b1307f599b96c360e1e6`; upstream `main` tích hợp:
   `08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`. Snapshot này chỉ thêm QA probes; app/runtime và dependencies không khác main.
 - QUESTION-01, EXAM-01 và CHAT-01 **NOT RUN**: module/docs đã có, nhưng Flutter regression bị
   chặn ở bước compile trước test execution: Flutter 3.47.9 / Dart 3.13.7 không resolve
@@ -27,8 +27,9 @@ Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là bi
 - Separate Nam snapshot `639da129d89e8290c13b63af3d36045309b38fd6`: focused mock/widget suite
   first exited 1 with 7 failures / 2 passing controls. Five lifecycle emits and lost second
   notification tap remain confirmed. Notification empty-state overflow was a false positive
-  from a missing Scaffold/theme in the test host; corrected UI host passed 3/3. QH-QA-009
-  awaits tracker correction. See [Nam report](reports/2026-11-15-nam-review.md) and
+  from a missing Scaffold/theme in the test host; corrected UI host passed 3/3 and the
+  reviewer rerun passed. Tracker row QH-QA-009 is now Closed / Retest Pass as Other/harness,
+  owner Sơn. See [Nam report](reports/2026-11-15-nam-review.md) and
   [host-correction evidence](evidence/2026-11-15/nam/host-correction.txt).
 
 ## Baseline và quy tắc kết luận

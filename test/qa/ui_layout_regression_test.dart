@@ -57,6 +57,11 @@ void _narrow(WidgetTester tester) {
   addTearDown(tester.view.reset);
 }
 
+Finder _listScrollable() => find.descendant(
+  of: find.byType(ListView).last,
+  matching: find.byType(Scrollable),
+);
+
 class _ConversationRows implements ChatRepository {
   @override
   Future<CursorPage<ChatConversation>> conversations({String? after}) async =>
@@ -303,7 +308,7 @@ void main() {
     await tester.scrollUntilVisible(
       showReplies,
       160,
-      scrollable: find.byType(ListView).last,
+      scrollable: _listScrollable().last,
     );
     await tester.tap(showReplies);
     await tester.pumpAndSettle();
@@ -311,7 +316,7 @@ void main() {
     await tester.scrollUntilVisible(
       reply,
       160,
-      scrollable: find.byType(ListView).last,
+      scrollable: _listScrollable().last,
     );
     expect(reply, findsOneWidget);
     final input = find.byType(TextField).last;
@@ -343,7 +348,7 @@ void main() {
     await tester.scrollUntilVisible(
       like,
       160,
-      scrollable: find.byType(ListView).last,
+      scrollable: _listScrollable().last,
     );
     expect(like.hitTestable(), findsOneWidget);
     await tester.tap(like);
@@ -390,7 +395,7 @@ void main() {
     await tester.scrollUntilVisible(
       generate,
       160,
-      scrollable: find.byType(ListView).last,
+      scrollable: _listScrollable().last,
     );
     await tester.tap(generate);
     await tester.pumpAndSettle();
