@@ -1,6 +1,8 @@
 # Góc làm việc của Sơn — Tester / QA
 
-[Kế hoạch phiên sau Quốc Anh — chuẩn bị/NOT RUN](docs/qa/reports/2026-11-19-quoc-anh-next-session.md)
+[Handoff tiếp tục sau crash — APK đã gỡ, luồng UI còn dang dở](docs/qa/reports/2026-11-19-quoc-anh-resume.md)
+
+[Kịch bản phiên sau Quốc Anh — chuẩn bị/NOT RUN](docs/qa/reports/2026-11-19-quoc-anh-next-session.md)
 
 [Kết quả execution Quốc Anh ngày 2026-11-19](docs/qa/reports/2026-11-19-quoc-anh-execution.md)
 
@@ -97,8 +99,7 @@ P2: giao diện phụ và chức năng sau core. Đây là thứ tự test, khô
 `WAITING`: chưa triển khai hoặc assertion cụ thể còn thiếu expected/contract; `PASS`/`FAIL`: chỉ ghi sau khi chạy kèm bằng chứng.
 
 Handoff 2026-11-15 ghi **22 NOT RUN, 3 WAITING, 0 PASS, 0 FAIL**; xem [PROGRESS](docs/qa/PROGRESS.md)
-để biết SHA và giới hạn môi trường. Lần compile-only hiện tại tại SHA `999a167` bị lỗi
-SDK/API symbol trước khi test chạy; không đổi trạng thái matrix. Có bốn client defect đã
+để biết SHA và giới hạn môi trường. Trên source `447ecf394894627e498df08464466f16a12e3ef6`, 106 test local core/data/recovery đạt với Flutter 3.47.9; chúng dùng fake/preview/loopback, không phải app acceptance. Compile-only probe vẫn bị QH-QA-005 chặn ở AppTheme trước khi test UI chạy. Một import Cupertino đã được Sơn cho phép tạm thời trong QA workspace cô lập để mở gate; các kết quả có patch và APK được ghi riêng, không sửa source root. Ma trận acceptance không tự đổi trạng thái từ các test local này. Có bốn client defect đã
 tái hiện bằng mock/widget trên Nam snapshot SHA `639da12`, chưa fix. Xem
 [tóm tắt QA](docs/qa/reports/2026-11-15-summary.md). Cột tự động là file test có liên quan,
 không có nghĩa file đó bao phủ toàn bộ acceptance criteria của dòng.
@@ -196,9 +197,9 @@ tái hiện bằng fake transport được ghi ở [RISKS.md](docs/qa/RISKS.md);
 | QH-QA-006..008 (logged, Open / Not retested) | Nam / Push settings, search, FCM | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng | Reproduced qua mock/widget trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6`; [QA summary](docs/qa/reports/2026-11-15-summary.md). Chưa fix/retest. |
 | QH-QA-009 (Closed / Retest Pass) | Sơn / test harness | Host thiếu app `Scaffold`/`AppTheme` gây false positive overflow 917 px; corrected UI test 3/3, independent rerun passed, 244 runtime/config files match pristine source | [Host-correction evidence](docs/qa/evidence/2026-11-15/nam/host-correction.txt). Đóng lỗi harness đã sửa; không phải bug sản phẩm. |
 | QH-QA-010..012 (pending, not logged) | Chat filters / shared empty view / PostCard | Overflow observations từ run tại SHA khác với temporary SDK compatibility edit | Chưa retest trên source sạch; không filed/confirmed. |
-| QH-QA-005 (logged, Open / Not retested) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Compile-only failure tại QA SHA `999a167`; expected platform behavior chưa chạy. [Evidence](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt). |
+| QH-QA-005 (logged, Open / Retest Fail) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Tracker đọc lại 19/11: compile-only failure trên root source `447ecf3`; test body chưa chạy, chưa có upstream fix. Một import chỉ dùng ở QA workspace cô lập theo Sơn cho phép; không đóng issue. [Evidence baseline](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt), [execution ngày 19/11](docs/qa/reports/2026-11-19-quoc-anh-summary.md). |
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |
-| QA-ENV-01 | Môi trường | Persistent Flutter SDK 3.41.6/Dart 3.11.4 và cache/config đã sẵn. Android JDK/adb, backend test/tài khoản/thiết bị chưa sẵn hoặc chưa xác nhận. OpenAPI đã được đọc tĩnh; xem [PROGRESS](docs/qa/PROGRESS.md) và [ENVIRONMENT](docs/qa/ENVIRONMENT.md) | Không dùng production credentials/data |
+| QA-ENV-01 | Môi trường | Flutter 3.41.6 và 3.47.9 đã có; Android RMX3370 / Android 13 được coordinator xác nhận online qua WindowsADB/MobileMCP. Backend host và tài khoản QA A/B chưa có theo xác nhận Sơn; xem [PROGRESS](docs/qa/PROGRESS.md) và [ENVIRONMENT](docs/qa/ENVIRONMENT.md) | Không dùng production credentials/data |
 
 Mỗi bug mới dùng mẫu này, không đưa password/token vào log hoặc ảnh:
 

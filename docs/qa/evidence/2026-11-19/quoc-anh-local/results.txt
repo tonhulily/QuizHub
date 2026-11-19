@@ -1,0 +1,43 @@
+Quoc Anh local expanded QA — 2026-11-19
+Tested source SHA: 447ecf394894627e498df08464466f16a12e3ef6
+Flutter: 3.47.9 (c197ca5199), Dart 3.13.7
+OS: Ubuntu 24.04.4, WSL2
+API host: none; local fixtures/fakes/preview and loopback only
+
+Shared environment prefix for all commands:
+XDG_CONFIG_HOME=.qa-tools/config XDG_CACHE_HOME=.qa-tools/cache PUB_CACHE=.qa-tools/pub-cache CI=true FLUTTER_SUPPRESS_ANALYTICS=true .qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub
+
+1) Core realtime + dev shared adapter/demo
+Command:
+XDG_CONFIG_HOME=.qa-tools/config XDG_CACHE_HOME=.qa-tools/cache PUB_CACHE=.qa-tools/pub-cache CI=true FLUTTER_SUPPRESS_ANALYTICS=true .qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub test/core/chat_realtime_test.dart test/dev/shared_chat_adapter_test.dart test/dev/shared_chat_demo_test.dart
+Exit: 0
+Observed summary: `00:07 +15: All tests passed!`
+stdout/stderr raw log files: not captured during original run. This is a transcript excerpt, not a complete log.
+
+2) Targeted data group
+Command:
+XDG_CONFIG_HOME=.qa-tools/config XDG_CACHE_HOME=.qa-tools/cache PUB_CACHE=.qa-tools/pub-cache CI=true FLUTTER_SUPPRESS_ANALYTICS=true .qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub test/data/blocking_test.dart test/data/chat_test.dart test/data/comment_reactions_test.dart test/data/deleted_posts_test.dart test/data/feed_ghost_test.dart test/data/friends_test.dart test/data/preview_chat_persistence_test.dart test/data/preview_posts_test.dart test/data/relationship_lists_test.dart test/data/media_validation_test.dart
+Exit: 0
+Observed summary: `00:29 +87: All tests passed!`
+stdout/stderr raw log files: not captured during original run. This is a transcript excerpt, not a complete log.
+
+3) Chat recovery
+Command:
+XDG_CONFIG_HOME=.qa-tools/config XDG_CACHE_HOME=.qa-tools/cache PUB_CACHE=.qa-tools/pub-cache CI=true FLUTTER_SUPPRESS_ANALYTICS=true .qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub test/features/chat_recovery_test.dart
+Exit: 0
+Observed summary: `00:00 +4: All tests passed!`
+stdout/stderr raw log files: not captured during original run. This is a transcript excerpt, not a complete log.
+
+4) UI compile gate probe
+Command:
+XDG_CONFIG_HOME=.qa-tools/config XDG_CACHE_HOME=.qa-tools/cache PUB_CACHE=.qa-tools/pub-cache CI=true FLUTTER_SUPPRESS_ANALYTICS=true .qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub test/features/chat_test.dart test/features/blocking_test.dart
+Exit: 1
+Observed stderr compiler diagnostics:
+lib/core/design_system/app_theme.dart:196:35: Error: Method not found: 'CupertinoPageTransitionsBuilder'.
+lib/core/design_system/app_theme.dart:197:31: Error: Method not found: 'CupertinoPageTransitionsBuilder'.
+Observed test result: chat test failed to load; test body did not run. QH-QA-005 compile-only blocker, not a business-case failure.
+stdout/stderr raw log files: not captured during original run. Diagnostics above transcribed from the observed tool output; this is not a complete log.
+
+The initial core/dev and recovery invocations were sandbox-blocked on Flutter's local server socket (OS error 1); the same commands were rerun with loopback permission and passed. The data invocation was run with loopback permission. The transcript did not retain complete output, and the original invocations did not redirect output to files. No tests were rerun to regenerate logs.
+
+Device discovery note at the time of this local-test run: Flutter CLI on the WSL2 Linux runner listed Linux desktop only. The later native run reached Home, then the APK was removed after the user requested stopping when the work session was interrupted. No new QA-app crash was recorded. See `docs/qa/reports/2026-11-19-quoc-anh-resume.md` for current handoff; this local test record remains unchanged otherwise.

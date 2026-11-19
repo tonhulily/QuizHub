@@ -1,5 +1,19 @@
 # Theo dõi tiến độ QA
 
+## Execution 2026-11-19 — Quốc Anh (cập nhật)
+
+**Handoff sau crash:** theo yêu cầu Sơn, đã dừng kiểm thử và gỡ QA APK khỏi điện thoại. APK đúng và bước tiếp theo được lưu tại [resume handoff](reports/2026-11-19-quoc-anh-resume.md). Không tiếp tục kiểm thử trong phiên này.
+
+Root source `447ecf394894627e498df08464466f16a12e3ef6`, upstream `main` `08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`; không có runtime/dependency changes trên root. Local suites core/data/chat recovery đạt **106 PASS** với Flutter 3.47.9 / Dart 3.13.7, nhưng chỉ dùng fake/preview/loopback, không phải acceptance API. Transcript excerpt, commands và giới hạn raw log ở [local expanded report](reports/2026-11-19-quoc-anh-local-expanded.md) và [evidence](evidence/2026-11-19/quoc-anh-local/results.txt).
+
+QH-QA-005 trên root source vẫn **OPEN / Retest Fail** theo tracker đọc lại 19/11: `CupertinoPageTransitionsBuilder` unresolved; compile-only, widget bodies chưa chạy, không có upstream fix. Sơn cho phép một import Cupertino trong QA workspace cô lập và Gradle artifact downloads, không cài SDK. APK QA Flutter 3.47.9 từ BASE `447ecf3` cộng patch được phép build thành công; lock giữ nguyên, metadata và plugin registrant sinh thành công. Install exit 0, cold launch exit 0, QA foreground và Home được quan sát; sau crash theo yêu cầu mới nhất app QA đã gỡ. APK còn trong isolated workspace. Hash, lệnh build và trạng thái UI dở dang tại [summary](reports/2026-11-19-quoc-anh-summary.md), [native build](reports/2026-11-19-quoc-anh-native-build.md) và [native UI](reports/2026-11-19-quoc-anh-native-ui.md). Đây là build QA có patch, không phải acceptance bản main nguyên trạng.
+
+Các kết quả đầu tiên trên SDK 3.41.6 (manual remapped UI 25 PASS; layout 2 PASS/5 FAIL) là **PROVISIONAL**, không phải baseline chuẩn. `offline-enforce-lock` exit 65 sẽ hạ 5 dependencies; lock SHA phải giữ nguyên. Không dùng SDK 3.41 để kết luận cuối.
+
+Một APK thử trước đó (SHA `588…`) mở màn đen/logo do thiếu `GeneratedPluginRegistrant`/SharedPreferences; QA tooling mistake, không phải product bug. APK gỡ thành công (exit 0; `pm path` absence exit 1); giữ PNG evidence.
+
+Flutter 3.47.9 targeted UI rerun bị **INTERRUPTED / INCOMPLETE** (partial log tới `+11`, không final summary/exit code). Native Home/startup đã quan sát; normal flow chưa hoàn tất trước crash. Android RMX3370 / Android 13 / API 33, 1080×2400, density 480, font 1.0; QA app đã gỡ. API host/A+B không có: backend cases **BLOCKED**, contract chưa chốt **WAITING**. Acceptance matrix không đổi. Tiếp tục từ APK và kịch bản trong resume handoff khi người dùng yêu cầu.
+
 ## Execution 2026-11-19 — Quốc Anh
 
 Tại checkpoint `2cf8ef3cfaa93928607b338d794ea3c46f7eb8b0` / `TESTED_SHA` cùng giá trị, `MAIN_SNAPSHOT=08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`. Flutter 3.47.9 compile gate **BLOCKED** do `CupertinoPageTransitionsBuilder` unresolved ở `app_theme.dart:196–197`; test body chưa chạy. Chat preview probe độc lập **2 PASS** với mock/local demo server sau khi cho phép bind loopback; không phải API acceptance. API+A/B **BLOCKED**, contract assertions chưa rõ **WAITING**. Chi tiết/lệnh/log: [execution report](reports/2026-11-19-quoc-anh-execution.md). Lần thử 3.41.6 cache-hook mismatch được lưu riêng, không dùng làm app compile result.

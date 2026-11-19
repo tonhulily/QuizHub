@@ -1,0 +1,84 @@
+Source checkpoint: 447ecf394894627e498df08464466f16a12e3ef6
+origin/main: 08a5a2e4097923d21bbdaf7d02cb1792f2171aa3
+Coordinator source comparison: 191 tracked files under lib/assets/test/pubspec.yaml/pubspec.lock; mismatch 0.
+Flutter 3.41.6 / Dart 3.11.4; Dart satisfies pubspec SDK ^3.9.2. JDK17; existing Android SDK; Gradle 8.14.
+QA applicationId: vn.edu.hust.quizhub.qa.quocanh
+Input hashes (workspace and root matched): pubspec.yaml 9306ed02270a091043410285cf0eda39013eafb8ae31e59f8b8fe239f8f42ac4; pubspec.lock 59611bad141bbf6af7aba78f1f03dbb05c4e62d03d69c0c5d9c379480d9ebc4f; lib/main_preview.dart 3bfd940443c63a696c502154c44727c81b58b9ae61663afb4c8c5b07937de4ac.
+Device snapshot from coordinator: Android 13/API 33; fontScale 1.0; logical size 1080x2400; density 480; QA package absent before install (pm path exit 1); serial omitted.
+
+Flutter test --no-pub --reporter expanded test/qa/ui_layout_regression_test.dart
+Exit 1. Final: 00:04 +2 -5: Some tests failed.
+Observed: conversation Row overflow 161 px (conversations_view.dart:256), EmptyView Column overflow 341 px (state_views.dart:143); PostCard Row overflow 71, 67, 179, 123 px (post_card.dart:380,479), using AppTheme.lightTheme + Scaffold, test view 320x640/textScale 2. Comment test off-screen tap and scrollUntilVisible StateError No element (test lines 313,316); closing reaction finder miss; exam generator scrollUntilVisible No element (line 395). Candidates only; no native repro or defect filed from these harness assertions.
+Actual final excerpts/log details are preserved in qa-artifacts/2026-11-19/quoc-anh-native/logs/ui_layout_regression_test.log.
+
+Flutter test --no-pub --reporter expanded test/features/messenger_ui_test.dart test/features/chat_navigation_test.dart test/shared/comment_reactions_test.dart test/features/blocking_test.dart
+Exit 0; actual final output: 00:05 +25: All tests passed!
+Full log: qa-artifacts/2026-11-19/quoc-anh-native/logs/targeted_ui_tests.log.
+
+Flutter build trial specified -t lib/main_preview.dart but Gradle could not start in sandbox (wildcard IP; exit 1). Direct offline Gradle retries did not pass -Ptarget and therefore do not establish a preview-target build.
+./gradlew --offline --no-daemon assembleDebug
+Exit 1; unresolved non-arm64 Flutter engine artifacts.
+Full log: qa-artifacts/2026-11-19/quoc-anh-native/logs/gradle-offline.log.
+
+./gradlew --offline --no-daemon -Ptarget-platform=android-arm64 assembleDebug
+Exit 1; missing cached androidx.profileinstaller:profileinstaller:1.3.1 AAR at :app:checkDebugAarMetadata.
+Full log: qa-artifacts/2026-11-19/quoc-anh-native/logs/gradle-arm64-offline.log.
+
+Historical delegate attempts: no APK produced. These notes were written before the coordinator's final 3.47.9 build. Final build/install/Home/uninstall observations are appended below; see the current report at `docs/qa/reports/2026-11-19-quoc-anh-resume.md`.
+
+Historical coordinator direct-Gradle exact-target command (produced the bad 3.41.6 packaging-only APK):
+./gradlew --no-daemon -Ptarget=lib/main_preview.dart -Ptarget-platform=android-arm64 -Pandroid.builder.sdkDownload=false assembleDebug
+It ran from isolated workspace `android/` with Flutter 3.41.6. It is not the final wrapper build and must not be confused with the validated 3.47.9 artifact below.
+
+Coordinator exact-target Gradle build result:
+./gradlew --no-daemon -Ptarget=lib/main_preview.dart -Ptarget-platform=android-arm64 -Pandroid.builder.sdkDownload=false assembleDebug
+Exit 0; BUILD SUCCESSFUL in 1m 25s; 52 actionable tasks: 46 executed, 6 up-to-date.
+Log: qa-artifacts/2026-11-19/quoc-anh-native/coordinator-gradle-preview.log
+APK: .qa-tools/quoc-anh-native-20261119/workspace/build/app/outputs/apk/debug/app-debug.apk
+Size: 88,258,453 bytes; SHA-256: 588233dc1d965986eb58ddd3beefa3812ab23d963d063105ff205d64ae782288
+Coordinator aapt dump badging exit 0: package vn.edu.hust.quizhub.qa.quocanh; launcher vn.edu.hust.quizhub.MainActivity; minSDK 24; targetSDK 36; arm64-v8a.
+This records direct Gradle APK packaging only. It is not a lock-resolved Flutter 3.41.6 native baseline; startup failed because Flutter plugin registration was missing. The previous Flutter 3.47.9 CupertinoPageTransitionsBuilder compile diagnostic required the isolated QA import patch below.
+
+Startup result from coordinator/native tester (APK above is packaging-only, not valid native acceptance build):
+- QA app opened to black Flutter splash; screenshot retained by native tester.
+- Logcat: GeneratedPluginsRegister could not find/invoke io.flutter.plugins.GeneratedPluginRegistrant; ClassNotFoundException.
+- Following channel failure: PlatformException(channel-error Unable to establish connection dev.flutter.pigeon.shared_preferences_android.SharedPreferencesApi.getAll).
+- Isolated workspace initially lacked `.flutter-plugins-dependencies` and generated GeneratedPluginRegistrant.java. Root metadata is Flutter 3.47.9; cached Android preview metadata is Flutter 3.41.6 with distinct resolved plugin paths. Do not copy either metadata file into the workspace. Flutter 3.41.6 tool code skips platform-specific tooling regeneration when `--no-pub` is set; the wrapper `--no-pub` retry therefore did not generate a registrant or a fresh APK.
+- Classification: QA build harness setup failure; not a confirmed product bug. Native UI acceptance remains NOT RUN until wrapper rebuild and app startup succeeds. No runtime/manual plugin registration edits.
+
+Flutter 3.41.6 local tool source verification:
+- `FlutterProject.ensureReadyForPlatformSpecificTooling` calls `refreshPluginsList`, then `injectPlugins`.
+- Android branch of `injectPlugins` calls `_writeAndroidPluginRegistrant` to generate `GeneratedPluginRegistrant.java` from discovered resolved plugins.
+- `--android-project-arg` is supported by FlutterCommand and each argument is passed to Gradle as `-P<argument>`.
+
+Provisional wrapper command for the Flutter 3.41.6 route (not used for final native acceptance):
+../../flutter/bin/flutter build apk -t lib/main_preview.dart --debug --no-pub --target-platform android-arm64 --android-project-arg=android.builder.sdkDownload=false
+This route was stopped after offline lock-enforced dependency resolution returned exit 65 and proposed downgrading five packages. The package config remapped for SDK 3.41.6 remains provisional.
+
+Correction from Flutter 3.41.6 source at runner/flutter_command.dart:1963: `regeneratePlatformSpecificToolingIfApplicable` immediately returns when `shouldRunPub` is false. Therefore `flutter build ... --no-pub` alone did not refresh plugin metadata/registrant. That wrapper attempt exited 0 but produced neither a registrant nor a fresh APK and stopped before install. The 3.41.6 route was not resumed.
+
+Flutter 3.41.6 lock-enforced offline resolution (coordinator observation):
+flutter pub get --offline --enforce-lockfile
+Exit 65. Solver proposed changes to five locked packages: intl 0.20.3 -> 0.20.2; matcher 0.12.20 -> 0.12.19; meta 1.19.0 -> 1.17.0; test_api 0.7.12 -> 0.7.10; vector_math 2.4.4 -> 2.2. Root and isolated pubspec.lock SHA remained 59611bad141bbf6af7aba78f1f03dbb05c4e62d03d69c0c5d9c379480d9ebc4f. The manually remapped Flutter 3.41.6 package config used for widget tests is provisional, not a resolved native build baseline. Stop this SDK route; no lockfile change.
+
+The registrant-failing QA APK was uninstalled by coordinator: uninstall exit 0 (Success), subsequent `pm path` exit 1 (package absent). Black splash screenshot retained by native tester.
+
+Sơn explicitly approved on 2026-11-19 applying the one-line `proposed-cupertino-import.patch` (SHA-256 `95f907dee356ea454fed781363b1a472be080a713fae2645cecfeec2668c7fd7`) to the isolated QA copy only. Patched `app_theme.dart` SHA-256: `e90ca86344996f7ebb52d86d9e6fdf8b3755fc3213925e043c499efabef94809`. Diff against base 447ecf3 is exactly that one import; no root/source or other runtime files changed. Flutter 3.47.9 offline `pub get --enforce-lockfile` exited 0 (Got dependencies!), lock SHA unchanged, and generated `.flutter-plugins-dependencies` plus `GeneratedPluginRegistrant.java`; log: `qa-artifacts/2026-11-19/quoc-anh-native/offline-generated-tooling-3.47.9.log`.
+
+Authorized isolated QA source patch provenance (Sơn approval, 2026-11-19):
+Base source SHA 447ecf394894627e498df08464466f16a12e3ef6 plus exactly one approved import line in workspace `lib/core/design_system/app_theme.dart`:
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
+No root source or other runtime source changed. Patched file SHA-256: e90ca86344996f7ebb52d86d9e6fdf8b3755fc3213925e043c499efabef94809. Patch artifact SHA-256: 95f907dee356ea454fed781363b1a472be080a713fae2645cecfeec2668c7fd7. Workspace diff against base has one added line.
+
+Flutter 3.47.9 lock-compatible tooling preparation (coordinator observation):
+flutter pub get --offline --enforce-lockfile
+Exit 0; `Got dependencies!`; pubspec.lock SHA remained 59611bad141bbf6af7aba78f1f03dbb05c4e62d03d69c0c5d9c379480d9ebc4f. It generated `.flutter-plugins-dependencies` and `android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java` from resolved plugins. Log: qa-artifacts/2026-11-19/quoc-anh-native/offline-generated-tooling-3.47.9.log.
+
+Final Flutter 3.47.9 wrapper build, install and startup observation (coordinator evidence):
+../../sdk-3.47.9/flutter/bin/flutter build apk -t lib/main_preview.dart --debug --no-pub --target-platform android-arm64 --android-project-arg=android.builder.sdkDownload=false
+Exit 0 after 318.7 seconds. Log: `qa-artifacts/2026-11-19/quoc-anh-native/corrected-flutter-preview-3.47.9.log`.
+APK: `.qa-tools/quoc-anh-native-20261119/workspace/build/app/outputs/flutter-apk/app-debug.apk`; size 97,980,127 bytes; SHA-256 `755b5deaf26c70f781a0055167fba5e4a29d544a8697a829772c26981654a120`.
+The generated registrant and SharedPreferences classes were verified in DEX. `adb install -r -t` exit 0 / Success; cold launch `am start -W` exit 0 / Status ok in 5.786 seconds. QA package `vn.edu.hust.quizhub.qa.quocanh` was foreground; Home with Tạo bài/Tin Nhắn/feed was observed. Device `base.apk` SHA matched the local APK. This confirms startup/Home only, not POST/COMM/CHAT/REL acceptance.
+Flutter 3.47.9 targeted UI test log `qa-artifacts/2026-11-19/quoc-anh-native/targeted-ui-tests-3.47.9.log` is partial through `+11`; no final summary or exit code was recorded. Status: INTERRUPTED / INCOMPLETE; do not report 25 PASS.
+After the work session was interrupted, the user asked to stop and remove the QA APK. Coordinator uninstall succeeded; subsequent Windows ADB `shell pm path` exited 1 with no package path. Font scale remained 1.0; display 1080x2400 and density 480; no settings changes needed restoration. No new QA-app crash was recorded. Home screenshot and earlier black-splash failure screenshot are retained. The APK remains in the isolated workspace for a future session.
+Do not use the earlier 3.41.6 direct-Gradle APK (SHA `588233dc1d965986eb58ddd3beefa3812ab23d963d063105ff205d64ae782288`) for native acceptance; it lacked the generated plugin registrant and showed a black Flutter splash. This was a QA build harness issue, not a confirmed product bug.
