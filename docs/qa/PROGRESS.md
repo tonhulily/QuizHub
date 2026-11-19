@@ -1,5 +1,9 @@
 # Theo dõi tiến độ QA
 
+## Execution 2026-11-19 — Quốc Anh
+
+Tại checkpoint `2cf8ef3cfaa93928607b338d794ea3c46f7eb8b0` / `TESTED_SHA` cùng giá trị, `MAIN_SNAPSHOT=08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`. Flutter 3.47.9 compile gate **BLOCKED** do `CupertinoPageTransitionsBuilder` unresolved ở `app_theme.dart:196–197`; test body chưa chạy. Chat preview probe độc lập **2 PASS** với mock/local demo server sau khi cho phép bind loopback; không phải API acceptance. API+A/B **BLOCKED**, contract assertions chưa rõ **WAITING**. Chi tiết/lệnh/log: [execution report](reports/2026-11-19-quoc-anh-execution.md). Lần thử 3.41.6 cache-hook mismatch được lưu riêng, không dùng làm app compile result.
+
 Snapshot handoff 2026-11-15 (Asia/Bangkok). Số matrix là acceptance của app, không gộp
 với regression tự động hoặc reproduction harness. Chi tiết: [TEST_CASES.md](TEST_CASES.md),
 [TEST_PLAN.md](TEST_PLAN.md), [QA.md](../../QA.md).

@@ -2,6 +2,8 @@
 
 [Kế hoạch phiên sau Quốc Anh — chuẩn bị/NOT RUN](docs/qa/reports/2026-11-19-quoc-anh-next-session.md)
 
+[Kết quả execution Quốc Anh ngày 2026-11-19](docs/qa/reports/2026-11-19-quoc-anh-execution.md)
+
 Nhánh: `qa/khanhson2005`. Phạm vi: test, tài liệu và cấu hình chạy phục vụ QA.
 Đây là nhánh cá nhân lâu dài; chỉ nhận thay đổi từ upstream `main`. Nhánh QA không
 được merge vào `main` hoặc nhánh khác, không dùng để mở PR nếu chưa có yêu cầu rõ ràng.

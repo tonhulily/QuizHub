@@ -1,0 +1,11 @@
+QuizHub QA compile gate — 2026-11-19
+Checkpoint / TESTED_SHA: 2cf8ef3cfaa93928607b338d794ea3c46f7eb8b0
+MAIN_SNAPSHOT origin/main: 08a5a2e4097923d21bbdaf7d02cb1792f2171aa3
+Compile SDK: Flutter 3.47.9 stable; Dart 3.13.7; Linux x86_64; cached PUB_CACHE; no API host/device.
+Environment: `XDG_CONFIG_HOME=$PWD/.qa-tools/config`, `XDG_CACHE_HOME=$PWD/.qa-tools/cache`, `PUB_CACHE=$PWD/.qa-tools/pub-cache`, `FLUTTER_SUPPRESS_ANALYTICS=true`, `CI=true`; `--no-pub`.
+Compile command: ./.qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub --reporter expanded test/qa/exam_export_regression_test.dart
+Compile exit: 1; diagnostics: `lib/core/design_system/app_theme.dart:196:35: Error: Method not found: 'CupertinoPageTransitionsBuilder'.` and same diagnostic at `197:31`; probe body did not run.
+Compile status: BLOCKED. Full output: ../../../../../qa-artifacts/2026-11-19/quoc-anh/exam-export-compile-gate-3.47.9.log
+Independent local chat probe: `./.qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub --reporter expanded test/qa/chat_preview_regression_test.dart`; exit 0, `+2: All tests passed!`. Cases: `preview list summary falls back after revoked message is deleted ME and restart` and `shared REST summaries stay user-specific after revoked message is deleted ME and restart`. CHAT-DEL-01 local subsets only; full app menu/back/relaunch/UI flow remains BLOCKED. Not API acceptance. Log: ../../../../../qa-artifacts/2026-11-19/quoc-anh/chat-preview-local-3.47.9.log
+Earlier Flutter 3.41.6 attempt and cache hook error remain in exam-export-compile-gate.log.
+Worktree was clean before execution. After first retry, the QA report/evidence existed as untracked files; runtime and test inputs remained unchanged, so TESTED_SHA remains the recorded source checkpoint.
