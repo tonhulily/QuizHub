@@ -1,6 +1,12 @@
 # Góc làm việc của Sơn — Tester / QA
 
-[Handoff tiếp tục sau crash — APK đã gỡ, luồng UI còn dang dở](docs/qa/reports/2026-11-19-quoc-anh-resume.md)
+[Kết quả native preview Nam 20/11 — Search/Notifications/Push settings, permission inconclusive](docs/qa/reports/2026-11-20-nam-native.md)
+
+[Kết quả native preview Quốc Anh 20/11 — app đã gỡ, acceptance API vẫn chưa chạy](docs/qa/reports/2026-11-20-quoc-anh-native.md)
+
+Quốc Anh widget preview 20/11: **25 PASS**, còn layout sweep **2 PASS / 5 FAIL** là candidate cần xác minh, chưa tạo bug mới hay đổi acceptance `main`. Xem [widget report](docs/qa/reports/2026-11-20-quoc-anh-widget.md).
+
+[Handoff tiếp tục sau crash 19/11](docs/qa/reports/2026-11-19-quoc-anh-resume.md)
 
 [Kịch bản phiên sau Quốc Anh — chuẩn bị/NOT RUN](docs/qa/reports/2026-11-19-quoc-anh-next-session.md)
 
@@ -13,8 +19,8 @@ Thay đổi QA đúng phạm vi được phép commit/push thường lệ lên `
 tuyệt đối không push QA lên `main` hoặc nhánh khác. Mã runtime QA mặc định theo đúng snapshot `main` đã
 tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệu. Không thay đổi nghiệp vụ app.
 
-Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (handoff 2026-11-15),
-[tóm tắt QA hiện tại](docs/qa/reports/2026-11-15-summary.md),
+Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (cập nhật 2026-11-20),
+[tóm tắt QA 15/11](docs/qa/reports/2026-11-15-summary.md),
 [ghi nhận cập nhật tracker](docs/qa/reports/2026-11-15-tracker-update.md),
 [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
 [22 case NOT RUN + 3 case WAITING](docs/qa/TEST_CASES.md),
@@ -103,6 +109,15 @@ Handoff 2026-11-15 ghi **22 NOT RUN, 3 WAITING, 0 PASS, 0 FAIL**; xem [PROGRESS]
 tái hiện bằng mock/widget trên Nam snapshot SHA `639da12`, chưa fix. Xem
 [tóm tắt QA](docs/qa/reports/2026-11-15-summary.md). Cột tự động là file test có liên quan,
 không có nghĩa file đó bao phủ toàn bộ acceptance criteria của dòng.
+
+Ngày 20/11, native preview Nam trên snapshot `639da129d89e8290c13b63af3d36045309b38fd6`
+đã quan sát được các thao tác Search, Notifications và Push settings. Đây là kết quả fixture
+trong một process, không thay đổi trạng thái `SEARCH-01`/`PUSH-01`; API, FCM delivery và
+nhánh từ chối quyền OS chưa được xác minh. Xem [native report Nam](docs/qa/reports/2026-11-20-nam-native.md).
+
+Local retest Nam cùng ngày trên snapshot `639da129d89e8290c13b63af3d36045309b38fd6`: 95 test
+feature/data/core PASS (exit 0); focused repro/UI có 6 lỗi và 3 ca harness qua (exit 1).
+QH-QA-006..008 tiếp tục Open / Retest Fail; xem [Nam local report](docs/qa/reports/2026-11-20-nam-local.md).
 
 | ID | Mức / owner | Ca kiểm thử và kết quả mong đợi | Tự động / môi trường | Trạng thái |
 |---|---|---|---|---|
@@ -194,7 +209,7 @@ tái hiện bằng fake transport được ghi ở [RISKS.md](docs/qa/RISKS.md);
 
 | ID | Liên quan | Quan sát | Cách xác nhận / trạng thái |
 |---|---|---|---|
-| QH-QA-006..008 (logged, Open / Not retested) | Nam / Push settings, search, FCM | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng | Reproduced qua mock/widget trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6`; [QA summary](docs/qa/reports/2026-11-15-summary.md). Chưa fix/retest. |
+| QH-QA-006..008 (Open / Retest Fail, 20/11) | Nam / Push settings, search, FCM | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng | Tái hiện lại bằng focused local repro/UI trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6` ngày 20/11: 6 lỗi (bao gồm các repro này), exit 1. Native preview không dựng race; không tính là retest. [Nam local report](docs/qa/reports/2026-11-20-nam-local.md), [lần tái hiện ban đầu](docs/qa/reports/2026-11-15-summary.md). Chưa có fix được quan sát. |
 | QH-QA-009 (Closed / Retest Pass) | Sơn / test harness | Host thiếu app `Scaffold`/`AppTheme` gây false positive overflow 917 px; corrected UI test 3/3, independent rerun passed, 244 runtime/config files match pristine source | [Host-correction evidence](docs/qa/evidence/2026-11-15/nam/host-correction.txt). Đóng lỗi harness đã sửa; không phải bug sản phẩm. |
 | QH-QA-010..012 (pending, not logged) | Chat filters / shared empty view / PostCard | Overflow observations từ run tại SHA khác với temporary SDK compatibility edit | Chưa retest trên source sạch; không filed/confirmed. |
 | QH-QA-005 (logged, Open / Retest Fail) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Tracker đọc lại 19/11: compile-only failure trên root source `447ecf3`; test body chưa chạy, chưa có upstream fix. Một import chỉ dùng ở QA workspace cô lập theo Sơn cho phép; không đóng issue. [Evidence baseline](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt), [execution ngày 19/11](docs/qa/reports/2026-11-19-quoc-anh-summary.md). |

@@ -1,0 +1,50 @@
+QuizHub QA — Quốc Anh widget rerun — 2026-11-20
+Evidence type: excerpt/transcript derived from the complete local runner logs below; this file is not the full raw log.
+
+Checkout / source
+  QA root branch: qa/khanhson2005
+  QA root HEAD: 12dd97257052122db1305c828d3c0c9f6d5d62e4
+  Test workspace: /home/khanhson2005/projects/QuizHub/.qa-tools/quoc-anh-native-20261119/workspace
+  Source baseline: 447ecf394894627e498df08464466f16a12e3ef6
+  Approved isolated patch: import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
+  Patched app_theme.dart SHA-256: e90ca86344996f7ebb52d86d9e6fdf8b3755fc3213925e043c499efabef94809
+  pubspec.lock SHA-256: 59611bad141bbf6af7aba78f1f03dbb05c4e62d03d69c0c5d9c379480d9ebc4f
+
+Environment
+  Linux x86_64; Flutter 3.47.9; Dart 3.13.7
+  Existing PUB_CACHE: /home/khanhson2005/projects/QuizHub/.qa-tools/pub-cache
+  XDG_CONFIG_HOME: /home/khanhson2005/projects/QuizHub/qa-artifacts/2026-11-20/quoc-anh-widget/xdg-config
+  XDG_CACHE_HOME: /home/khanhson2005/projects/QuizHub/qa-artifacts/2026-11-20/quoc-anh-widget/xdg-cache
+  CI=true FLUTTER_SUPPRESS_ANALYTICS=true FLUTTER_SKIP_UPDATE_CHECK=true
+  Flutter test runner used local loopback; sandbox-only attempt was denied before tests loaded.
+  Widget harness setup in test/qa/ui_layout_regression_test.dart: viewport 320x640 logical px (physicalSize 320x640, devicePixelRatio 1), text scale 2.0. Other cases use their declared test defaults.
+
+Working directory: /home/khanhson2005/projects/QuizHub/.qa-tools/quoc-anh-native-20261119/workspace
+Commands (180 second timeout each)
+  timeout 180s /home/khanhson2005/projects/QuizHub/.qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub --reporter expanded test/features/messenger_ui_test.dart test/features/chat_navigation_test.dart test/shared/comment_reactions_test.dart test/features/blocking_test.dart
+  exit: 0
+  final output: 00:10 +25: All tests passed!
+
+  timeout 180s /home/khanhson2005/projects/QuizHub/.qa-tools/sdk-3.47.9/flutter/bin/flutter test --no-pub --reporter expanded test/qa/ui_layout_regression_test.dart
+  exit: 1
+  final output: 00:05 +2 -5: Some tests failed.
+
+Selected actual diagnostics from ui_layout_regression_test.log
+  conversation list: RenderFlex overflowed by 161 pixels on the right.
+    Row at lib/features/chat/view/conversations_view.dart:256
+  conversation list empty state: RenderFlex overflowed by 341 pixels on the bottom.
+    Column at lib/core/widgets/state_views.dart:143
+  feed: RenderFlex overflowed by 71, 67, 179, and 123 pixels on the right.
+    Row at lib/shared/post/post_card.dart:479
+  comments long root/reply: Bad state: No element during scroll/find at test/qa/ui_layout_regression_test.dart:316
+  comments pending reaction: expected one “Thích” finder result; found 0 at test/qa/ui_layout_regression_test.dart:353
+  exam generator: Bad state: No element during dragUntilVisible at test/qa/ui_layout_regression_test.dart:395
+
+Context and limits
+  These are local widget harness observations; the layout failures are not device-confirmed and the finder/scroll failures remain harness candidates. No product bug status is changed here.
+  Separately reported native baseline: chat keyboard at 360x800, font scale 1, showed matching/long empty/cancel states with no observed overflow. ColorOS denied wm size/font scale 2 changes due to WRITE_SECURE_SETTINGS / WRITE_SETTINGS; physical 1080x2400, font scale 1 remained. Exact narrow native layout check is BLOCKED. This does not change the widget candidate statuses.
+  No native/API run was performed as part of this widget rerun. No screenshot was captured by these test runs.
+
+Full ignored logs (not copied into this transcript)
+  qa-artifacts/2026-11-20/quoc-anh-widget/targeted-widget-tests.log (exit in targeted-widget-tests.exit)
+  qa-artifacts/2026-11-20/quoc-anh-widget/ui-layout-regression.log (exit in ui-layout-regression.exit)

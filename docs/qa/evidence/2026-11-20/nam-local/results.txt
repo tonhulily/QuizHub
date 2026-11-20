@@ -1,0 +1,39 @@
+Nam local resume — observed results
+Date: 2026-11-20
+Source snapshot: qa-artifacts/2026-11-15/nam-source
+Source SHA: 639da129d89e8290c13b63af3d36045309b38fd6
+Integrity before and after run: 244 tracked files under lib/, android/, ios/, pubspec.yaml, pubspec.lock matched the source SHA (0 mismatches). .dart_tool/package_config.json resolved quizhub to the snapshot root. The three QA repro files also retained their recorded SHA-256 fingerprints.
+Environment: Linux x64; Flutter 3.41.6; Dart 3.11.4. CI=true, FLUTTER_SUPPRESS_ANALYTICS=true, XDG_CONFIG_HOME=/home/khanhson2005/projects/QuizHub/qa-artifacts/2026-11-20/nam-local/xdg-config, XDG_CACHE_HOME=/home/khanhson2005/projects/QuizHub/qa-artifacts/2026-11-20/nam-local/xdg-cache, PUB_CACHE=/home/khanhson2005/projects/QuizHub/.qa-tools/pub-cache. No pub get or dependency resolution.
+
+Both commands ran with working directory /home/khanhson2005/projects/QuizHub/qa-artifacts/2026-11-15/nam-source, a 180-second timeout, and temporary permission for Flutter's localhost test socket. Initial sandbox-only attempt failed to bind 127.0.0.1; the commands below are the successful authorized reruns.
+
+Feature/data/core group
+Command:
+  timeout 180s /home/khanhson2005/projects/QuizHub/.qa-tools/flutter/bin/flutter test --no-pub --reporter expanded test/features/global_search_cubit_test.dart test/features/notification_cubit_test.dart test/features/notification_navigator_test.dart test/data/search_models_test.dart test/data/search_repository_test.dart test/data/notification_repository_test.dart test/data/push_notification_payload_test.dart test/core/firebase_messaging_service_test.dart test/core/firebase_fid_sync_service_test.dart
+Exit code: 0 — 95 tests passed.
+Coverage is local unit/mock/fake behavior. FID tests use a fake adapter and do not establish real API acceptance or push delivery.
+
+QA repro and UI group
+Command:
+  timeout 180s /home/khanhson2005/projects/QuizHub/.qa-tools/flutter/bin/flutter test --no-pub --reporter expanded test/qa/async_close_lifecycle_test.dart test/qa/fcm_pending_queue_test.dart test/qa/search_notifications_ui_test.dart
+Exit code: 1 — 6 failed, 3 passed. This is an observed **Retest Fail** against source SHA `639da129d89e8290c13b63af3d36045309b38fd6`.
+  QH-QA-006: four push-settings late-completion paths failed with “Bad state: Cannot emit new states after calling close”.
+  QH-QA-007: saved-search deletion failure after close failed with the same closed-cubit emission.
+  QH-QA-008: delayed second notification tap expected [1, 2], observed [1].
+  QH-QA-009: corrected-host search and notification UI cases passed 3/3; this supports the harness correction only.
+
+Captured excerpts below are verbatim from ignored `qa-artifacts/2026-11-20/nam-local/repro.stdout.log`:
+```text
+Bad state: Cannot emit new states after calling close
+package:quizhub/features/menu/cubit/push_settings_cubit.dart 74:7  PushSettingsCubit.load
+...
+Bad state: Cannot emit new states after calling close
+package:quizhub/features/search/cubit/global_search_cubit.dart 123:7  GlobalSearchCubit.deleteSavedSearch
+Expected: [1, 2]
+Actual: [1]
+00:03 +3 -6: Some tests failed.
+```
+
+QH-QA-006..008 remain **Open / Retest Fail** from this observed rerun; await Nam's fix and a passing retest before closure. This local report did not execute a device, real API, or Firebase delivery case. See [Nam native report](../../../reports/2026-11-20-nam-native.md) for the separate native run. PUSH-01 and SEARCH-01 business acceptance remain dependent on owner/backend evidence.
+
+Full stdout/stderr logs, command metadata, and SDK version are retained in ignored qa-artifacts/2026-11-20/nam-local/.
