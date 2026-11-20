@@ -63,6 +63,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
     );
     try {
       final settings = await _repository.getSettings();
+      if (isClosed) return;
       emit(
         PushSettingsState(
           status: PushSettingsStatus.ready,
@@ -71,6 +72,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
         ),
       );
     } catch (error) {
+      if (isClosed) return;
       emit(
         PushSettingsState(
           status: state.hasSettings
@@ -121,6 +123,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
 
     try {
       final saved = await _repository.updateSettings(draft);
+      if (isClosed) return;
       emit(
         PushSettingsState(
           status: PushSettingsStatus.ready,
@@ -130,6 +133,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
         ),
       );
     } catch (error) {
+      if (isClosed) return;
       // Giữ nguyên draft để người dùng có thể thử lưu lại.
       emit(
         PushSettingsState(

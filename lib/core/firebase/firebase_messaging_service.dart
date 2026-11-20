@@ -73,9 +73,11 @@ class FirebaseMessagingService {
     if (payload == null) return;
 
     _handlingPending = true;
+    var opened = false;
 
     try {
       await _openNotification(payload);
+      opened = true;
 
       // Chỉ xóa đúng payload vừa xử lý.
       // Tránh xóa nhầm notification mới đến trong lúc đang xử lý.
@@ -87,6 +89,12 @@ class FirebaseMessagingService {
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       _handlingPending = false;
+    }
+
+    // Có lần chạm mới đến trong lúc đang mở payload trước: xử lý tiếp.
+    // Nếu mở lỗi thì không lặp lại để tránh vòng lặp vô hạn.
+    if (opened && _pendingPayload != null) {
+      await handlePendingNotification();
     }
   }
 

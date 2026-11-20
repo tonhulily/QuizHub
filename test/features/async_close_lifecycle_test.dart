@@ -1,0 +1,116 @@
+import 'dart:async';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:quizhub/data/models/push_settings.dart';
+import 'package:quizhub/data/models/search_models.dart';
+import 'package:quizhub/data/repositories/push_settings_repository.dart';
+import 'package:quizhub/data/repositories/search_repository.dart';
+import 'package:quizhub/features/menu/cubit/push_settings_cubit.dart';
+import 'package:quizhub/features/search/cubit/global_search_cubit.dart';
+
+const _settings = PushSettings(
+  pushEnabled: true,
+  categories: {},
+  quietHours: QuietHours(),
+  soundEnabled: true,
+  vibrationEnabled: true,
+);
+
+class _PushSettingsRepo implements PushSettingsRepository {
+  final loadResult = Completer<PushSettings>();
+  final saveResult = Completer<PushSettings>();
+
+  @override
+  Future<PushSettings> getSettings() => loadResult.future;
+
+  @override
+  Future<PushSettings> updateSettings(PushSettings settings) =>
+      saveResult.future;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _SearchRepo implements SearchRepository {
+  final deleteResult = Completer<void>();
+
+  @override
+  Future<GlobalSearchPage> search({
+    required String query,
+    SearchType type = SearchType.all,
+    int? after,
+    int limit = SearchRepository.defaultPageSize,
+  }) async => const GlobalSearchPage();
+
+  @override
+  Future<SavedSearchResponse> getSavedSearches() async =>
+      const SavedSearchResponse();
+
+  @override
+  Future<void> saveSearch(String query) async {}
+
+  @override
+  Future<void> deleteSavedSearch(int id) => deleteResult.future;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+void main() {
+  group('PushSettingsCubit completion after close', () {
+    test('load success completes safely after close', () async {
+      final repository = _PushSettingsRepo();
+      final cubit = PushSettingsCubit(repository);
+      final pending = cubit.load();
+      await cubit.close();
+      repository.loadResult.complete(_settings);
+
+      await pending;
+    });
+
+    test('load failure completes safely after close', () async {
+      final repository = _PushSettingsRepo();
+      final cubit = PushSettingsCubit(repository);
+      final pending = cubit.load();
+      await cubit.close();
+      repository.loadResult.completeError(Exception('offline'));
+
+      await pending;
+    });
+
+    test('save success completes safely after close', () async {
+      final repository = _PushSettingsRepo();
+      repository.loadResult.complete(_settings);
+      final cubit = PushSettingsCubit(repository);
+      await cubit.load();
+      cubit.updateDraft(_settings.copyWith(pushEnabled: false));
+      final pending = cubit.save();
+      await cubit.close();
+      repository.saveResult.complete(_settings.copyWith(pushEnabled: false));
+
+      await pending;
+    });
+
+    test('save failure completes safely after close', () async {
+      final repository = _PushSettingsRepo();
+      repository.loadResult.complete(_settings);
+      final cubit = PushSettingsCubit(repository);
+      await cubit.load();
+      cubit.updateDraft(_settings.copyWith(pushEnabled: false));
+      final pending = cubit.save();
+      await cubit.close();
+      repository.saveResult.completeError(Exception('offline'));
+
+      await pending;
+    });
+  });
+
+  test('saved-search deletion failure completes safely after close', () async {
+    final repository = _SearchRepo();
+    final cubit = GlobalSearchCubit(repository);
+    final pending = cubit.deleteSavedSearch(1);
+    await cubit.close();
+    repository.deleteResult.completeError(Exception('offline'));
+
+    await pending;
+  });
+}

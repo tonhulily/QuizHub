@@ -120,6 +120,7 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
         ),
       );
     } catch (e) {
+      if (isClosed) return;
       emit(state.copyWith(historyError: e.toString()));
     }
   }
