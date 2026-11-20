@@ -109,4 +109,16 @@ class AppIcons {
   static const offline = PhosphorIconsRegular.wifiSlash;
   static const radioOn = PhosphorIconsFill.radioButton;
   static const radioOff = PhosphorIconsRegular.circle;
+
+  // Search
+  static const history = PhosphorIconsRegular.clockCounterClockwise;
+  static const trendingUp = PhosphorIconsRegular.trendUp;
+
+  // ---- Thông báo đẩy ----
+  static const bellRinging = PhosphorIconsRegular.bellRinging;
+  static const moon = PhosphorIconsFill.moon;
+  static const speakerHigh = PhosphorIconsFill.speakerHigh;
+  static const vibrate = PhosphorIconsFill.vibrate;
+  static const circleFilled = PhosphorIconsFill.circle;
+  static const doneAll = PhosphorIconsRegular.checks;
 }

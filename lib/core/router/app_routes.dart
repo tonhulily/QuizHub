@@ -23,6 +23,8 @@ class AppRoutes {
   static const conversations = '/chat';
   static const chatDetail = '/chat/detail'; // arguments: ChatTarget
 
+  static const searchGlobal = '/search/global';
+
   // Ngân hàng câu hỏi
   static const qbankMySubmissions = '/qbank/my-submissions';
   // arguments: int sessionId, hoặc ({int id, SessionStatus status})

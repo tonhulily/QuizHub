@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/storage/local_storage.dart';
@@ -11,6 +12,8 @@ import '../core/services/blocked_users.dart';
 import '../core/network/api_exception.dart';
 import 'preview_qbank.dart';
 import 'preview_chat.dart';
+import 'preview_search.dart';
+import 'preview_notifications.dart';
 
 /// Token giả để vào thẳng app mà không cần đăng nhập (chỉ dùng cho preview).
 class PreviewTokens extends TokenStorage {
@@ -147,6 +150,50 @@ class PreviewBackend implements HttpClientAdapter {
 
   /// Module Ngân hàng câu hỏi + Đề thi + AI (dữ liệu mẫu riêng).
   final PreviewQbank _qbank = PreviewQbank();
+
+  late final PreviewSearch _search = PreviewSearch(
+    users: () => [for (var id = 2; id < 2 + _totalUsers; id++) _person(id)],
+    posts: () => _posts.values.toList(growable: false),
+    questions: () => _qbank.searchQuestions,
+    sessions: () => _qbank.searchSessions,
+    subjects: () => _qbank.searchSubjects,
+    isBlocked: _blocked.contains,
+  );
+
+  /// Module thông báo (danh sách, đánh dấu đã đọc) dùng dữ liệu RAM.
+  final PreviewNotifications _notifications = PreviewNotifications();
+
+  /// Cấu hình thông báo mẫu cho màn hình Push Settings.
+  /// Dữ liệu thay đổi khi PUT và được giữ trong RAM trong phiên preview.
+  Map<String, dynamic> _pushSettings = {
+    'push_enabled': true,
+    'categories': {
+      'SOCIAL': {
+        'enabled': true,
+        'description': 'Lời mời kết bạn, người theo dõi và tương tác xã hội.',
+      },
+      'GAMIFICATION': {
+        'enabled': true,
+        'description': 'Điểm thưởng, huy hiệu và bảng xếp hạng.',
+      },
+      'ACADEMIC': {
+        'enabled': false,
+        'description': 'Thông báo về câu hỏi, đề thi và hoạt động học tập.',
+      },
+      'SYSTEM': {
+        'enabled': true,
+        'description': 'Thông báo hệ thống và cập nhật quan trọng.',
+      },
+    },
+    'quiet_hours': {
+      'enabled': true,
+      'start_time': '22:00',
+      'end_time': '07:00',
+    },
+    'sound_enabled': true,
+    'vibration_enabled': false,
+  };
+
   late final PreviewChat chat = PreviewChat(
     person: _person,
     me: _me,
@@ -624,6 +671,14 @@ class PreviewBackend implements HttpClientAdapter {
       'pagination': {'after': null, 'has_next': false},
     };
 
+    final notifications = _notifications.route(m, path, q, body);
+    if (!identical(notifications, PreviewNotifications.unhandled)) {
+      return notifications;
+    }
+
+    final search = _search.route(m, path, q, body);
+    if (!identical(search, PreviewSearch.unhandled)) return search;
+
     final qbank = _qbank.route(m, path, q, body);
     if (!identical(qbank, PreviewQbank.unhandled)) return qbank;
 
@@ -659,40 +714,44 @@ class PreviewBackend implements HttpClientAdapter {
             .toList(),
       );
     }
-    // ---- Bạn bè / tìm kiếm / theo dõi / chặn ----
-    if (path == '/search' && m == 'GET') {
-      final query = _fold((q['query'] ?? '').toString());
-      final all = [
-        for (var id = 2; id < 2 + _totalUsers; id++)
-          if (!_blocked.contains(id)) _person(id),
-      ];
-      final matched = query.isEmpty
-          ? all
-          : all
-                .where(
-                  (u) =>
-                      _fold(u['full_name'] as String).contains(query) ||
-                      (u['student_lecturer_code'] as String).contains(query),
-                )
-                .toList();
-      final from = int.tryParse('${q['after'] ?? 0}') ?? 0;
-      final limit = int.tryParse('${q['limit'] ?? 20}') ?? 20;
-      final slice = matched.skip(from).take(limit).toList();
-      final next = from + slice.length;
-      return {
-        'items': [
-          for (final u in slice)
-            {'type': 'USER', 'relevance_score': 1.0, 'user': u},
-        ],
-        'pagination': {
-          'before': null,
-          'after': next < matched.length ? next : null,
-          'has_prev': from > 0,
-          'has_next': next < matched.length,
-        },
-        'total_hits': matched.length,
-      };
+    // ---- Cài đặt thông báo đẩy ----
+    if (path == '/settings/push' && m == 'GET') {
+      // Trả về bản sao để tránh nơi gọi vô tình sửa dữ liệu gốc.
+      return jsonDecode(jsonEncode(_pushSettings));
     }
+
+    if (path == '/settings/push' && m == 'PUT') {
+      final currentCategories =
+          _pushSettings['categories'] as Map<String, dynamic>;
+      final currentQuietHours =
+          _pushSettings['quiet_hours'] as Map<String, dynamic>;
+
+      final categories = body['categories'] is Map
+          ? Map<String, dynamic>.from(body['categories'] as Map)
+          : currentCategories;
+
+      final quietHours = body['quiet_hours'] is Map
+          ? Map<String, dynamic>.from(body['quiet_hours'] as Map)
+          : currentQuietHours;
+
+      _pushSettings = {
+        'push_enabled': body['push_enabled'] is bool
+            ? body['push_enabled']
+            : _pushSettings['push_enabled'],
+        'categories': categories,
+        'quiet_hours': quietHours,
+        'sound_enabled': body['sound_enabled'] is bool
+            ? body['sound_enabled']
+            : _pushSettings['sound_enabled'],
+        'vibration_enabled': body['vibration_enabled'] is bool
+            ? body['vibration_enabled']
+            : _pushSettings['vibration_enabled'],
+      };
+
+      return jsonDecode(jsonEncode(_pushSettings));
+    }
+    // ---- Bạn bè / tìm kiếm / theo dõi / chặn ----
+    // GET /search được PreviewSearch xử lý tập trung ở đầu router.
     if (path == '/friendships' && m == 'GET') {
       return {
         ...page([
@@ -1048,20 +1107,6 @@ class PreviewBackend implements HttpClientAdapter {
       };
     }
     return null;
-  }
-
-  /// Chữ thường + bỏ dấu tiếng Việt (để tìm "tung" ra "Tùng").
-  static String _fold(String input) {
-    const from =
-        'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
-    const to =
-        'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd';
-    final buf = StringBuffer();
-    for (final ch in input.toLowerCase().split('')) {
-      final i = from.indexOf(ch);
-      buf.write(i >= 0 ? to[i] : ch);
-    }
-    return buf.toString().trim();
   }
 
   @override

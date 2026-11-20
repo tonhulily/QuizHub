@@ -7,6 +7,7 @@ import '../../features/auth/view/login_view.dart';
 import '../../features/friends/view/search_users_view.dart';
 import '../../features/friends/view/relationship_users_view.dart';
 import '../../data/models/post_model.dart';
+import '../../data/models/search_models.dart';
 import '../../features/post/create_post_view.dart';
 import '../../features/post/post_detail_view.dart';
 import '../../features/profile/widgets/friend_actions.dart';
@@ -28,6 +29,7 @@ import '../../features/profile/view/change_password_view.dart';
 import '../../features/profile/view/edit_profile_view.dart';
 import '../../features/profile/view/my_profile_view.dart';
 import '../../features/profile/view/user_profile_view.dart';
+import '../../features/search/view/global_search_view.dart';
 import '../../features/shell/main_shell.dart';
 import '../../features/splash/splash_view.dart';
 import 'app_routes.dart';
@@ -65,6 +67,11 @@ class AppRouter {
             : _NotFoundView(name: settings.name);
       case AppRoutes.searchUsers:
         page = const SearchUsersView();
+      case AppRoutes.searchGlobal:
+        page = GlobalSearchView(
+          initialQuery: args is String ? args : null,
+          initialType: args is String ? SearchType.question : SearchType.all,
+        );
       case AppRoutes.conversations:
         page = const ConversationsView();
       case AppRoutes.chatDetail:

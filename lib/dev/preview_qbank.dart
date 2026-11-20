@@ -337,6 +337,52 @@ class PreviewQbank {
     orElse: () => _subjects.first,
   );
 
+  /// Dữ liệu nguồn cho PreviewSearch. Việc lọc từ khóa và phân trang
+  /// chỉ được thực hiện tại PreviewSearch.
+  List<Map<String, dynamic>> get searchSubjects => [
+    for (final subject in _subjects) Map<String, dynamic>.from(subject),
+  ];
+
+  List<Map<String, dynamic>> get searchSessions => [
+    for (final session in _sessions.values)
+      if (session['status'] == 'RESOLVED')
+        {
+          ..._summary(session),
+          'question_count': J.asList(session['question_ids']).length,
+        },
+  ];
+
+  List<Map<String, dynamic>> get searchQuestions => [
+    for (final question in _questions.values)
+      if (question['status'] == 'APPROVED' &&
+          _sessions[question['session_id']]?['status'] == 'RESOLVED')
+        {
+          'question_id': question['question_id'],
+          'question_code':
+              question['question_code'] ??
+              '${_subject(question['subject_id'] as int)['code']}-Q${question['question_id']}',
+          'session_id': question['session_id'],
+          'subject_id': question['subject_id'],
+          'subject_name': _subject(question['subject_id'] as int)['name'],
+          'topic_name': question['topic'],
+          'status': question['status'],
+          'difficulty': question['difficulty'],
+          'content': question['content'],
+          'options': [
+            for (final option in J.asList(question['options']))
+              {
+                'key': J.asMap(option)?['key'],
+                'text': J.asMap(option)?['text'],
+              },
+          ],
+          'image_urls': List<dynamic>.from(J.asList(question['image_urls'])),
+          'rating_count':
+              (_ratings[question['question_id']] ?? const []).length,
+          'comment_count': 0,
+          'created_at': question['created_at'],
+        },
+  ];
+
   List<Map<String, dynamic>> _questionsOf(dynamic ids) => [
     for (final id in J.asList(ids)) ?_questions[id],
   ];
@@ -605,86 +651,7 @@ class PreviewQbank {
         q,
       );
     }
-    if (path == '/search' &&
-        J.stringOr(q['type']).toUpperCase() == 'QUESTION') {
-      final keyword = J.stringOr(q['query']).toLowerCase().trim();
-      final list = _questions.values.where((x) {
-        final s = _sessions[x['session_id']];
-        if (s == null || s['status'] != 'RESOLVED') return false;
-        if (keyword.isEmpty) return true;
-        final subject = _subject(x['subject_id'] as int);
-        return '${x['content']} ${subject['name']} ${subject['code']}'
-            .toLowerCase()
-            .contains(keyword);
-      }).toList();
-      return {
-        'items': [
-          for (final x in list)
-            {
-              'type': 'QUESTION',
-              'relevance_score': 1.0,
-              'question': {
-                'question_id': x['question_id'],
-                'question_code': x['question_code'],
-                'subject_id': x['subject_id'],
-                'subject_name': _subject(x['subject_id'] as int)['name'],
-                'status': 'APPROVED',
-                'difficulty': x['difficulty'],
-                'content': x['content'],
-                // Kết quả tìm kiếm không lộ đáp án
-                'options': [
-                  for (final o in J.asList(x['options']))
-                    {'key': J.asMap(o)?['key'], 'text': J.asMap(o)?['text']},
-                ],
-                'rating_count': (_ratings[x['question_id']] ?? const []).length,
-                'comment_count': 0,
-                'created_at': x['created_at'],
-                // Swagger chưa có; giả lập backend đã bổ sung để thử luồng mở
-                // phiên từ câu hỏi
-                'session_id': x['session_id'],
-              },
-            },
-        ],
-        'pagination': {
-          'before': null,
-          'after': null,
-          'has_prev': false,
-          'has_next': false,
-        },
-        'total_hits': list.length,
-      };
-    }
-    if (path == '/search' && J.stringOr(q['type']).toUpperCase() == 'SESSION') {
-      final keyword = J.stringOr(q['query']).toLowerCase().trim();
-      final list = _sessions.values.where((s) {
-        if (s['status'] != 'RESOLVED') return false;
-        if (keyword.isEmpty) return true;
-        final subject = _subject(s['subject_id'] as int);
-        return '${s['title']} ${subject['name']} ${subject['code']}'
-            .toLowerCase()
-            .contains(keyword);
-      }).toList();
-      return {
-        'items': [
-          for (final s in list)
-            {
-              'type': 'SESSION',
-              'relevance_score': 1.0,
-              'session': {
-                ..._summary(s),
-                'question_count': J.asList(s['question_ids']).length,
-              },
-            },
-        ],
-        'pagination': {
-          'before': null,
-          'after': null,
-          'has_prev': false,
-          'has_next': false,
-        },
-        'total_hits': list.length,
-      };
-    }
+    // GET /search được xử lý tập trung bởi PreviewSearch.
     if (seg.length == 4 && seg[1] == 'sessions' && seg[3] == 'questions') {
       final s = _sessions[int.tryParse(seg[2])];
       if (s == null) return null;
