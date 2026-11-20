@@ -1,3 +1,7 @@
+// Flutter >= 3.47 chuyển CupertinoPageTransitionsBuilder sang thư viện Cupertino
+// (material.dart không còn export); Flutter 3.41 vẫn để trong Material.
+// ignore: unnecessary_import, unused_import
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
