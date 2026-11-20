@@ -61,9 +61,13 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
         draft: state.draft,
       ),
     );
+
     try {
       final settings = await _repository.getSettings();
+
+      // Request hoàn tất sau khi Cubit đã dispose.
       if (isClosed) return;
+
       emit(
         PushSettingsState(
           status: PushSettingsStatus.ready,
@@ -73,6 +77,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
       );
     } catch (error) {
       if (isClosed) return;
+
       emit(
         PushSettingsState(
           status: state.hasSettings
@@ -88,6 +93,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
 
   void updateDraft(PushSettings settings) {
     if (!state.hasSettings || state.isSaving) return;
+
     emit(
       PushSettingsState(
         status: PushSettingsStatus.ready,
@@ -99,6 +105,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
 
   void discardChanges() {
     if (!state.hasSettings || state.isSaving) return;
+
     emit(
       PushSettingsState(
         status: PushSettingsStatus.ready,
@@ -113,6 +120,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
     if (draft == null || !state.isDirty || state.isSaving) return;
 
     final original = state.original;
+
     emit(
       PushSettingsState(
         status: PushSettingsStatus.saving,
@@ -123,7 +131,10 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
 
     try {
       final saved = await _repository.updateSettings(draft);
+
+      // Không emit nếu Cubit đã dispose trong lúc PUT.
       if (isClosed) return;
+
       emit(
         PushSettingsState(
           status: PushSettingsStatus.ready,
@@ -134,6 +145,7 @@ class PushSettingsCubit extends Cubit<PushSettingsState> {
       );
     } catch (error) {
       if (isClosed) return;
+
       // Giữ nguyên draft để người dùng có thể thử lưu lại.
       emit(
         PushSettingsState(

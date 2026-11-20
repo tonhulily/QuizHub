@@ -121,6 +121,7 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
       );
     } catch (e) {
       if (isClosed) return;
+
       emit(state.copyWith(historyError: e.toString()));
     }
   }
@@ -128,6 +129,8 @@ class GlobalSearchCubit extends Cubit<GlobalSearchState> {
   Future<void> _saveSearchHistory(String query) async {
     try {
       await _repository.saveSearch(query);
+
+      if (isClosed) return;
 
       final response = await _repository.getSavedSearches();
 

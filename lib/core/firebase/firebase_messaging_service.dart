@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:collection';
 
 import '../../data/models/push_notification_payload.dart';
 import '../router/app_navigator.dart';
@@ -46,7 +47,8 @@ class FirebaseMessagingService {
   String? get currentToken => _currentToken;
 
   bool _initialized = false;
-  PushNotificationPayload? _pendingPayload;
+  final Queue<PushNotificationPayload> _pendingPayloads =
+      Queue<PushNotificationPayload>();
 
   bool _navigationReady = false;
   bool _handlingPending = false;
@@ -61,7 +63,9 @@ class FirebaseMessagingService {
   }
 
   void _handleNotificationTap(RemoteMessage message) {
-    _pendingPayload = PushNotificationPayload.fromRemoteMessage(message);
+    final payload = PushNotificationPayload.fromRemoteMessage(message);
+
+    _pendingPayloads.addLast(payload);
 
     unawaited(handlePendingNotification());
   }
@@ -69,34 +73,36 @@ class FirebaseMessagingService {
   Future<void> handlePendingNotification() async {
     if (!_navigationReady || _handlingPending) return;
 
-    final payload = _pendingPayload;
-    if (payload == null) return;
+    if (_pendingPayloads.isEmpty) return;
 
     _handlingPending = true;
-    var opened = false;
 
     try {
-      await _openNotification(payload);
-      opened = true;
+      while (_navigationReady && _pendingPayloads.isNotEmpty) {
+        final payload = _pendingPayloads.first;
 
-      // Chỉ xóa đúng payload vừa xử lý.
-      // Tránh xóa nhầm notification mới đến trong lúc đang xử lý.
-      if (identical(_pendingPayload, payload)) {
-        _pendingPayload = null;
+        try {
+          await _openNotification(payload);
+
+          // Chỉ xóa notification vừa xử lý thành công.
+          if (_pendingPayloads.isNotEmpty &&
+              identical(_pendingPayloads.first, payload)) {
+            _pendingPayloads.removeFirst();
+          }
+        } catch (e, stackTrace) {
+          debugPrint('[FCM] Cannot open notification: $e');
+          debugPrintStack(stackTrace: stackTrace);
+
+          // Giữ notification lỗi ở đầu queue để có thể thử lại
+          // khi navigation được đánh dấu sẵn sàng lần tiếp theo.
+          break;
+        }
       }
-    } catch (e, stackTrace) {
-      debugPrint('[FCM] Cannot open notification: $e');
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       _handlingPending = false;
     }
-
-    // Có lần chạm mới đến trong lúc đang mở payload trước: xử lý tiếp.
-    // Nếu mở lỗi thì không lặp lại để tránh vòng lặp vô hạn.
-    if (opened && _pendingPayload != null) {
-      await handlePendingNotification();
-    }
   }
+
 
   Future<void> initialize() async {
     if (_initialized) return;
