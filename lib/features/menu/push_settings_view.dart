@@ -27,6 +27,41 @@ class _PushSettingsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Có thay đổi chưa lưu thì hỏi xác nhận trước khi thoát màn hình.
+    return BlocBuilder<PushSettingsCubit, PushSettingsState>(
+      buildWhen: (previous, current) => previous.isDirty != current.isDirty,
+      builder: (context, state) => PopScope(
+        canPop: !state.isDirty,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          final leave = await _confirmDiscard(context);
+          if (leave == true && context.mounted) Navigator.of(context).pop();
+        },
+        child: _buildScaffold(context),
+      ),
+    );
+  }
+
+  static Future<bool?> _confirmDiscard(BuildContext context) =>
+      showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Bỏ thay đổi?'),
+          content: const Text('Các thay đổi chưa lưu sẽ bị mất.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Ở lại'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Bỏ thay đổi'),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundSecondary,
       appBar: AppBar(
@@ -117,6 +152,7 @@ class _PushSettingsBody extends StatelessWidget {
                             title: _formatCategory(entry.key),
                             subtitle: entry.value.description,
                             value: entry.value.enabled,
+                            enabled: settings.pushEnabled,
                             onChanged: (value) => _update(
                               context,
                               settings.updateCategory(entry.key, value),
@@ -136,6 +172,7 @@ class _PushSettingsBody extends StatelessWidget {
                           subtitle:
                               'Thiết lập khoảng thời gian không làm phiền',
                           value: settings.quietHours.enabled,
+                          enabled: settings.pushEnabled,
                           onChanged: (value) => _update(
                             context,
                             settings.copyWith(
@@ -153,12 +190,14 @@ class _PushSettingsBody extends StatelessWidget {
                           _TimeSetting(
                             title: 'Bắt đầu',
                             value: settings.quietHours.startTime,
+                            enabled: settings.pushEnabled,
                             onTap: () =>
                                 _pickTime(context, settings, isStart: true),
                           ),
                           _TimeSetting(
                             title: 'Kết thúc',
                             value: settings.quietHours.endTime,
+                            enabled: settings.pushEnabled,
                             onTap: () =>
                                 _pickTime(context, settings, isStart: false),
                           ),
@@ -174,6 +213,7 @@ class _PushSettingsBody extends StatelessWidget {
                           title: 'Âm thanh',
                           subtitle: 'Phát âm thanh khi có thông báo',
                           value: settings.soundEnabled,
+                          enabled: settings.pushEnabled,
                           onChanged: (value) => _update(
                             context,
                             settings.copyWith(soundEnabled: value),
@@ -184,6 +224,7 @@ class _PushSettingsBody extends StatelessWidget {
                           title: 'Rung',
                           subtitle: 'Rung khi nhận được thông báo',
                           value: settings.vibrationEnabled,
+                          enabled: settings.pushEnabled,
                           onChanged: (value) => _update(
                             context,
                             settings.copyWith(vibrationEnabled: value),
@@ -367,6 +408,7 @@ class _SettingSwitch extends StatelessWidget {
   final String title;
   final String? subtitle;
   final bool value;
+  final bool enabled;
   final ValueChanged<bool> onChanged;
 
   const _SettingSwitch({
@@ -374,6 +416,7 @@ class _SettingSwitch extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.value,
+    this.enabled = true,
     required this.onChanged,
   });
 
@@ -397,23 +440,26 @@ class _SettingSwitch extends StatelessWidget {
             ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
           ),
     value: value,
-    onChanged: onChanged,
+    onChanged: enabled ? onChanged : null,
   );
 }
 
 class _TimeSetting extends StatelessWidget {
   final String title;
   final String value;
+  final bool enabled;
   final VoidCallback onTap;
 
   const _TimeSetting({
     required this.title,
     required this.value,
+    this.enabled = true,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) => ListTile(
+    enabled: enabled,
     contentPadding: const EdgeInsets.only(left: 38, right: 8),
     title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
     trailing: Row(
