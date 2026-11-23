@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quizhub/core/firebase/firebase_installation_service.dart';
 import 'package:quizhub/core/network/api_client.dart';
 import 'package:quizhub/core/network/session_events.dart';
 import 'package:quizhub/core/services/device_service.dart';
@@ -164,6 +165,7 @@ void main() {
         storage,
         DeviceService(storage),
         _Credentials(),
+        FirebaseInstallationService(),
       );
       final cubit = AuthCubit(repo, events);
       addTearDown(cubit.close);

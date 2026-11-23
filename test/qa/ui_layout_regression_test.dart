@@ -164,7 +164,8 @@ class _Subjects implements SubjectRepository {
   ];
 
   @override
-  Future<List<SubjectModel>> enrolled() async => all();
+  Future<List<SubjectModel>> enrolled({bool currentSemester = false}) async =>
+      all();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
