@@ -51,16 +51,16 @@ Widget _app(Widget home, {UserRole role = UserRole.student}) => withRole(
   ),
 );
 
+Finder _scrollableIn(Finder listView) => find.descendant(
+  of: listView,
+  matching: find.byType(Scrollable),
+).first;
+
 void _narrow(WidgetTester tester) {
   tester.view.physicalSize = const Size(320, 640);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 }
-
-Finder _listScrollable() => find.descendant(
-  of: find.byType(ListView).last,
-  matching: find.byType(Scrollable),
-);
 
 class _ConversationRows implements ChatRepository {
   @override
@@ -166,6 +166,19 @@ class _Subjects implements SubjectRepository {
   @override
   Future<List<SubjectModel>> enrolled({bool currentSemester = false}) async =>
       all();
+
+  @override
+  Future<List<EnrolledCourseClass>> enrolledClasses() async => const [
+    EnrolledCourseClass(
+      courseClassId: 1,
+      classCode: 'IT3011.2026.1.01',
+      subjectId: 10,
+      subjectCode: 'IT3011',
+      subjectName: 'Cấu trúc dữ liệu',
+      activeSemester: true,
+      canPropose: true,
+    ),
+  ];
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -309,15 +322,16 @@ void main() {
     await tester.scrollUntilVisible(
       showReplies,
       160,
-      scrollable: _listScrollable().last,
+      scrollable: _scrollableIn(find.byType(ListView).last),
     );
+    expect(showReplies.hitTestable(), findsOneWidget);
     await tester.tap(showReplies);
     await tester.pumpAndSettle();
     final reply = find.byKey(const ValueKey('comment_72'));
     await tester.scrollUntilVisible(
       reply,
       160,
-      scrollable: _listScrollable().last,
+      scrollable: _scrollableIn(find.byType(ListView).last),
     );
     expect(reply, findsOneWidget);
     final input = find.byType(TextField).last;
@@ -349,7 +363,7 @@ void main() {
     await tester.scrollUntilVisible(
       like,
       160,
-      scrollable: _listScrollable().last,
+      scrollable: _scrollableIn(find.byType(ListView).last),
     );
     expect(like.hitTestable(), findsOneWidget);
     await tester.tap(like);
@@ -376,7 +390,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Gửi').last);
     await tester.pumpAndSettle();
-    expect(find.text('Hãy chọn môn học.'), findsOneWidget);
+    expect(find.text('Hãy chọn lớp học phần.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -396,7 +410,7 @@ void main() {
     await tester.scrollUntilVisible(
       generate,
       160,
-      scrollable: _listScrollable().last,
+      scrollable: _scrollableIn(find.byType(ListView).first),
     );
     await tester.tap(generate);
     await tester.pumpAndSettle();
