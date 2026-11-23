@@ -1,0 +1,55 @@
+QA retest evidence — 2026-11-23
+
+Tested source SHA: 04d858c5348626198b1879a7900e2d75c9390e58 (QA branch checkpoint)
+Upstream main snapshot: 82ef14f38e086d6b558b392fc54a328c3d7f26a2
+Baseline app source SHA before QA harness edits: 622640325b7c1b4bf0f3a5018ffd2635dce27061
+Environment: Linux x86_64; Flutter 3.41.6 stable; Dart 3.11.4; local widget/unit tests with mocks/fakes; no API host, no native device.
+
+Focused issue retest command:
+.qa-tools/flutter/bin/flutter test --no-pub --concurrency=1 --reporter expanded test/features/question_bank_ui_test.dart test/qa/exam_export_regression_test.dart test/features/exam_ui_test.dart test/features/async_close_lifecycle_test.dart test/core/fcm_pending_queue_test.dart
+Actual executable: .qa-tools/flutter/bin/flutter. Exit 0, 47 passed. Includes:
+- QH-QA-001: LoadCubit late-load success and failure after close, both complete without exception.
+- QH-QA-002: image-only answer options accepted by validator.
+- QH-QA-003: launcher PlatformException is caught and user feedback appears.
+- QH-QA-004: role-specific exam UI assertions (student sees no AI suggestion, lecturer does).
+- QH-QA-006: push settings load/save success and error after close (4 cases).
+- QH-QA-007: saved-search deletion failure after close.
+- QH-QA-008: queued second notification tap opens after first navigation completes.
+Raw full output is in ignored qa-artifacts/2026-11-23/retest/issues-loopback.log.
+
+Scoped analyzer command: .qa-tools/flutter/bin/flutter analyze --no-pub lib test qa/repro; exit 0, `No issues found`.
+
+Layout retest command on committed test blob `b6ad793c86e36cfd40559e48f287e35df5c6d83a`: .qa-tools/flutter/bin/flutter test --no-pub --concurrency=1 --reporter expanded test/qa/ui_layout_regression_test.dart; exit 1, 2 passed / 5 failed. The earlier exploratory working-copy output (`layout-loopback.log`) is not valid for the committed SHA and is excluded. Observed failures:
+- `conversation list: search/filter remain usable with long rows`: RenderFlex overflow 161 px right at lib/features/chat/view/conversations_view.dart:256; EmptyView overflow 341 px bottom at lib/core/widgets/state_views.dart:143.
+- `feed: long author/post text does not cover available actions`: four RenderFlex overflows 71, 67, 179, 123 px right in lib/shared/post/post_card.dart:380 and :479.
+- The two overflow test failures are the conversation row/EmptyView and feed/PostCard described above. Three other test failures are host/finder limits: comments reply/like controls were not hit-testable; the exam generator tap landed at y=642.8 outside the 640 px root, so validation was not observed. The question-form case passed. No exam generator overflow was observed in the committed run. These remain local widget evidence; no device confirmation.
+The baseline checkpoint at SHA 2f040844ee939317ac06da6a9d7473670f4213cd had 6 layout failures; the exact committed rerun is in ignored `qa-artifacts/2026-11-23/retest/layout-pristine-04d.log` and its exit/hash files. An interim edited-copy run in `layout-loopback.log` is exploratory only and excluded from results.
+
+Opt-in fake network risk repro command: .qa-tools/flutter/bin/flutter test --no-pub --concurrency=1 --reporter expanded qa/repro/network_risks_test.dart; exit 1, two expected invariants still fail:
+- Redirect sends `Authorization: Bearer dummy-access` and body `{marker: dummy-body}` to other.test.
+- Concurrent 401/refresh-timeout callers return `noConnection` for the first and `unauthorized` for the second; expected both `noConnection`.
+These are in-memory adapter repros, not API/server/device observations. Log: ignored `qa-artifacts/2026-11-23/retest/network-risks.log`.
+
+QH-QA-005: Flutter 3.41.6 full suite compiled and ran; original QH-QA-005 repro was Flutter 3.47.9. No lock-matched 3.47.9 retest was run. Status recommendation: ready for a focused 3.47.9 retest; do not claim the old compile defect fixed from the 3.41.6 run.
+
+No screenshots were captured. API, backend, and native acceptance were not run.
+
+Network repro safe excerpts (dummy fixture only):
+```
+[API] redirect 308 -> https://other.test/capture
+[API] -> POST https://other.test/capture
+Expected authorization/body null; actual `Bearer dummy-access` and `{'marker': 'dummy-body'}`.
+```
+```
+Expected errorTypes [noConnection, noConnection]; actual [noConnection, unauthorized].
+Expected/actual tokensRetained true, sessionExpiredCount 0, refreshCalls 1.
+```
+Suggested tracker candidates: QH-QA-014 cross-origin 308 forwards dummy bearer/body (Như, Security; local fake adapter only); QH-QA-015 parallel 401 refresh timeout second caller returns unauthorized instead of noConnection (Như, Authentication; local fake adapter only). Existing findings in RISKS.md are retested; this run does not show an actual server, proxy, device, or real credential exposure.
+
+Layout excerpts:
+```
+RenderFlex overflowed by 161 pixels on the right (conversations_view.dart:256)
+RenderFlex overflowed by 341 pixels on the bottom (state_views.dart:143)
+PostCard rows overflowed 71, 67, 179, and 123 pixels on the right (post_card.dart:380, :479)
+```
+Committed layout test run: 2 passed / 5 failed, exit 1. The three non-overflow test failures are host/finder limits: comments cannot hit-test `Xem 1 phản hồi` or `Thích` in the current 320x640/2x text fixture; the exam generator tap is at y=642.8 outside the 640 px root and validation text is absent. No exam generator overflow was observed in the committed run. QH-QA-004 remains a harness-only case and passed its specific role visibility assertions.

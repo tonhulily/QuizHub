@@ -1,0 +1,38 @@
+QuizHub regression evidence — 2026-11-23
+Environment: Linux x86_64; Flutter 3.41.6 stable; Dart 3.11.4; no API host/device.
+All Flutter runs used --no-pub and the existing cache. No screenshots were captured.
+
+BASELINE TESTED_SHA=622640325b7c1b4bf0f3a5018ffd2635dce27061
+Command: .qa-tools/flutter/bin/flutter test --no-pub --reporter expanded
+Loopback-authorized rerun: exit 1, 390 passed, 2 test files failed to compile.
+Observed UTC: 2026-11-23 14:52:50 to 14:54:11.
+test/features/auth_session_test.dart:156:34: AuthRepository.new requires 6 positional args, test supplied 5.
+test/qa/ui_layout_regression_test.dart:167:30: _Subjects.enrolled override omitted named bool currentSemester. This file runs in the default suite; it has no opt-in flag.
+Full log: qa-artifacts/2026-11-23/regression/flutter-test-loopback.log
+
+CHECKPOINT TESTED_SHA=2f040844ee939317ac06da6a9d7473670f4213cd
+Command: .qa-tools/flutter/bin/flutter test --no-pub --reporter expanded
+Loopback-authorized rerun: exit 1, 395 passed, 6 failed.
+Observed UTC: 2026-11-23 15:03:11 to 15:04:22.
+Two layout observations: conversations_view.dart:256 row overflow 161 px and state_views.dart:143 empty-state column overflow 341 px; post_card.dart:380/479 horizontal overflows 71, 67, 179, 123 px.
+Four harness/finder failures: comments long-content dragUntilVisible found no element; pending-reaction test expected one “Thích” but found zero; question-form fake lacked enrolledClasses() and pumpAndSettle timed out; exam-generator dragUntilVisible found no element.
+Full log: qa-artifacts/2026-11-23/regression/checkpoint-2f040844/flutter-test.log
+
+Checkpoint scoped analyzer:
+Command: .qa-tools/flutter/bin/flutter analyze --no-pub lib test qa/repro
+Exit 0: No issues found.
+Observed UTC: 2026-11-23 15:04:29 to 15:05:02.
+Full log: qa-artifacts/2026-11-23/regression/checkpoint-2f040844/flutter-analyze.log
+
+Baseline Python checks:
+python3 qa/api/test_collection.py — exit 0, 3 tests.
+Observed UTC: 2026-11-23 14:54:35 to 14:54:35.
+python3 -m unittest discover -s qa/fixtures -p 'test_*.py' -v — exit 0, 6 tests.
+Observed UTC: 2026-11-23 14:54:40 to 14:54:41.
+Full logs: qa-artifacts/2026-11-23/regression/python-api.log and python-fixtures.log
+
+Formatter check (baseline and checkpoint):
+.qa-tools/flutter/bin/dart format --output=none --set-exit-if-changed lib test qa/repro — exit 1, 245 files inspected, 12 reported as needing formatting. Check-only; files were not written.
+Baseline observed UTC: 2026-11-23 14:54:27 to 14:54:30.
+Checkpoint observed UTC: 2026-11-23 15:05:08 to 15:05:10.
+Reported paths: lib/core/firebase/firebase_messaging_service.dart; test/core/firebase_fid_sync_service_test.dart; test/core/firebase_messaging_service_test.dart; test/core/paged_cubit_test.dart; test/data/notification_repository_test.dart; test/data/push_notification_payload_test.dart; test/data/search_models_test.dart; test/features/async_close_lifecycle_test.dart; test/features/notification_cubit_test.dart; test/features/notification_navigator_test.dart; test/features/report_sheet_test.dart; test/helpers/fake_firebase_messaging_gateway.dart.

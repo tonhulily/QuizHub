@@ -1,0 +1,17 @@
+Public OpenAPI route evidence — contract inspection only
+Date: 2026-11-23
+URL: https://snsqb.duckdns.org/api/v1/docs/openapi.json
+Fetch: `curl -L --max-time 25` — initial sandbox attempt failed DNS (exit 6); one approved read-only retry returned HTTP 200, 488833 bytes, exit 0.
+SHA-256 of raw response retained in ignored `qa-artifacts/2026-11-23/delta/openapi.json`: f031f885a87340067daaabdb680992077c6a2f222b6ed4fc75dc504dc2ff0401
+Schema: OpenAPI 3.1.0, 155 paths.
+
+Relevant documented paths/methods:
+- `GET /sessions/my-enrolled-course-classes` — operationId `getMyEnrolledCourseClasses`, bearer auth, response 200.
+- `GET /games/prediction/game-1/classes` — operationId `getMyCourseClassesForGame1Prediction`, bearer auth, response 200.
+- `GET /games/my-predictions` — operationId `getMyPredictions`, bearer auth, response 200.
+- `GET /games/leaderboard` — operationId `getLeaderboard`, bearer auth, response 200.
+- `POST /games/prediction/participants` — operationId `predictGame1`, bearer auth, responses 200/400/403/404/409.
+- `POST /games/prediction/approved-questions` — operationId `predictGame2`, bearer auth, responses 200/400/404/409.
+- `POST /games/prediction/bank-size` — operationId `predictGame4`, bearer auth, responses 200/404/409.
+
+This confirms public schema route/method presence only. No authentication, request or business API call was made; response compatibility and backend runtime remain unverified.

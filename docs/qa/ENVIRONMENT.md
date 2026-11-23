@@ -1,5 +1,14 @@
 # Môi trường QA
 
+## Regression runner cập nhật 2026-11-23
+
+- Checkout QA: `qa/khanhson2005`; tested sources gồm merge `622640325b7c1b4bf0f3a5018ffd2635dce27061`, regression checkpoint `2f040844ee939317ac06da6a9d7473670f4213cd`, và focused retest checkpoint `04d858c5348626198b1879a7900e2d75c9390e58`. Upstream main snapshot: `82ef14f38e086d6b558b392fc54a328c3d7f26a2`.
+- Linux x86_64, Flutter 3.41.6 stable / Dart 3.11.4 từ `.qa-tools/flutter`; `PUB_CACHE=.qa-tools/pub-cache`, XDG config/cache ở `.qa-tools/`. Không cài SDK/package và không chạy `pub get`.
+- Đã audit toàn bộ `pubspec.lock`: 141 hosted package versions đều có cache đúng phiên bản. `.dart_tool/package_config.json` được dựng lại từ package map exact-lock cũ, bổ sung Firebase và giữ SDK package paths của Flutter 3.41.6. Flutter 3.47.9 có sẵn tại `.qa-tools/sdk-3.47.9/flutter`, nhưng test SDK packages của nó không khớp lockfile; không ghép runner đó với dependency config này.
+- Flutter test loader cần loopback `127.0.0.1`; sandbox thường chặn bind. Các lượt test cuối được chạy bằng loopback access đã được cấp. Lượt sandbox đầu có lỗi tạo server socket và không được dùng làm kết quả cuối.
+- Không có API host/tài khoản hoặc thiết bị trong các lần chạy. Regression là unit/widget với fakes/mocks; browser preview dùng local static server, không gọi backend.
+- Full logs đang ở ignored `qa-artifacts/2026-11-23/regression/`, `qa-artifacts/2026-11-23/regression/checkpoint-2f040844/`, `qa-artifacts/2026-11-23/retest/`, và `qa-artifacts/2026-11-23/web/`. Chọn evidence/report: [regression](reports/2026-11-23-regression.md), [retest evidence](evidence/2026-11-23/retest/results.txt), [web](reports/2026-11-23-web.md).
+
 ## Cập nhật QA ngày 2026-11-15 — lịch sử audit và trạng thái mới nhất
 
 - **Audit ban đầu tại SHA `adde556e2ef6e481fd7145588db878012673b059`:** package config có 135 package so với 136 trong lockfile; Flutter test/analyze khi đó **BLOCKED / NOT RUN**. Chi tiết: [báo cáo regression](reports/2026-11-15-regression.md). Đây là trạng thái trước khi coordinator khôi phục cache.

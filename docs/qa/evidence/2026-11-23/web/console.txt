@@ -1,0 +1,14 @@
+WEB-FCM-01 — local browser preview console excerpt
+Date: 2026-11-23 (workspace local time, Asia/Bangkok)
+Source/build SHA: 2f040844ee939317ac06da6a9d7473670f4213cd
+Command: cached Flutter 3.41.6 Dart snapshot `build web --no-pub -t lib/main_preview.dart --dart-define=PREVIEW_ROLE=STUDENT --no-web-resources-cdn --no-wasm-dry-run --output=qa-artifacts/2026-11-23/web/build` (exit 0); Python static server on 127.0.0.1:4173; Playwright Chromium navigated to http://127.0.0.1:4173/.
+
+Observed console:
+[ 924ms] [Firebase] Initialization failed: Unsupported operation: DefaultFirebaseOptions have not been configured for web
+[2425ms] Uncaught Error; stack at main.dart.js:62723 -> 137564 -> 130239 -> 130274 -> 130276 -> 146600.
+[2998ms] [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+The second stack begins at the same minified frames as the uncaught Error. Browser screenshot `preview-blank-body.png` shows shell header with blank gray body.
+
+Source correlation (same build SHA): `main_preview.dart` catches Firebase initialization failure and continues; `setupLocator` registers a lazy `FirebaseMessagingService`; `MainShell` creates `NotificationCubit` and calls `_listenToForegroundPush`, which resolves that service unconditionally; its factory constructs `FirebaseMessagingGatewayImpl`, whose default constructor reads `FirebaseMessaging.instance`. With no default Firebase app, the lookup throws. This matches the observed no-app exception and the blank content after shell mount; failure is reproducible in local preview when web Firebase options are unavailable.
+
+Other console events: WebGL context loss; external avatar images at `i.pravatar.cc` blocked by CORS; `/favicon.ico` 404. These do not explain the `[core/no-app]` exception. No credentials, tokens, or personal identifiers appear in this excerpt. Full raw log remains in ignored `qa-artifacts/2026-11-23/web/browser-logs/`.

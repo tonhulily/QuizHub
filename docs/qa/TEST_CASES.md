@@ -1,13 +1,19 @@
 # Bộ test case chấp nhận — Sơn (TV4)
 
 Bộ case này ghi acceptance IDs của [matrix QA](../../QA.md#test-matrix-khởi-đầu). Handoff
-2026-11-15: **22 NOT RUN, 3 WAITING**; 19 case có bước chi tiết, ba module Question/Exam/Chat
-đã có implementation nhưng acceptance chưa chạy và được ghi trong mục handoff bên dưới.
+2026-11-23: **24 NOT RUN, 1 WAITING**; 19 case gốc có bước chi tiết. Question/Exam/Chat,
+Search và Push đã có implementation trong upstream nhưng acceptance chưa chạy; xem mục handoff bên dưới.
 Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là biến thể cùng phạm vi.
 [TEST_PLAN.md](TEST_PLAN.md) mô tả chuẩn bị phiên chạy, evidence, bug và thứ tự QA;
 [PROGRESS.md](PROGRESS.md) là nguồn duy nhất cho trạng thái và số liệu chạy hiện thời.
 
-## Handoff mới nhất — 2026-11-15
+## Handoff hiện tại — 2026-11-23
+
+- Upstream `main` snapshot: `82ef14f38e086d6b558b392fc54a328c3d7f26a2`; latest focused QA test checkpoint: `04d858c5348626198b1879a7900e2d75c9390e58`. Matrix hiện **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**. Mọi case acceptance vẫn chưa chạy trên API/device.
+- SEARCH-01 và PUSH-01 đã có implementation trong main snapshot mới; chuyển từ WAITING sang NOT RUN cho tới khi chạy acceptance với backend/FCM và thiết bị. Có minigame implementation một phần; AI và contract/release scope còn thiếu nên ADV-01 giữ WAITING.
+- Local focused widget/unit retest không đánh dấu PASS cho acceptance matrix. Kết quả theo từng QA issue và giới hạn môi trường ở [PROGRESS.md](PROGRESS.md) và [retest report](reports/2026-11-23-retest.md).
+
+## Handoff lịch sử — 2026-11-15
 
 - QA test-source snapshot / compile-check `TESTED_SHA`: `999a1678206a6b0d5589cf2c97a0f677ef8bb017`; current QA report/docs snapshot `f3661a2db84c3e4fb544b1307f599b96c360e1e6`; upstream `main` tích hợp:
   `08a5a2e4097923d21bbdaf7d02cb1792f2171aa3`. Snapshot này chỉ thêm QA probes; app/runtime và dependencies không khác main.
@@ -39,7 +45,7 @@ Giữ nguyên ID để truy vết matrix; các hậu tố như `AUTH-01a` là bi
   `0cfa3fba4cb1a8858e448b81b62954ebec9c277e`. Không fetch; độ mới của ref remote chưa
   được xác minh.
 - Tại snapshot lúc soạn, matrix có 19 ID `NOT RUN` và 6 ID `WAITING`. Đây là trạng thái lịch
-  sử; snapshot handoff hiện tại ở trên có 22 NOT RUN / 3 WAITING. Không ghi `PASS` từ code,
+  sử; handoff ngày 2026-11-15 có 22 NOT RUN / 3 WAITING. Không ghi `PASS` từ code,
   mock hay nội dung case.
 - Expected bắt buộc đến từ requirement đã duyệt trong [README — quy tắc nghiệp vụ](../../README.md#quy-tắc-nghiệp-vụ-phải-giữ)
   hoặc contract backend mà owner đã xác nhận. Code links bên dưới chỉ cho biết nơi
@@ -252,18 +258,19 @@ trong [PROGRESS.md](PROGRESS.md). Đây không phải lỗi app.
 
 ## 8. Acceptance handoff cho module mới tích hợp và module còn chờ
 
-Ba ID đầu đã có module trong upstream, nên trạng thái case là `NOT RUN`; API/UI readiness bị
-`BLOCKED` do thiếu môi trường/test data. Các assertion chưa có expected/contract xác nhận vẫn
-`WAITING` riêng. Ba ID cuối vẫn `WAITING` vì feature chưa tích hợp.
+Question/Exam/Chat, Search và Push đã có implementation trong upstream snapshot mới nên các
+case tương ứng ở `NOT RUN`; API/UI readiness cần host, tài khoản, FCM hoặc thiết bị. Các assertion
+chưa có expected/contract xác nhận vẫn `WAITING` riêng. Minigame đã có một phần, còn AI và
+release contract chưa chốt nên ADV-01 tiếp tục `WAITING`.
 
 | ID / owner / trạng thái | Draft phạm vi acceptance | Cần chốt với owner / prerequisite |
 |---|---|---|
 | QUESTION-01 · Dũng · NOT RUN | Tạo/sửa/xoá submission, câu trùng, moderation/approval, answer và rating; xác nhận feed cập nhật sau trạng thái được duyệt. | Module đã có; chốt vai trò được tạo/duyệt, định nghĩa câu trùng, trạng thái/ai được trả lời hoặc rate, range rating và cách sửa/xoá; cần fixture subject/session và API host/tài khoản. Routes [ApiEndpoints](../../lib/core/network/api_endpoints.dart#L64) không xác nhận schema/behavior. |
 | EXAM-01 · Dũng · NOT RUN | Sinh đề từ nguồn đã chọn; mở danh sách/detail và export; xác nhận quyền sở hữu và kết quả export. | Module đã có; chốt tham số/số câu/subject/range, đồng bộ hay async, file format/size, quyền tải/xoá; cần API host/tài khoản. Route declarations [exam](../../lib/core/network/api_endpoints.dart#L80) không xác định schema. |
 | CHAT-01 · Quốc Anh · NOT RUN | Send/receive/read/delete qua hai user; thử reconnect và block behavior. Client đã có; tham chiếu [chat API contract](../chat/API_CONTRACT.md) và [QA chat](chat.md). | Cần API host, hai tài khoản và realtime payload thực để verify. Chốt thêm expected cho ordering/delivery guarantee, retry/idempotency, receipts, delete semantics và block policy; các assertion này WAITING tới khi owner xác nhận. |
-| PUSH-01 · Nam · WAITING | Permission, device token registration/unregistration, foreground/background/terminated delivery và deep link. | Chưa tích hợp ở upstream snapshot; khi có implementation cần FCM project/test credentials qua kênh bảo mật, payload contract, token refresh, denied-permission behavior, supported OS/devices. |
-| SEARCH-01 · Nam · WAITING | Search nội dung câu hỏi/bài, pagination/history/saved search; xác nhận refresh và quyền riêng tư kết quả. | Chưa tích hợp ở upstream snapshot; chốt searchable entity/fields, ranking, offset/cursor, history retention/delete, saved search schema, private content filtering; không trùng REL-01 search người dùng. |
-| ADV-01 · Dũng · WAITING | Khi AI/gamification/badges/cosmetics được tích hợp: kiểm tra action tạo reward, leaderboard, inventory/badge và consistency sau reload. | Chưa tích hợp scope này; chốt release scope, rules/eligibility, idempotency, ranking tie-break, reward ledger, AI fallback/quota/privacy. |
+| PUSH-01 · Nam · NOT RUN | Permission, device token registration/unregistration, foreground/background/terminated delivery và deep link. | Module đã tích hợp trong main snapshot `82ef14f`; cần FCM project/test credentials qua kênh bảo mật, payload contract, token refresh, denied-permission behavior và thiết bị/OS hỗ trợ. |
+| SEARCH-01 · Nam · NOT RUN | Search nội dung câu hỏi/bài, pagination/history/saved search; xác nhận refresh và quyền riêng tư kết quả. | Search đã tích hợp trong main snapshot `82ef14f`; cần chốt searchable entity/fields, ranking, offset/cursor, history retention/delete, saved search schema, private content filtering; không trùng REL-01 search người dùng. API/UI acceptance chưa chạy. |
+| ADV-01 · Dũng · WAITING | Kiểm tra minigame đã có một phần; sau khi chốt scope có thể gồm reward, leaderboard, inventory/badge và consistency sau reload; AI theo bàn giao riêng. | Minigame chưa được nghiệm thu; phần còn thiếu và AI cần release scope, rules/eligibility, idempotency, ranking tie-break, reward ledger, AI fallback/quota/privacy rõ ràng. |
 
 ## Phiếu ghi kết quả mỗi case
 

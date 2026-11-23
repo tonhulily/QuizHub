@@ -1,5 +1,36 @@
 # Theo dõi tiến độ QA
 
+## Handoff hiện tại — 2026-11-23
+
+### Source và acceptance
+
+| Mốc | SHA / trạng thái |
+|---|---|
+| `QA_BEFORE` | `b25419365a8ecb78a00ccfd629f0807a1eea98a7` |
+| `MAIN_SNAPSHOT` | `82ef14f38e086d6b558b392fc54a328c3d7f26a2` |
+| QA merge / `TESTED_SHA` full regression | `622640325b7c1b4bf0f3a5018ffd2635dce27061` |
+| Checkpoint sau khi sửa hai fixture compile | `2f040844ee939317ac06da6a9d7473670f4213cd` |
+| Focused retest checkpoint | `04d858c5348626198b1879a7900e2d75c9390e58` |
+| Runtime/config delta theo coordinator | `lib/`, `android/`, `ios/`, `pubspec.yaml`, `pubspec.lock` trùng `MAIN_SNAPSHOT`; không có app/dependency edit riêng trên QA. |
+| Acceptance matrix | **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**. SEARCH/PUSH đã có implementation trong snapshot mới nên chuyển từ WAITING sang NOT RUN; minigame có một phần, AI/contract còn WAITING. Local regression không được cộng vào acceptance. |
+| API/native acceptance | **NOT RUN** — không có API host/tài khoản hoặc thiết bị trong các lượt này. |
+
+### Regression và local repro
+
+- Full default suite trên `6226403`, Flutter 3.41.6/Dart 3.11.4: exit 1, 390 passed; hai file test compile lỗi. Sau khi sửa fixture, full suite tại `2f04084`: exit 1, 395 passed / 6 failed. Đây là full-suite result duy nhất ở checkpoint đó; không gộp với focused retest mới hơn. Xem [regression report](reports/2026-11-23-regression.md) và [evidence excerpt](evidence/2026-11-23/regression/results.txt).
+- Tại `04d858c`, focused issue suite: **47 PASS**, exit 0; bao phủ QH-QA-001..004 và QH-QA-006..008 bằng unit/widget tests với mocks/fakes. QH-QA-005 chưa retest bằng Flutter 3.47.9; runner lock-compatible Flutter 3.41.6 không đóng được issue đó. Kết quả từng issue: [retest report](reports/2026-11-23-retest.md).
+- Cùng `04d858c`, `test/qa/ui_layout_regression_test.dart`: **2 PASS / 5 FAIL**, exit 1. Hai failed test cases chứa ba overflow component sites tương ứng QH-QA-010..012: conversation row 161 px ngang, shared EmptyView 341 px dọc, PostCard actions (71/67/179/123 px ngang trên bốn diagnostic). Ba failed test cases còn lại là hit-test/viewport limits của harness (reply control, like control, exam action off-screen). Widget run 320×640/text scale 2, không xác nhận trên thiết bị. Không dùng exploratory layout log 4/3; source test của nó đã bị chỉnh trong lúc điều tra và log đó không được tính.
+- Cùng `04d858c`, scoped analyzer `flutter analyze --no-pub lib test qa/repro`: exit 0, `No issues found`.
+- Network fake repro: 2 invariant FAIL, exit 1. Redirect gửi dummy bearer/body sang off-origin host; hai concurrent 401 callers phân loại timeout thành `noConnection` và `unauthorized`. Đây là adapter in-memory, không phải server/API repro; đề xuất QH-QA-014/015.
+- Flutter/Dart formatter check tại checkpoint `2f04084`: exit 1, 12 file trong `lib/`/`test/` được formatter báo cần đổi; lệnh check-only, không sửa file. Full analyzer baseline có 129 diagnostics; 127 nằm trong bản sao/repro cũ dưới `qa-artifacts/`, 2 là compile fixture ở SHA baseline.
+- Python checks tại `6226403`: API collection 3 test PASS (exit 0), fixture unittest 6 PASS (exit 0); checkpoint sau đó chỉ thay Dart tests nên các kết quả vẫn áp dụng.
+
+### Web preview
+
+Trên `2f04084`, cached Flutter web build exit 0 (57.6 giây). Browser boot của `lib/main_preview.dart` **FAIL**: header/shell hiện nhưng body xám trống; Firebase init trên web lỗi rồi lazy messaging service ném `[core/no-app]`. Đây là local preview candidate QH-QA-013, không phải lỗi API/native. Search, push settings, report và minigame flows **NOT RUN** do boot bị chặn. Xem [web report](reports/2026-11-23-web.md), [console excerpt](evidence/2026-11-23/web/console.txt) và [ảnh](evidence/2026-11-23/web/preview-blank-body.png).
+
+Tracker update và readback thuộc điều phối. QH-QA-010..015 được đề xuất từ widget/local repro; chưa ghi là issue tracker đã cập nhật. Chi tiết delta minigame/question bank/report/push: [delta review](reports/2026-11-23-delta-review.md). Môi trường và lệnh: [ENVIRONMENT](ENVIRONMENT.md).
+
 ## Execution 2026-11-20 — Nam (native preview)
 
 Trên APK preview đã có sẵn từ Nam pristine source `639da129d89e8290c13b63af3d36045309b38fd6`, coordinator quan sát Search (filter/history/empty/paging fixture), Notifications (19 unread ban đầu trong fixture 33 mục, đọc đơn/đọc tất cả/paging/điều hướng) và Push settings (draft/cancel/save/reopen cùng process). Dùng preview backend; Firebase SDK được khởi tạo, nhưng API thật và FCM delivery không xác minh. Nhánh deny Android notification permission **INCONCLUSIVE**: cuối cùng quyền vẫn granted. `QUESTION_APPROVED` thiếu state rõ và badge còn placeholder (**WAITING**). Acceptance `SEARCH-01`/`PUSH-01` không đổi. Local retest cùng ngày: 95 feature/data/core PASS (exit 0); focused repro/UI tái hiện 6 lỗi, 3 ca harness PASS (exit 1); QH-QA-006..008 giữ Open / Retest Fail trên SHA này. Thiết bị RMX3370 Android 13/API 33, MCP báo emulator, 1080×2400/font 1.0. APK SHA-256 `c09122a2c64d4e76650176c330b4494d090f822bd0357dc2b76b512fe7718603`; Mobile MCP install/launch không có numeric exit. Cleanup: QA package uninstall thành công, Windows `pm path` exit 1/stdout rỗng; display/font read exit 0; ADB dừng trên Windows/Linux, process checks không thấy adb. Chi tiết và 18 ảnh context đã chọn: [native report](reports/2026-11-20-nam-native.md), [local report](reports/2026-11-20-nam-local.md).

@@ -19,11 +19,13 @@ Thay đổi QA đúng phạm vi được phép commit/push thường lệ lên `
 tuyệt đối không push QA lên `main` hoặc nhánh khác. Mã runtime QA mặc định theo đúng snapshot `main` đã
 tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệu. Không thay đổi nghiệp vụ app.
 
-Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (cập nhật 2026-11-20),
+Handoff mới nhất 2026-11-23: upstream `main` snapshot `82ef14f38e086d6b558b392fc54a328c3d7f26a2`, QA integration `622640325b7c1b4bf0f3a5018ffd2635dce27061`, focused retest source `04d858c5348626198b1879a7900e2d75c9390e58`. Acceptance matrix: **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**; regression local không phải acceptance. Xem [tiến độ](docs/qa/PROGRESS.md), [regression](docs/qa/reports/2026-11-23-regression.md), [web preview](docs/qa/reports/2026-11-23-web.md), và [tóm tắt phiên](docs/qa/reports/2026-11-23-summary.md).
+
+Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (cập nhật 2026-11-23),
 [tóm tắt QA 15/11](docs/qa/reports/2026-11-15-summary.md),
 [ghi nhận cập nhật tracker](docs/qa/reports/2026-11-15-tracker-update.md),
 [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),
-[22 case NOT RUN + 3 case WAITING](docs/qa/TEST_CASES.md),
+[25 case acceptance matrix — 24 NOT RUN + 1 WAITING](docs/qa/TEST_CASES.md),
 [bộ request API Postman và hướng dẫn](qa/api/README.md),
 [fixture biên và self-check](qa/fixtures/README.md),
 [repro rủi ro network phía client](qa/repro/README.md),
@@ -104,7 +106,7 @@ P2: giao diện phụ và chức năng sau core. Đây là thứ tự test, khô
 `NOT RUN`: đã có để kiểm tra nhưng chưa chạy; `BLOCKED`: thiếu môi trường/tài khoản;
 `WAITING`: chưa triển khai hoặc assertion cụ thể còn thiếu expected/contract; `PASS`/`FAIL`: chỉ ghi sau khi chạy kèm bằng chứng.
 
-Handoff 2026-11-15 ghi **22 NOT RUN, 3 WAITING, 0 PASS, 0 FAIL**; xem [PROGRESS](docs/qa/PROGRESS.md)
+Handoff 2026-11-23 ghi **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**; xem [PROGRESS](docs/qa/PROGRESS.md)
 để biết SHA và giới hạn môi trường. Trên source `447ecf394894627e498df08464466f16a12e3ef6`, 106 test local core/data/recovery đạt với Flutter 3.47.9; chúng dùng fake/preview/loopback, không phải app acceptance. Compile-only probe vẫn bị QH-QA-005 chặn ở AppTheme trước khi test UI chạy. Một import Cupertino đã được Sơn cho phép tạm thời trong QA workspace cô lập để mở gate; các kết quả có patch và APK được ghi riêng, không sửa source root. Ma trận acceptance không tự đổi trạng thái từ các test local này. Có bốn client defect đã
 tái hiện bằng mock/widget trên Nam snapshot SHA `639da12`, chưa fix. Xem
 [tóm tắt QA](docs/qa/reports/2026-11-15-summary.md). Cột tự động là file test có liên quan,
@@ -143,9 +145,9 @@ QH-QA-006..008 tiếp tục Open / Retest Fail; xem [Nam local report](docs/qa/r
 | QUESTION-01 | P1 / Dũng | Tạo/sửa/xoá submission, câu trùng, answer/rating; một số expected cần xác nhận contract | Module đã có; acceptance API/UI chưa chạy, schema/role/side effects còn cần chốt | NOT RUN |
 | EXAM-01 | P1 / Dũng | Sinh/xem/export đề; validation và lỗi API; một số expected cần xác nhận contract | Module đã có; acceptance API/UI chưa chạy, tham số/range/file behavior cần chốt | NOT RUN |
 | CHAT-01 | P1 / Quốc Anh | Send/read/delete, block và mất mạng/reconnect không mất/trùng tin nhắn | Client và [API contract](docs/chat/API_CONTRACT.md) đã có; acceptance chưa chạy do thiếu API/tài khoản/realtime evidence. Một số delivery/retry/receipt/delete/block assertions chờ owner xác nhận | NOT RUN |
-| PUSH-01 | P1 / Nam | FCM foreground/background/terminated, permission, token đăng ký và deep link | Chưa triển khai; hai điện thoại thật | WAITING |
-| SEARCH-01 | P1 / Nam | Search/history/saved search, refresh/load more; tìm người đã có kiểm tra riêng ở REL-01 | Chưa tích hợp vào upstream main snapshot `08a5a2e` | WAITING |
-| ADV-01 | P2 / Dũng | Gamification/AI sau core, test theo contract lúc bàn giao | Chưa triển khai module | WAITING |
+| PUSH-01 | P1 / Nam | FCM foreground/background/terminated, permission, token đăng ký và deep link | Module đã tích hợp trong main snapshot `82ef14f`; cần API/FCM và thiết bị để nghiệm thu | NOT RUN |
+| SEARCH-01 | P1 / Nam | Search/history/saved search, refresh/load more; tìm người đã có kiểm tra riêng ở REL-01 | Search đã tích hợp trong main snapshot `82ef14f`; acceptance API/UI chưa chạy | NOT RUN |
+| ADV-01 | P2 / Dũng | Gamification/AI sau core, test theo contract lúc bàn giao | Minigame đã có một phần; AI và expected/contract còn chờ bàn giao rõ | WAITING |
 
 Quy tắc biên trong code dùng byte: 4 MiB = 4,194,304; 15 MiB = 15,728,640.
 `media_validation_test` còn kiểm tra giới hạn video ở repository để chuẩn bị tích hợp;
@@ -211,7 +213,9 @@ tái hiện bằng fake transport được ghi ở [RISKS.md](docs/qa/RISKS.md);
 |---|---|---|---|
 | QH-QA-006..008 (Open / Retest Fail, 20/11) | Nam / Push settings, search, FCM | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng | Tái hiện lại bằng focused local repro/UI trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6` ngày 20/11: 6 lỗi (bao gồm các repro này), exit 1. Native preview không dựng race; không tính là retest. [Nam local report](docs/qa/reports/2026-11-20-nam-local.md), [lần tái hiện ban đầu](docs/qa/reports/2026-11-15-summary.md). Chưa có fix được quan sát. |
 | QH-QA-009 (Closed / Retest Pass) | Sơn / test harness | Host thiếu app `Scaffold`/`AppTheme` gây false positive overflow 917 px; corrected UI test 3/3, independent rerun passed, 244 runtime/config files match pristine source | [Host-correction evidence](docs/qa/evidence/2026-11-15/nam/host-correction.txt). Đóng lỗi harness đã sửa; không phải bug sản phẩm. |
-| QH-QA-010..012 (pending, not logged) | Chat filters / shared empty view / PostCard | Overflow observations từ run tại SHA khác với temporary SDK compatibility edit | Chưa retest trên source sạch; không filed/confirmed. |
+| QH-QA-010..012 (candidate; tracker update pending) | Conversations / shared empty view / PostCard | Focused layout retest `04d858c` quan sát ba điểm tràn trong viewport 320×640/text scale 2. Ba lỗi hit-test/viewport còn lại thuộc harness. | Local widget candidates, chưa xác nhận thiết bị; tracker update chờ điều phối. [Regression report](docs/qa/reports/2026-11-23-regression.md) |
+| QH-QA-013 (candidate; tracker update pending) | Web preview boot / Firebase fallback | Local preview build thành công nhưng body trống; Firebase web init lỗi rồi lazy messaging service ném `[core/no-app]`. | Local web repro; không API/native. [Web report](docs/qa/reports/2026-11-23-web.md) |
+| QH-QA-014..015 (candidate; tracker update pending) | Network client redirect / concurrent refresh timeout | Fake adapter còn gửi bearer/body sang off-origin redirect; concurrent 401 callers phân loại timeout khác nhau. | In-memory fake, không API thật; [focused retest evidence](docs/qa/evidence/2026-11-23/retest/results.txt). |
 | QH-QA-005 (logged, Open / Retest Fail) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Tracker đọc lại 19/11: compile-only failure trên root source `447ecf3`; test body chưa chạy, chưa có upstream fix. Một import chỉ dùng ở QA workspace cô lập theo Sơn cho phép; không đóng issue. [Evidence baseline](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt), [execution ngày 19/11](docs/qa/reports/2026-11-19-quoc-anh-summary.md). |
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |
 | QA-ENV-01 | Môi trường | Flutter 3.41.6 và 3.47.9 đã có; Android RMX3370 / Android 13 được coordinator xác nhận online qua WindowsADB/MobileMCP. Backend host và tài khoản QA A/B chưa có theo xác nhận Sơn; xem [PROGRESS](docs/qa/PROGRESS.md) và [ENVIRONMENT](docs/qa/ENVIRONMENT.md) | Không dùng production credentials/data |
