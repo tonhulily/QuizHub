@@ -68,7 +68,7 @@ ApiClient _client(HttpClientAdapter adapter) => ApiClient(
 );
 
 const _draft = SessionDraft(
-  subjectId: 10,
+  courseClassId: 100,
   title: '  Bảng băm ',
   content: '   ',
   questions: [

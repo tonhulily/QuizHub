@@ -2,19 +2,23 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/design_system/app_colors.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/firebase/firebase_messaging_service.dart';
 import '../../core/widgets/fb_widgets.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/repositories/friend_repository.dart';
 import '../../di/locator.dart';
 import '../home/home_tab.dart';
 import '../menu/menu_tab.dart';
+import '../notifications/cubit/notification_cubit.dart';
+import '../notifications/cubit/notification_state.dart';
+import '../notifications/view/notifications_tab.dart';
 import '../question_bank/view/question_bank_tab.dart';
 import '../friends/view/friends_tab.dart';
-import 'placeholder_tab.dart';
 import '../../core/design_system/app_icons.dart';
 
 /// Định nghĩa 1 tab của shell. Module khác chỉ cần thay `builder` của tab
@@ -75,10 +79,7 @@ class MainShell extends StatefulWidget {
       title: 'Thông báo',
       icon: AppIcons.notifications,
       activeIcon: AppIcons.notificationsActive,
-      builder: (_) => const PlaceholderTab(
-        icon: AppIcons.notificationsActive,
-        message: 'Thông báo về lượt thích, bình luận, kết bạn... sẽ có ở đây.',
-      ),
+      builder: (_) => const NotificationsTab(),
     ),
     ShellTab(
       label: 'Menu',
@@ -96,6 +97,20 @@ class MainShell extends StatefulWidget {
 class MainShellState extends State<MainShell>
     with SingleTickerProviderStateMixin {
   bool _loadingBlocks = true;
+
+  StreamSubscription<void>? _foregroundPushSubscription;
+
+  void _listenToForegroundPush(NotificationCubit cubit) {
+    if (!getIt.isRegistered<FirebaseMessagingService>()) return;
+
+    final messagingService = getIt<FirebaseMessagingService>();
+
+    _foregroundPushSubscription = messagingService.foregroundEvents.listen((_) {
+      if (cubit.isClosed) return;
+
+      unawaited(cubit.onPushReceived());
+    });
+  }
 
   @override
   void initState() {
@@ -147,6 +162,7 @@ class MainShellState extends State<MainShell>
 
   @override
   void dispose() {
+    _foregroundPushSubscription?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -157,46 +173,67 @@ class MainShellState extends State<MainShell>
 
   @override
   Widget build(BuildContext context) {
-    if (_loadingBlocks) {
-      return const Scaffold(body: LoadingView());
-    }
-    final tabs = MainShell.tabs;
-    final current = tabs[_index];
+    return BlocProvider<NotificationCubit>(
+      create: (_) {
+        final cubit = NotificationCubit(getIt())..load();
 
-    return PopScope(
-      // Back ở tab khác -> về tab Trang chủ trước, rồi mới thoát app
-      canPop: _index == 0,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _select(0);
+        // Lắng nghe push foreground và đồng bộ unread count.
+        _listenToForegroundPush(cubit);
+
+        return cubit;
       },
-      child: Scaffold(
-        backgroundColor: AppColors.white,
-        body: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle.dark,
-          child: SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                _Header(tab: current, onCreate: _create),
-                _TabStrip(controller: _controller, tabs: tabs, onTap: _select),
-                Expanded(
-                  child: ColoredBox(
-                    color: AppColors.backgroundSecondary,
-                    child: IndexedStack(
-                      index: _index,
-                      children: [
-                        for (var i = 0; i < tabs.length; i++)
-                          _built[i]
-                              ? tabs[i].builder(context)
-                              : const SizedBox.shrink(),
-                      ],
-                    ),
+      child: Builder(
+        builder: (context) {
+          if (_loadingBlocks) {
+            return const Scaffold(body: LoadingView());
+          }
+
+          final tabs = MainShell.tabs;
+          final current = tabs[_index];
+
+          return PopScope(
+            // Back ở tab khác -> về tab Trang chủ trước, rồi mới thoát app
+            canPop: _index == 0,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop) _select(0);
+            },
+            child: Scaffold(
+              backgroundColor: AppColors.white,
+              body: AnnotatedRegion<SystemUiOverlayStyle>(
+                value: SystemUiOverlayStyle.dark,
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    children: [
+                      _Header(tab: current, onCreate: _create),
+
+                      _TabStrip(
+                        controller: _controller,
+                        tabs: tabs,
+                        onTap: _select,
+                      ),
+
+                      Expanded(
+                        child: ColoredBox(
+                          color: AppColors.backgroundSecondary,
+                          child: IndexedStack(
+                            index: _index,
+                            children: [
+                              for (var i = 0; i < tabs.length; i++)
+                                _built[i]
+                                    ? tabs[i].builder(context)
+                                    : const SizedBox.shrink(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -247,7 +284,8 @@ class _Header extends StatelessWidget {
           HeaderIconButton(
             icon: AppIcons.search,
             tooltip: 'Tìm kiếm',
-            onTap: () => Navigator.of(context).pushNamed(AppRoutes.searchUsers),
+            onTap: () =>
+                Navigator.of(context).pushNamed(AppRoutes.searchGlobal),
           ),
           HeaderIconButton(
             icon: AppIcons.messenger,
@@ -275,34 +313,67 @@ class _TabStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        border: Border(bottom: BorderSide(color: AppColors.borderLight)),
-      ),
-      child: TabBar(
-        controller: controller,
-        onTap: onTap,
-        dividerColor: AppColors.transparent,
-        indicatorColor: AppColors.primary600,
-        indicatorWeight: 3,
-        indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: AppColors.primary600,
-        unselectedLabelColor: AppColors.textSecondary,
-        splashFactory: NoSplash.splashFactory,
-        overlayColor: const WidgetStatePropertyAll(AppColors.transparent),
-        tabs: [
-          for (final t in tabs)
-            Tab(
-              height: 46,
-              icon: Icon(
-                controller.index == tabs.indexOf(t) ? t.activeIcon : t.icon,
-                size: 30,
-              ),
-              iconMargin: EdgeInsets.zero,
-            ),
-        ],
-      ),
+    return BlocBuilder<NotificationCubit, NotificationState>(
+      buildWhen: (previous, current) =>
+          previous.unreadCount != current.unreadCount,
+      builder: (context, state) {
+        final hasUnread = state.unreadCount > 0;
+
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.white,
+            border: Border(bottom: BorderSide(color: AppColors.borderLight)),
+          ),
+          child: TabBar(
+            controller: controller,
+            onTap: onTap,
+            dividerColor: AppColors.transparent,
+            indicatorColor: AppColors.primary600,
+            indicatorWeight: 3,
+            indicatorSize: TabBarIndicatorSize.tab,
+            labelColor: AppColors.primary600,
+            unselectedLabelColor: AppColors.textSecondary,
+            splashFactory: NoSplash.splashFactory,
+            overlayColor: const WidgetStatePropertyAll(AppColors.transparent),
+            tabs: [
+              for (var i = 0; i < tabs.length; i++)
+                Tab(
+                  height: 46,
+                  iconMargin: EdgeInsets.zero,
+                  icon: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(
+                        controller.index == i
+                            ? tabs[i].activeIcon
+                            : tabs[i].icon,
+                        size: 30,
+                      ),
+
+                      if (tabs[i].label == 'Thông báo' && hasUnread)
+                        Positioned(
+                          right: -3,
+                          top: -2,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

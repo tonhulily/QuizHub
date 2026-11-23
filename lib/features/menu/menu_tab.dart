@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/design_system/app_colors.dart';
 import '../../core/router/app_routes.dart';
@@ -11,6 +15,7 @@ import '../auth/logout_action.dart';
 import '../shell/main_shell.dart';
 import '../profile/cubit/profile_cubit.dart';
 import '../../core/design_system/app_icons.dart';
+import 'push_settings_view.dart';
 
 /// Lối tắt hiển thị trong lưới của tab Menu.
 ///
@@ -41,6 +46,67 @@ class MenuTab extends StatelessWidget {
   static void _goToQuestionBank(BuildContext context) =>
       context.findAncestorStateOfType<MainShellState>()?.select(2);
 
+  /// Hiển thị thông tin phiên bản ứng dụng.
+  static Future<void> _showAppInfo(BuildContext context) async {
+    final info = await PackageInfo.fromPlatform();
+
+    if (!context.mounted) return;
+
+    showAboutDialog(
+      context: context,
+      applicationName: info.appName,
+      applicationVersion: '${info.version} (${info.buildNumber})',
+      applicationIcon: const Icon(
+        AppIcons.quizActive,
+        size: 40,
+        color: AppColors.primary600,
+      ),
+      children: [
+        const SizedBox(height: 12),
+        Text('Package ID: ${info.packageName}'),
+        const SizedBox(height: 8),
+        const Text('QuizHub - Mạng xã hội học tập và ngân hàng câu hỏi.'),
+      ],
+    );
+  }
+
+  /// Xác nhận trước khi thoát ứng dụng.
+  static Future<void> _confirmExit(BuildContext context) async {
+    // iOS không cho phép ứng dụng tự đóng theo cách này.
+    if (!Platform.isAndroid) {
+      AppFeedback.info(
+        context,
+        'Trên iOS, bạn có thể đóng ứng dụng bằng thao tác của hệ thống.',
+      );
+      return;
+    }
+
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Thoát QuizHub?'),
+        content: const Text('Bạn có chắc chắn muốn thoát ứng dụng không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary600,
+            ),
+            child: const Text('Thoát'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldExit == true) {
+      await SystemNavigator.pop();
+    }
+  }
+
   /// Đề thi chỉ dành cho giảng viên (sinh viên gọi API bị 403).
   static void _openExams(BuildContext context) {
     final role = context.read<ProfileCubit>().state.profile?.role;
@@ -50,6 +116,12 @@ class MenuTab extends StatelessWidget {
       AppFeedback.info(context, 'Chỉ giảng viên mới sinh và quản lý đề thi.');
     }
   }
+
+  static void _openMinigame(BuildContext context) =>
+      Navigator.of(context).pushNamed(AppRoutes.minigameHub);
+
+  static void _openLeaderboard(BuildContext context) =>
+      Navigator.of(context).pushNamed(AppRoutes.leaderboard);
 
   static const List<MenuShortcut> shortcuts = [
     MenuShortcut(
@@ -65,9 +137,16 @@ class MenuTab extends StatelessWidget {
       onTap: _goToQuestionBank,
     ),
     MenuShortcut(
+      icon: AppIcons.bolt,
+      color: AppColors.warningDark,
+      label: 'Minigame',
+      onTap: _openMinigame,
+    ),
+    MenuShortcut(
       icon: AppIcons.leaderboard,
       color: AppColors.secondary600,
       label: 'Bảng xếp hạng',
+      onTap: _openLeaderboard,
     ),
     MenuShortcut(
       icon: AppIcons.badge,
@@ -127,6 +206,16 @@ class MenuTab extends StatelessWidget {
               ),
               children: [
                 ListTile(
+                  leading: const Icon(AppIcons.bellRinging),
+                  title: const Text('Cài đặt thông báo'),
+                  subtitle: const Text(
+                    'Danh mục, giờ yên tĩnh, âm thanh và rung',
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PushSettingsView()),
+                  ),
+                ),
+                ListTile(
                   leading: const Icon(AppIcons.edit),
                   title: const Text('Chỉnh sửa trang cá nhân'),
                   onTap: () =>
@@ -143,6 +232,33 @@ class MenuTab extends StatelessWidget {
           ),
         ),
         const SectionGap(),
+        // Thông tin và thao tác ứng dụng.
+        FlatSection(
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(
+                  AppIcons.info,
+                  color: AppColors.textSecondary,
+                ),
+                title: const Text('Thông tin ứng dụng'),
+                subtitle: const Text('Phiên bản, thông tin QuizHub'),
+                onTap: () => _showAppInfo(context),
+              ),
+              ListTile(
+                leading: const Icon(
+                  AppIcons.logout,
+                  color: AppColors.textSecondary,
+                ),
+                title: const Text('Thoát ứng dụng'),
+                subtitle: const Text('Đóng QuizHub trên thiết bị'),
+                onTap: () => _confirmExit(context),
+              ),
+            ],
+          ),
+        ),
+        const SectionGap(),
+        // Đăng xuất tài khoản.
         FlatSection(
           padding: const EdgeInsets.all(12),
           child: SizedBox(

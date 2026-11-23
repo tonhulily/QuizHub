@@ -25,10 +25,26 @@ class SubjectRepository {
     return list;
   }
 
-  /// `GET /sessions/my-enrolled-subjects` - chỉ môn mình đang học. Form đề
-  /// xuất phải dùng danh sách này: đề xuất cho môn khác bị 403.
-  Future<List<SubjectModel>> enrolled() => _api.get<List<SubjectModel>>(
-    ApiEndpoints.myEnrolledSubjects,
-    parser: (d) => J.list(d, SubjectModel.fromJson),
-  );
+  /// `GET /sessions/my-enrolled-course-classes` - lớp học phần của mình (cả
+  /// học kỳ cũ). Form đề xuất chỉ dùng lớp có `canPropose`.
+  Future<List<EnrolledCourseClass>> enrolledClasses() =>
+      _api.get<List<EnrolledCourseClass>>(
+        ApiEndpoints.myEnrolledCourseClasses,
+        parser: (d) => J.list(d, EnrolledCourseClass.fromJson),
+      );
+
+  /// Môn mình đang / đã học: gộp [enrolledClasses] theo `subject_id`, giữ thứ
+  /// tự server trả về. [currentSemester]: chỉ lớp của học kỳ đang hoạt động
+  /// (minigame 4, xếp hạng theo môn).
+  Future<List<SubjectModel>> enrolled({bool currentSemester = false}) async {
+    final classes = await enrolledClasses();
+    final seen = <int>{};
+    return [
+      for (final c in classes)
+        if ((!currentSemester || c.activeSemester) &&
+            c.subjectId > 0 &&
+            seen.add(c.subjectId))
+          c.subject,
+    ];
+  }
 }

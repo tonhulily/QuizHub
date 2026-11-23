@@ -1,4 +1,5 @@
 import '../core/utils/json_utils.dart';
+import 'preview_games.dart';
 
 /// Dữ liệu mẫu cho module Ngân hàng câu hỏi + Đề thi + AI trong bản xem trước
 /// (`lib/main_preview.dart`). Tách khỏi `PreviewBackend` để file đó khỏi phình;
@@ -64,6 +65,18 @@ class PreviewQbank {
   /// editLogId -> bản gợi ý của AI đang chờ áp dụng
   final Map<int, Map<String, dynamic>> _aiLogs = {};
   final Map<int, Map<String, dynamic>> _exams = {};
+
+  /// Minigame dự đoán (`/games/...`), cần biết nguồn câu của phiên cho Game 2.
+  late final PreviewGames _games = PreviewGames(
+    mySessionSources: (id) {
+      final s = _sessions[id];
+      if (s == null || s['author_id'] != _meId) return null;
+      return [
+        for (final q in _questionsOf(s['question_ids']))
+          J.stringOr(q['source'], 'HOMO_SAPIENS'),
+      ];
+    },
+  );
 
   PreviewQbank() {
     Map<String, dynamic> opt(String key, String text, [bool correct = false]) =>
@@ -337,6 +350,52 @@ class PreviewQbank {
     orElse: () => _subjects.first,
   );
 
+  /// Dữ liệu nguồn cho PreviewSearch. Việc lọc từ khóa và phân trang
+  /// chỉ được thực hiện tại PreviewSearch.
+  List<Map<String, dynamic>> get searchSubjects => [
+    for (final subject in _subjects) Map<String, dynamic>.from(subject),
+  ];
+
+  List<Map<String, dynamic>> get searchSessions => [
+    for (final session in _sessions.values)
+      if (session['status'] == 'RESOLVED')
+        {
+          ..._summary(session),
+          'question_count': J.asList(session['question_ids']).length,
+        },
+  ];
+
+  List<Map<String, dynamic>> get searchQuestions => [
+    for (final question in _questions.values)
+      if (question['status'] == 'APPROVED' &&
+          _sessions[question['session_id']]?['status'] == 'RESOLVED')
+        {
+          'question_id': question['question_id'],
+          'question_code':
+              question['question_code'] ??
+              '${_subject(question['subject_id'] as int)['code']}-Q${question['question_id']}',
+          'session_id': question['session_id'],
+          'subject_id': question['subject_id'],
+          'subject_name': _subject(question['subject_id'] as int)['name'],
+          'topic_name': question['topic'],
+          'status': question['status'],
+          'difficulty': question['difficulty'],
+          'content': question['content'],
+          'options': [
+            for (final option in J.asList(question['options']))
+              {
+                'key': J.asMap(option)?['key'],
+                'text': J.asMap(option)?['text'],
+              },
+          ],
+          'image_urls': List<dynamic>.from(J.asList(question['image_urls'])),
+          'rating_count':
+              (_ratings[question['question_id']] ?? const []).length,
+          'comment_count': 0,
+          'created_at': question['created_at'],
+        },
+  ];
+
   List<Map<String, dynamic>> _questionsOf(dynamic ids) => [
     for (final id in J.asList(ids)) ?_questions[id],
   ];
@@ -350,9 +409,17 @@ class PreviewQbank {
   // JSON trả về (theo schema Swagger)
   // ------------------------------------------------------------------
 
+  /// Lớp học phần (mẫu) của môn [subjectId], null nếu không học môn đó.
+  static Map<String, Object>? _classOfSubject(int subjectId) =>
+      _classes.where((c) => c['subject_id'] == subjectId).firstOrNull;
+
   Map<String, dynamic> _summary(Map<String, dynamic> s) {
     final subject = _subject(s['subject_id'] as int);
+    final cls = _classOfSubject(subject['subject_id']! as int);
     return {
+      'course_class_id': cls?['course_class_id'],
+      'class_code': cls?['class_code'],
+      'semester_name': cls?['semester_name'],
       'session_id': s['session_id'],
       'session_code': s['session_code'],
       'title': s['title'],
@@ -483,9 +550,11 @@ class PreviewQbank {
     for (final key in const ['title', 'content', 'source_url']) {
       if (body[key] != null) s[key] = body[key];
     }
-    if (J.asInt(body['subject_id']) case final subjectId?) {
-      s['subject_id'] = subjectId;
-    }
+    final classId = J.asInt(body['course_class_id']);
+    final cls = _classes
+        .where((c) => c['course_class_id'] == classId)
+        .firstOrNull;
+    if (cls != null) s['subject_id'] = cls['subject_id'];
     final ids = <int>[];
     for (final q in J.list(body['questions'], (m) => m)) {
       final id = J.asInt(q['question_id']) ?? _nextId++;
@@ -531,11 +600,28 @@ class PreviewQbank {
   ) {
     final seg = path.split('/'); // ['', 'sessions', '12', 'questions']
 
+    if (path.startsWith('/games/') && path != '/games/check-in') {
+      return _games.route(m, path, q, body);
+    }
     if (path == '/subjects') return _subjects;
-    if (path == '/sessions/my-enrolled-subjects') {
+    if (path == '/sessions/my-enrolled-course-classes') {
       return [
-        for (final s in _subjects)
-          if (_enrolledIds.contains(s['subject_id'])) s,
+        for (final c in _classes)
+          if (_enrolledIds.contains(c['subject_id']))
+            {
+              for (final k in const [
+                'course_class_id',
+                'class_code',
+                'subject_id',
+                'subject_code',
+                'subject_name',
+                'semester_id',
+                'semester_name',
+              ])
+                k: c[k],
+              'active_semester': true,
+              'can_propose': true,
+            },
       ];
     }
 
@@ -570,7 +656,12 @@ class PreviewQbank {
     }
     if (path == '/sessions/propose' && m == 'POST') {
       final id = _nextId++;
-      final subjectId = J.intOr(body['subject_id'], 10);
+      final subjectId = J.intOr(
+        _classes
+            .where((c) => c['course_class_id'] == body['course_class_id'])
+            .firstOrNull?['subject_id'],
+        10,
+      );
       final s = <String, dynamic>{
         'session_id': id,
         'session_code': '${_subject(subjectId)['code']}_PREVIEW_$id',
@@ -605,86 +696,7 @@ class PreviewQbank {
         q,
       );
     }
-    if (path == '/search' &&
-        J.stringOr(q['type']).toUpperCase() == 'QUESTION') {
-      final keyword = J.stringOr(q['query']).toLowerCase().trim();
-      final list = _questions.values.where((x) {
-        final s = _sessions[x['session_id']];
-        if (s == null || s['status'] != 'RESOLVED') return false;
-        if (keyword.isEmpty) return true;
-        final subject = _subject(x['subject_id'] as int);
-        return '${x['content']} ${subject['name']} ${subject['code']}'
-            .toLowerCase()
-            .contains(keyword);
-      }).toList();
-      return {
-        'items': [
-          for (final x in list)
-            {
-              'type': 'QUESTION',
-              'relevance_score': 1.0,
-              'question': {
-                'question_id': x['question_id'],
-                'question_code': x['question_code'],
-                'subject_id': x['subject_id'],
-                'subject_name': _subject(x['subject_id'] as int)['name'],
-                'status': 'APPROVED',
-                'difficulty': x['difficulty'],
-                'content': x['content'],
-                // Kết quả tìm kiếm không lộ đáp án
-                'options': [
-                  for (final o in J.asList(x['options']))
-                    {'key': J.asMap(o)?['key'], 'text': J.asMap(o)?['text']},
-                ],
-                'rating_count': (_ratings[x['question_id']] ?? const []).length,
-                'comment_count': 0,
-                'created_at': x['created_at'],
-                // Swagger chưa có; giả lập backend đã bổ sung để thử luồng mở
-                // phiên từ câu hỏi
-                'session_id': x['session_id'],
-              },
-            },
-        ],
-        'pagination': {
-          'before': null,
-          'after': null,
-          'has_prev': false,
-          'has_next': false,
-        },
-        'total_hits': list.length,
-      };
-    }
-    if (path == '/search' && J.stringOr(q['type']).toUpperCase() == 'SESSION') {
-      final keyword = J.stringOr(q['query']).toLowerCase().trim();
-      final list = _sessions.values.where((s) {
-        if (s['status'] != 'RESOLVED') return false;
-        if (keyword.isEmpty) return true;
-        final subject = _subject(s['subject_id'] as int);
-        return '${s['title']} ${subject['name']} ${subject['code']}'
-            .toLowerCase()
-            .contains(keyword);
-      }).toList();
-      return {
-        'items': [
-          for (final s in list)
-            {
-              'type': 'SESSION',
-              'relevance_score': 1.0,
-              'session': {
-                ..._summary(s),
-                'question_count': J.asList(s['question_ids']).length,
-              },
-            },
-        ],
-        'pagination': {
-          'before': null,
-          'after': null,
-          'has_prev': false,
-          'has_next': false,
-        },
-        'total_hits': list.length,
-      };
-    }
+    // GET /search được xử lý tập trung bởi PreviewSearch.
     if (seg.length == 4 && seg[1] == 'sessions' && seg[3] == 'questions') {
       final s = _sessions[int.tryParse(seg[2])];
       if (s == null) return null;

@@ -78,6 +78,7 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
       );
 
   int _request = 0;
+
   /// Tải trang đầu. Nếu đã có dữ liệu (cache) thì không hiện loading toàn màn.
   Future<void> load() async {
     final hasData = state.items.isNotEmpty;
@@ -169,6 +170,12 @@ class PagedCubit<T> extends Cubit<PagedState<T>> {
         items: [for (final i in state.items) test(i) ? newItem : i],
       ),
     );
+  }
+
+  /// Biến đổi toàn bộ item trong một lần emit (vd đánh dấu đọc tất cả).
+  void mapItems(T Function(T item) transform) {
+    if (isClosed) return;
+    emit(state.copyWith(items: state.items.map(transform).toList()));
   }
 
   void removeWhere(bool Function(T) test) {

@@ -65,6 +65,11 @@ class _ReportSheetState extends State<_ReportSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final (title, subject) = switch (widget.target) {
+      ReportTarget.post => ('Báo cáo bài viết', 'bài viết'),
+      ReportTarget.comment => ('Báo cáo bình luận', 'bình luận'),
+      ReportTarget.user => ('Báo cáo tài khoản', 'tài khoản'),
+    };
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -77,10 +82,10 @@ class _ReportSheetState extends State<_ReportSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Báo cáo nội dung', style: theme.textTheme.titleLarge),
+            Text(title, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              'Hãy cho chúng tôi biết vấn đề của nội dung này.',
+              'Hãy cho chúng tôi biết vấn đề của $subject này.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
               ),

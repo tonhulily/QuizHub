@@ -195,6 +195,11 @@ class SubmissionDetail extends Equatable {
   final int? subjectId;
   final String? subjectName;
   final String? subjectCode;
+
+  /// Lớp học phần của phiên (backend mới gắn phiên với lớp, không chỉ môn).
+  final int? courseClassId;
+  final String? classCode;
+  final String? semesterName;
   final SessionStatus status;
 
   /// Tên / email giảng viên đã duyệt (null nếu chưa duyệt)
@@ -214,6 +219,9 @@ class SubmissionDetail extends Equatable {
     this.subjectId,
     this.subjectName,
     this.subjectCode,
+    this.courseClassId,
+    this.classCode,
+    this.semesterName,
     this.status = SessionStatus.unknown,
     this.reviewedBy,
     this.reviewedAt,
@@ -233,6 +241,9 @@ class SubmissionDetail extends Equatable {
         subjectId: J.asInt(json['subject_id']),
         subjectName: J.asString(json['subject_name']),
         subjectCode: J.asString(json['subject_code']),
+        courseClassId: J.asInt(json['course_class_id']),
+        classCode: J.asString(json['class_code']),
+        semesterName: J.asString(json['semester_name']),
         status: SessionStatus.parse(json['status']),
         reviewedBy: J.asString(json['reviewed_by_lecturer']),
         reviewedAt: J.asDate(json['reviewed_at']),
@@ -249,6 +260,7 @@ class SubmissionDetail extends Equatable {
     content,
     sourceUrl,
     subjectId,
+    courseClassId,
     status,
     reviewedBy,
     reviewedAt,
@@ -406,14 +418,16 @@ class QuestionDraft extends Equatable {
 
 /// Một phiên người dùng đang soạn (form tạo / sửa phiên).
 class SessionDraft extends Equatable {
-  final int subjectId;
+  /// Lớp học phần (học kỳ hiện tại) nhận phiên - bắt buộc từ khi backend bỏ
+  /// `subject_id` khỏi `ProposeSessionRequest`.
+  final int courseClassId;
   final String title;
   final String? content;
   final String? sourceUrl;
   final List<QuestionDraft> questions;
 
   const SessionDraft({
-    required this.subjectId,
+    required this.courseClassId,
     required this.title,
     this.content,
     this.sourceUrl,
@@ -422,7 +436,7 @@ class SessionDraft extends Equatable {
 
   /// Mở lại phiên đã nộp để sửa.
   factory SessionDraft.fromDetail(SubmissionDetail d) => SessionDraft(
-    subjectId: d.subjectId ?? 0,
+    courseClassId: d.courseClassId ?? 0,
     title: d.title,
     content: d.content,
     sourceUrl: d.sourceUrl,
@@ -430,7 +444,7 @@ class SessionDraft extends Equatable {
   );
 
   Map<String, dynamic> _base() => {
-    'subject_id': subjectId,
+    'course_class_id': courseClassId,
     'title': title.trim(),
     'content': ?_clean(content),
     'source_url': ?_clean(sourceUrl),
@@ -449,5 +463,11 @@ class SessionDraft extends Equatable {
   };
 
   @override
-  List<Object?> get props => [subjectId, title, content, sourceUrl, questions];
+  List<Object?> get props => [
+    courseClassId,
+    title,
+    content,
+    sourceUrl,
+    questions,
+  ];
 }

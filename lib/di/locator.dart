@@ -4,7 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/network/api_client.dart';
 import '../core/network/session_events.dart';
+import '../core/firebase/firebase_installation_service.dart';
 import '../core/services/device_service.dart';
+import '../core/firebase/firebase_fid_sync_service.dart';
+import '../core/firebase/firebase_messaging_service.dart';
 import '../core/services/post_events.dart';
 import '../core/services/social_events.dart';
 import '../core/services/chat_realtime.dart';
@@ -20,12 +23,16 @@ import '../data/repositories/comment_repository.dart';
 import '../data/repositories/exam_repository.dart';
 import '../data/repositories/feed_repository.dart';
 import '../data/repositories/friend_repository.dart';
+import '../data/repositories/game_repository.dart';
 import '../data/repositories/media_repository.dart';
 import '../data/repositories/post_repository.dart';
 import '../data/repositories/like_state_store.dart';
 import '../data/repositories/question_bank_repository.dart';
 import '../data/repositories/reaction_repository.dart';
 import '../data/repositories/report_repository.dart';
+import '../data/repositories/search_repository.dart';
+import '../data/repositories/notification_repository.dart';
+import '../data/repositories/push_settings_repository.dart';
 import '../data/repositories/subject_repository.dart';
 import '../data/repositories/user_directory.dart';
 import '../data/repositories/submission_repository.dart';
@@ -73,6 +80,21 @@ Future<void> setupLocator({
   getIt.registerLazySingleton<DeviceService>(
     () => DeviceService(getIt<LocalStorage>()),
   );
+  getIt.registerLazySingleton<FirebaseInstallationService>(
+    () => FirebaseInstallationService(),
+  );
+  getIt.registerLazySingleton<FirebaseFidSyncService>(
+    () => FirebaseFidSyncService(
+      getIt<ApiClient>(),
+      getIt<TokenStorage>(),
+      getIt<FirebaseInstallationService>(),
+    ),
+    dispose: (value) => value.dispose(),
+  );
+  getIt.registerLazySingleton<FirebaseMessagingService>(
+    () => FirebaseMessagingService(),
+    dispose: (value) => value.dispose(),
+  );
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(
       tokens: getIt<TokenStorage>(),
@@ -105,6 +127,7 @@ Future<void> setupLocator({
       getIt<LocalStorage>(),
       getIt<DeviceService>(),
       getIt<CredentialStorage>(),
+      getIt<FirebaseInstallationService>(),
     ),
   );
   getIt.registerLazySingleton<UserRepository>(
@@ -144,6 +167,15 @@ Future<void> setupLocator({
       blocks: getIt<BlockedUsers>(),
     ),
   );
+  getIt.registerLazySingleton<SearchRepository>(
+    () => SearchRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PushSettingsRepository>(
+    () => PushSettingsRepository(getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton<FeedRepository>(
     () => FeedRepository(
       getIt<ApiClient>(),
@@ -167,6 +199,9 @@ Future<void> setupLocator({
   );
   getIt.registerLazySingleton<AiRepository>(
     () => AiRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<GameRepository>(
+    () => GameRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<UserDirectory>(
     () => UserDirectory(getIt<UserRepository>()),

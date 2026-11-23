@@ -1,0 +1,8 @@
+{
+  "title": "QuizHub - Bài viết mới",
+  "body": "Có một bài viết bạn có thể quan tâm!",
+  "targetType": "POST",
+  "targetId": "123",
+  "targetUrl": "https://snsqb.duckdns.org/posts/123",
+  "pushType": "SOCIAL"
+}

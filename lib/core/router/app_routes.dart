@@ -23,6 +23,8 @@ class AppRoutes {
   static const conversations = '/chat';
   static const chatDetail = '/chat/detail'; // arguments: ChatTarget
 
+  static const searchGlobal = '/search/global';
+
   // Ngân hàng câu hỏi
   static const qbankMySubmissions = '/qbank/my-submissions';
   // arguments: int sessionId, hoặc ({int id, SessionStatus status})
@@ -36,6 +38,14 @@ class AppRoutes {
   static const qbankQuestionStats = '/qbank/question/stats';
   // arguments: AiRefineArgs; pop -> true nếu đã lưu bản AI
   static const qbankAiRefine = '/qbank/ai-refine';
+
+  // Minigame dự đoán + bảng xếp hạng (Swagger mục 21)
+  static const minigameHub = '/games';
+  static const minigameParticipants = '/games/participants'; // Game 1
+  static const minigameApprovedQuestions = '/games/approved-questions'; // G2
+  static const minigameBankSize = '/games/bank-size'; // Game 4
+  static const minigamePredictions = '/games/my-predictions';
+  static const leaderboard = '/games/leaderboard';
 
   // Đề thi (chỉ giảng viên)
   static const examMyExams = '/exam/my-exams';

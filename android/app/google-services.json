@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "124951524469",
+    "project_id": "quizhub-ee01a",
+    "storage_bucket": "quizhub-ee01a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:124951524469:android:81c858827f7ff10951743c",
+        "android_client_info": {
+          "package_name": "vn.edu.hust.quizhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-2HeTYbSKcbREPi_8MwVbxGJrSPnCTfA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
