@@ -254,7 +254,7 @@ void main() {
     // Game 2: phiên chỉ có câu tự soạn -> cược câu AI bị 400
     final created = await submissions.propose(
       const SessionDraft(
-        subjectId: 10,
+        courseClassId: 100,
         title: 'Đồ thị',
         questions: [
           QuestionDraft(

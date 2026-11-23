@@ -62,7 +62,9 @@ class DeviceService {
 
     return _cached = DeviceInfo(
       deviceId: deviceId,
-      platform: Platform.isIOS ? 'IOS' : 'ANDROID',
+      // Web không có dart:io Platform: coi như ANDROID (server chỉ nhận
+      // ANDROID / IOS) để chạy thử được trên trình duyệt.
+      platform: !kIsWeb && Platform.isIOS ? 'IOS' : 'ANDROID',
       deviceName: name,
       osVersion: os,
       appVersion: appVersion,

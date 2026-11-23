@@ -35,7 +35,7 @@ class _LeaderboardViewState extends State<LeaderboardView> {
   )..load();
 
   late final LoadCubit<List<SubjectModel>> _subjects = LoadCubit(
-    () => getIt<SubjectRepository>().enrolled(),
+    () => getIt<SubjectRepository>().enrolled(currentSemester: true),
   )..load();
 
   @override
@@ -55,6 +55,16 @@ class _LeaderboardViewState extends State<LeaderboardView> {
       }
     });
     if (p == LeaderboardPeriod.subject && _subject == null) return;
+    _board.load();
+  }
+
+  /// Danh sách môn tải xong (kể cả sau "Thử lại") khi đang ở tab Theo môn mà
+  /// chưa chọn môn: chọn môn đầu tiên rồi tải bảng.
+  void _onSubjectsChanged(LoadState<List<SubjectModel>> state) {
+    if (_period != LeaderboardPeriod.subject || _subject != null) return;
+    final first = state.data?.firstOrNull;
+    if (state.status != LoadStatus.loaded || first == null) return;
+    setState(() => _subject = first);
     _board.load();
   }
 
@@ -127,10 +137,26 @@ class _LeaderboardViewState extends State<LeaderboardView> {
           ),
           Expanded(
             child: bySubject && _subject == null
-                ? const EmptyView(
-                    icon: AppIcons.subject,
-                    title: 'Chọn một môn học',
-                    message: 'Bạn cần đăng ký môn để xem xếp hạng theo môn.',
+                ? BlocConsumer<
+                    LoadCubit<List<SubjectModel>>,
+                    LoadState<List<SubjectModel>>
+                  >(
+                    bloc: _subjects,
+                    listener: (_, state) => _onSubjectsChanged(state),
+                    builder: (context, state) => switch (state.status) {
+                      LoadStatus.loading => const LoadingView(),
+                      // Lỗi tải môn (API) - không phải do chưa đăng ký môn
+                      LoadStatus.failure => ErrorView(
+                        error: state.error,
+                        onRetry: _subjects.load,
+                      ),
+                      LoadStatus.loaded => const EmptyView(
+                        icon: AppIcons.subject,
+                        title: 'Chọn một môn học',
+                        message:
+                            'Bạn cần đăng ký môn để xem xếp hạng theo môn.',
+                      ),
+                    },
                   )
                 : BlocBuilder<LoadCubit<Leaderboard>, LoadState<Leaderboard>>(
                     bloc: _board,

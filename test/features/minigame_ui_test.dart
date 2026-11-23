@@ -13,6 +13,7 @@ import 'package:quizhub/data/repositories/subject_repository.dart';
 import 'package:quizhub/di/locator.dart';
 import 'package:quizhub/features/minigame/view/game1_view.dart';
 import 'package:quizhub/features/minigame/view/game4_view.dart';
+import 'package:quizhub/features/minigame/view/leaderboard_view.dart';
 import 'package:quizhub/features/minigame/view/minigame_hub_view.dart';
 
 import '../helpers/fake_profile.dart';
@@ -116,11 +117,24 @@ class _FakeGames implements GameRepository {
 }
 
 class _FakeSubjects implements SubjectRepository {
+  /// Số lần tải môn còn bị lỗi (giả lập API trả 404).
+  int failures = 0;
+
   @override
-  Future<List<SubjectModel>> enrolled() async => const [
-    SubjectModel(subjectId: 10, code: 'IT3011', name: 'CTDL & TT'),
-    SubjectModel(subjectId: 11, code: 'IT3070', name: 'Hệ điều hành'),
-  ];
+  Future<List<SubjectModel>> enrolled({bool currentSemester = false}) async {
+    if (failures > 0) {
+      failures--;
+      throw const ApiException(
+        type: ApiErrorType.notFound,
+        message: 'Resource not found',
+        statusCode: 404,
+      );
+    }
+    return const [
+      SubjectModel(subjectId: 10, code: 'IT3011', name: 'CTDL & TT'),
+      SubjectModel(subjectId: 11, code: 'IT3070', name: 'Hệ điều hành'),
+    ];
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -145,13 +159,15 @@ Future<void> _answer(WidgetTester tester, String value) async {
 
 void main() {
   late _FakeGames games;
+  late _FakeSubjects subjects;
 
   setUp(() async {
     await getIt.reset();
     games = _FakeGames();
+    subjects = _FakeSubjects();
     getIt
       ..registerSingleton<GameRepository>(games)
-      ..registerSingleton<SubjectRepository>(_FakeSubjects());
+      ..registerSingleton<SubjectRepository>(subjects);
   });
 
   tearDown(getIt.reset);
@@ -208,5 +224,25 @@ void main() {
     expect(find.text('Bạn đoán: 300 câu hỏi'), findsOneWidget);
     expect(find.text('Chờ kết quả'), findsOneWidget);
     expect(find.text('Dự đoán').evaluate().length, before - 1);
+  });
+
+  testWidgets('Xếp hạng theo môn: tải môn lỗi thì báo lỗi + Thử lại', (
+    tester,
+  ) async {
+    subjects.failures = 1;
+    await tester.pumpWidget(_app(const LeaderboardView()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(LeaderboardPeriod.subject.label));
+    await tester.pumpAndSettle();
+    expect(find.text('Chọn một môn học'), findsNothing);
+    expect(find.text('Thử lại'), findsOneWidget);
+
+    // Thử lại thành công: tự chọn môn đầu tiên và hiện bảng
+    await tester.tap(find.text('Thử lại'));
+    await tester.pumpAndSettle();
+    expect(find.text('Thử lại'), findsNothing);
+    expect(find.text('IT3011'), findsOneWidget);
+    expect(find.text('Chọn một môn học'), findsNothing);
   });
 }

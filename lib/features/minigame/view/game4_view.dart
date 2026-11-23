@@ -29,7 +29,9 @@ class Game4View extends StatelessWidget {
   /// Backend không có API "đã cược môn này chưa": suy ra từ lịch sử dự đoán
   /// (trang đầu, tối đa 50 lượt gần nhất là đủ cho số môn một kỳ).
   static Future<Game4Data> _load() async {
-    final subjectsF = getIt<SubjectRepository>().enrolled();
+    final subjectsF = getIt<SubjectRepository>().enrolled(
+      currentSemester: true,
+    );
     final historyF = getIt<GameRepository>().myPredictions(limit: 50);
     // Future.wait ném lại nguyên ApiException đầu tiên (LoadCubit bắt được)
     // và tự xử lý lỗi của future còn lại.

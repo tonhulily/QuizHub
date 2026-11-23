@@ -19,6 +19,7 @@ const _detail = SubmissionDetail(
   sessionId: 3,
   title: 'Bảng băm',
   subjectId: 10,
+  courseClassId: 100,
   status: SessionStatus.pending,
   questions: [
     SubmissionQuestion(
@@ -29,6 +30,23 @@ const _detail = SubmissionDetail(
       options: [
         QuestionOption(key: 'A', text: 'Separate chaining', isCorrect: true),
         QuestionOption(key: 'B', text: 'Linear probing', isCorrect: false),
+      ],
+    ),
+    // Phiên phải có tối thiểu 3 câu
+    SubmissionQuestion(
+      questionId: 202,
+      content: 'Hàm băm tốt cần gì?',
+      options: [
+        QuestionOption(key: 'A', text: 'Phân bố đều', isCorrect: true),
+        QuestionOption(key: 'B', text: 'Chậm', isCorrect: false),
+      ],
+    ),
+    SubmissionQuestion(
+      questionId: 203,
+      content: 'Hệ số tải là gì?',
+      options: [
+        QuestionOption(key: 'A', text: 'n / m', isCorrect: true),
+        QuestionOption(key: 'B', text: 'm / n', isCorrect: false),
       ],
     ),
   ],
@@ -200,7 +218,9 @@ void main() {
         expect(await c.accept(), isNull);
 
         expect(ai.applied, isEmpty);
-        final q = submissions.updates.single.questions.single;
+        final qs = submissions.updates.single.questions;
+        expect(qs.map((q) => q.questionId), [201, 202, 203]);
+        final q = qs.first;
         expect(q.questionId, 201);
         expect(q.content, _suggestion.content);
         expect(q.options[1].text, 'Open addressing');

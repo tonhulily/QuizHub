@@ -44,7 +44,7 @@ Riêng `/search` dùng offset. Mọi response bọc `{code, message, data}`, `Ap
 | Màn hình | Thao tác | Endpoint | Hàm |
 |---|---|---|---|
 | Bộ lọc môn (Bank Home, My Exams) | Tất cả môn, A đến Z | `GET /subjects` | `all()` (có cache trong RAM) |
-| Form tạo phiên | Môn mình đang học | `GET /sessions/my-enrolled-subjects` | `enrolled()` |
+| Form tạo phiên | Lớp học phần học kỳ hiện tại (`can_propose`) | `GET /sessions/my-enrolled-course-classes` | `enrolledClasses()`; môn gộp theo `subject_id`: `enrolled()` |
 
 ### 3.2 Phiên đề xuất của tôi — `SubmissionRepository`
 

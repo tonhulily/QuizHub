@@ -36,14 +36,17 @@ class SubmissionFormView extends StatelessWidget {
         getIt<SubmissionRepository>(),
         getIt<SubjectRepository>(),
         sessionId: d?.sessionId,
-        currentSubject: d?.subjectId == null
+        currentClass: d?.courseClassId == null
             ? null
-            : SubjectModel(
-                subjectId: d!.subjectId!,
-                code: d.subjectCode ?? '',
-                name: d.subjectName ?? 'Môn học',
+            : EnrolledCourseClass(
+                courseClassId: d!.courseClassId!,
+                classCode: d.classCode ?? '',
+                subjectId: d.subjectId ?? 0,
+                subjectCode: d.subjectCode ?? '',
+                subjectName: d.subjectName ?? 'Môn học',
+                semesterName: d.semesterName,
               ),
-      )..loadSubjects(),
+      )..loadClasses(),
       child: _Form(initial: d),
     );
   }
@@ -170,7 +173,7 @@ class _FormState extends State<_Form> {
   late final _title = TextEditingController(text: widget.initial?.title);
   late final _content = TextEditingController(text: widget.initial?.content);
   late final _source = TextEditingController(text: widget.initial?.sourceUrl);
-  late int? _subjectId = widget.initial?.subjectId;
+  late int? _classId = widget.initial?.courseClassId;
   late final List<_QuestionEditor> _questions = [
     for (final q in widget.initial?.questions ?? const <SubmissionQuestion>[])
       _QuestionEditor.from(q),
@@ -179,7 +182,7 @@ class _FormState extends State<_Form> {
 
   /// Lỗi nhập liệu đang hiển thị (viền đỏ + dòng báo ngay tại ô đó).
   DraftIssue? _issue;
-  final _subjectKey = GlobalKey();
+  final _classKey = GlobalKey();
   final _titleKey = GlobalKey();
   final _sourceKey = GlobalKey();
   final _questionsKey = GlobalKey();
@@ -196,7 +199,7 @@ class _FormState extends State<_Form> {
   }
 
   SessionDraft _draft() => SessionDraft(
-    subjectId: _subjectId ?? 0,
+    courseClassId: _classId ?? 0,
     title: _title.text,
     content: _content.text,
     sourceUrl: _source.text,
@@ -225,7 +228,7 @@ class _FormState extends State<_Form> {
   void _showIssue(DraftIssue issue) {
     setState(() => _issue = issue);
     final key = switch (issue.field) {
-      DraftField.subject => _subjectKey,
+      DraftField.courseClass => _classKey,
       DraftField.title => _titleKey,
       DraftField.source => _sourceKey,
       DraftField.questions => _questionsKey,
@@ -340,12 +343,12 @@ class _FormState extends State<_Form> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _SubjectPicker(
-                      key: _subjectKey,
-                      value: _subjectId,
-                      errorText: _errorOf(DraftField.subject),
+                    _ClassPicker(
+                      key: _classKey,
+                      value: _classId,
+                      errorText: _errorOf(DraftField.courseClass),
                       onChanged: (id) {
-                        setState(() => _subjectId = id);
+                        setState(() => _classId = id);
                         _edited();
                       },
                     ),
@@ -437,12 +440,12 @@ class _FormState extends State<_Form> {
 }
 
 /// Chọn môn: chỉ các môn đang học (đề xuất môn khác bị 403).
-class _SubjectPicker extends StatelessWidget {
+class _ClassPicker extends StatelessWidget {
   final int? value;
   final String? errorText;
   final ValueChanged<int?> onChanged;
 
-  const _SubjectPicker({
+  const _ClassPicker({
     super.key,
     required this.value,
     this.errorText,
@@ -452,39 +455,39 @@ class _SubjectPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<SubmissionFormCubit>().state;
-    if (state.subjectsStatus == LoadStatus.loading) {
+    if (state.classesStatus == LoadStatus.loading) {
       return const SizedBox(height: 56, child: LoadingView());
     }
-    if (state.subjectsStatus == LoadStatus.failure) {
+    if (state.classesStatus == LoadStatus.failure) {
       return ErrorView(
         error: state.error,
         compact: true,
-        onRetry: context.read<SubmissionFormCubit>().loadSubjects,
+        onRetry: context.read<SubmissionFormCubit>().loadClasses,
       );
     }
-    if (state.subjects.isEmpty) {
+    if (state.classes.isEmpty) {
       return const ExplanationBox(
-        title: 'Bạn chưa tham gia lớp học phần nào',
-        text: 'Chỉ đề xuất được câu hỏi cho môn bạn đang học.',
+        title: 'Bạn chưa tham gia lớp học phần nào trong học kỳ này',
+        text: 'Chỉ đề xuất được câu hỏi cho lớp học phần của học kỳ hiện tại.',
         icon: AppIcons.errorOutline,
         color: AppColors.warningDark,
         background: AppColors.warningLight,
       );
     }
-    final valid = state.subjects.any((s) => s.subjectId == value);
+    final valid = state.classes.any((c) => c.courseClassId == value);
     return DropdownButtonFormField<int>(
       initialValue: valid ? value : null,
       isExpanded: true,
       decoration: InputDecoration(
-        labelText: 'Môn học *',
+        labelText: 'Lớp học phần *',
         prefixIcon: const Icon(AppIcons.subject),
         errorText: errorText,
       ),
       items: [
-        for (final s in state.subjects)
+        for (final c in state.classes)
           DropdownMenuItem(
-            value: s.subjectId,
-            child: Text(s.label, overflow: TextOverflow.ellipsis),
+            value: c.courseClassId,
+            child: Text(c.label, overflow: TextOverflow.ellipsis),
           ),
       ],
       onChanged: onChanged,

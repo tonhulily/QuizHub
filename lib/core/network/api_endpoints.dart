@@ -68,7 +68,8 @@ class ApiEndpoints {
   // ---- 17-19. Question sessions ----
   static const String sessionPropose = '/sessions/propose';
   static const String mySubmissions = '/sessions/my-submissions';
-  static const String myEnrolledSubjects = '/sessions/my-enrolled-subjects';
+  static const String myEnrolledCourseClasses =
+      '/sessions/my-enrolled-course-classes';
   static const String sessionsPending = '/sessions/pending';
   static String session(int id) => '/sessions/$id';
   static String sessionQuestions(int id) => '/sessions/$id/questions';

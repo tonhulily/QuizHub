@@ -14,6 +14,9 @@ class SubmissionLimits {
   SubmissionLimits._();
 
   static const int minOptions = 2;
+
+  /// `ProposeSessionRequest.questions` có `minItems: 3` trên Swagger.
+  static const int minQuestions = 3;
   static const int maxOptions = 6;
   static const int maxQuestions = 50;
   static const int maxTitleLength = 200;
@@ -25,7 +28,8 @@ class SubmissionLimits {
 
 /// Ô bị lỗi trong form đề xuất.
 enum DraftField {
-  subject,
+  /// Lớp học phần nhận phiên.
+  courseClass,
   title,
   source,
 
@@ -70,8 +74,8 @@ String? validateSessionDraft(SessionDraft d) => checkSessionDraft(d)?.message;
 
 /// Như [validateSessionDraft] nhưng cho biết lỗi nằm ở ô nào.
 DraftIssue? checkSessionDraft(SessionDraft d) {
-  if (d.subjectId <= 0) {
-    return const DraftIssue('Hãy chọn môn học.', DraftField.subject);
+  if (d.courseClassId <= 0) {
+    return const DraftIssue('Hãy chọn lớp học phần.', DraftField.courseClass);
   }
   final title = d.title.trim();
   if (title.isEmpty) {
@@ -90,9 +94,9 @@ DraftIssue? checkSessionDraft(SessionDraft d) {
       DraftField.source,
     );
   }
-  if (d.questions.isEmpty) {
+  if (d.questions.length < SubmissionLimits.minQuestions) {
     return const DraftIssue(
-      'Phiên phải có ít nhất một câu hỏi.',
+      'Phiên phải có ít nhất ${SubmissionLimits.minQuestions} câu hỏi.',
       DraftField.questions,
     );
   }
@@ -170,32 +174,34 @@ DraftIssue? checkSessionDraft(SessionDraft d) {
 }
 
 class SubmissionFormState extends Equatable {
-  final LoadStatus subjectsStatus;
-  final List<SubjectModel> subjects;
+  final LoadStatus classesStatus;
+
+  /// Lớp học phần được chọn để đề xuất (học kỳ hiện tại, `can_propose`).
+  final List<EnrolledCourseClass> classes;
   final bool saving;
   final ApiException? error;
 
   const SubmissionFormState({
-    this.subjectsStatus = LoadStatus.loading,
-    this.subjects = const [],
+    this.classesStatus = LoadStatus.loading,
+    this.classes = const [],
     this.saving = false,
     this.error,
   });
 
   SubmissionFormState copyWith({
-    LoadStatus? subjectsStatus,
-    List<SubjectModel>? subjects,
+    LoadStatus? classesStatus,
+    List<EnrolledCourseClass>? classes,
     bool? saving,
     ApiException? error,
   }) => SubmissionFormState(
-    subjectsStatus: subjectsStatus ?? this.subjectsStatus,
-    subjects: subjects ?? this.subjects,
+    classesStatus: classesStatus ?? this.classesStatus,
+    classes: classes ?? this.classes,
     saving: saving ?? this.saving,
     error: error ?? this.error,
   );
 
   @override
-  List<Object?> get props => [subjectsStatus, subjects, saving, error];
+  List<Object?> get props => [classesStatus, classes, saving, error];
 }
 
 /// Tạo phiên mới ([sessionId] null) hoặc sửa phiên còn chờ duyệt.
@@ -204,31 +210,35 @@ class SubmissionFormCubit extends Cubit<SubmissionFormState> {
   final SubjectRepository _subjects;
   final int? sessionId;
 
-  /// Môn của phiên đang sửa: vẫn hiện trong danh sách dù đã thôi học môn đó.
-  final SubjectModel? currentSubject;
+  /// Lớp của phiên đang sửa: vẫn hiện trong danh sách dù không còn
+  /// `can_propose` (đổi học kỳ).
+  final EnrolledCourseClass? currentClass;
 
   SubmissionFormCubit(
     this._submissions,
     this._subjects, {
     this.sessionId,
-    this.currentSubject,
+    this.currentClass,
   }) : super(const SubmissionFormState());
 
   bool get isEdit => sessionId != null;
 
-  /// Chỉ đề xuất được cho môn đang học (môn khác server trả 403).
-  Future<void> loadSubjects() async {
-    emit(state.copyWith(subjectsStatus: LoadStatus.loading));
+  /// Chỉ đề xuất được vào lớp học phần của học kỳ hiện tại
+  /// (`can_propose` = true); lớp khác server từ chối.
+  Future<void> loadClasses() async {
+    emit(state.copyWith(classesStatus: LoadStatus.loading));
     try {
-      final list = await _subjects.enrolled();
+      final list = (await _subjects.enrolledClasses())
+          .where((c) => c.canPropose)
+          .toList();
       if (isClosed) return;
-      final current = currentSubject;
+      final current = currentClass;
       emit(
         state.copyWith(
-          subjectsStatus: LoadStatus.loaded,
-          subjects: [
+          classesStatus: LoadStatus.loaded,
+          classes: [
             if (current != null &&
-                list.every((s) => s.subjectId != current.subjectId))
+                list.every((c) => c.courseClassId != current.courseClassId))
               current,
             ...list,
           ],
@@ -236,7 +246,7 @@ class SubmissionFormCubit extends Cubit<SubmissionFormState> {
       );
     } on ApiException catch (e) {
       if (isClosed) return;
-      emit(state.copyWith(subjectsStatus: LoadStatus.failure, error: e));
+      emit(state.copyWith(classesStatus: LoadStatus.failure, error: e));
     }
   }
 

@@ -51,17 +51,28 @@ QuestionDraft _q({
       ],
 );
 
+/// Server bắt buộc tối thiểu 3 câu: [questions] không rỗng thì được bù thêm
+/// câu hợp lệ ở cuối để lỗi (nếu có) vẫn nằm ở câu đang kiểm tra.
 SessionDraft _draft({
-  int subjectId = 10,
+  int courseClassId = 100,
   String title = 'Bảng băm',
   String? sourceUrl,
   List<QuestionDraft>? questions,
-}) => SessionDraft(
-  subjectId: subjectId,
-  title: title,
-  sourceUrl: sourceUrl,
-  questions: questions ?? [_q()],
-);
+}) {
+  final qs = questions ?? [_q()];
+  return SessionDraft(
+    courseClassId: courseClassId,
+    title: title,
+    sourceUrl: sourceUrl,
+    questions: qs.isEmpty
+        ? qs
+        : [
+            ...qs,
+            for (var i = qs.length; i < SubmissionLimits.minQuestions; i++)
+              _q(),
+          ],
+  );
+}
 
 PracticeQuestion _practice(
   int id, {
@@ -203,9 +214,29 @@ class _FakeComments implements CommentRepository {
 
 class _FakeSubjects implements SubjectRepository {
   @override
-  Future<List<SubjectModel>> enrolled() async => const [
-    SubjectModel(subjectId: 10, code: 'IT3011', name: 'CTDL & TT'),
+  Future<List<EnrolledCourseClass>> enrolledClasses() async => const [
+    EnrolledCourseClass(
+      courseClassId: 100,
+      classCode: '171146',
+      subjectId: 10,
+      subjectCode: 'IT3011',
+      subjectName: 'CTDL & TT',
+      activeSemester: true,
+      canPropose: true,
+    ),
+    // Lớp học kỳ cũ: không được chọn trong form đề xuất
+    EnrolledCourseClass(
+      courseClassId: 90,
+      classCode: '160001',
+      subjectId: 12,
+      subjectCode: 'IT3180',
+      subjectName: 'CNPM',
+    ),
   ];
+
+  @override
+  Future<List<SubjectModel>> enrolled({bool currentSemester = false}) async =>
+      const [SubjectModel(subjectId: 10, code: 'IT3011', name: 'CTDL & TT')];
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -257,15 +288,24 @@ void main() {
       expect(validateSessionDraft(_draft()), isNull);
     });
 
-    test('bắt buộc môn, tiêu đề và ít nhất một câu', () {
-      expect(validateSessionDraft(_draft(subjectId: 0)), 'Hãy chọn môn học.');
+    test('bắt buộc lớp học phần, tiêu đề và ít nhất 3 câu', () {
+      expect(
+        validateSessionDraft(_draft(courseClassId: 0)),
+        'Hãy chọn lớp học phần.',
+      );
       expect(
         validateSessionDraft(_draft(title: '   ')),
         'Hãy nhập tiêu đề phiên.',
       );
       expect(
         validateSessionDraft(_draft(questions: [])),
-        'Phiên phải có ít nhất một câu hỏi.',
+        'Phiên phải có ít nhất 3 câu hỏi.',
+      );
+      expect(
+        validateSessionDraft(
+          SessionDraft(courseClassId: 100, title: 'A', questions: [_q(), _q()]),
+        ),
+        'Phiên phải có ít nhất 3 câu hỏi.',
       );
     });
 
@@ -566,7 +606,7 @@ void main() {
       await tester.tap(find.widgetWithText(TextButton, 'Gửi'));
       await tester.pump();
 
-      expect(find.text('Hãy chọn môn học.'), findsOneWidget);
+      expect(find.text('Hãy chọn lớp học phần.'), findsOneWidget);
       expect(submissions.proposed, isEmpty);
     });
 
