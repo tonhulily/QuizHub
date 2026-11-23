@@ -13,6 +13,7 @@
 | Focused retest checkpoint | `04d858c5348626198b1879a7900e2d75c9390e58` |
 | Runtime/config delta theo coordinator | `lib/`, `android/`, `ios/`, `pubspec.yaml`, `pubspec.lock` trùng `MAIN_SNAPSHOT`; không có app/dependency edit riêng trên QA. |
 | Acceptance matrix | **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**. SEARCH/PUSH đã có implementation trong snapshot mới nên chuyển từ WAITING sang NOT RUN; minigame có một phần, AI/contract còn WAITING. Local regression không được cộng vào acceptance. |
+| Canonical bug tracker | **15 unique issues: 8 Closed, 1 Ready for Retest, 6 Open**; cells đã được coordinator readback xác nhận, dashboard 15/6/1/8 khớp. [Tracker update report](reports/2026-11-23-tracker-update.md). |
 | API/native acceptance | **NOT RUN** — không có API host/tài khoản hoặc thiết bị trong các lượt này. |
 
 ### Regression và local repro
@@ -29,7 +30,7 @@
 
 Trên `2f04084`, cached Flutter web build exit 0 (57.6 giây). Browser boot của `lib/main_preview.dart` **FAIL**: header/shell hiện nhưng body xám trống; Firebase init trên web lỗi rồi lazy messaging service ném `[core/no-app]`. Đây là local preview candidate QH-QA-013, không phải lỗi API/native. Search, push settings, report và minigame flows **NOT RUN** do boot bị chặn. Xem [web report](reports/2026-11-23-web.md), [console excerpt](evidence/2026-11-23/web/console.txt) và [ảnh](evidence/2026-11-23/web/preview-blank-body.png).
 
-Tracker update và readback thuộc điều phối. QH-QA-010..015 được đề xuất từ widget/local repro; chưa ghi là issue tracker đã cập nhật. Chi tiết delta minigame/question bank/report/push: [delta review](reports/2026-11-23-delta-review.md). Môi trường và lệnh: [ENVIRONMENT](ENVIRONMENT.md).
+Tracker update/readback ngày 23/11: QH-QA-010..012 và QH-QA-014..015 hiện **Open / Retest Fail** với evidence local; QH-QA-013 **Open / Not Retested** sau lần web preview đầu; QH-QA-005 **Ready for Retest / Retest Blocked**; QH-QA-001..004 và QH-QA-006..009 **Closed**. Chi tiết, status history và URL ghim: [tracker update report](reports/2026-11-23-tracker-update.md). Delta minigame/question bank/report/push: [delta review](reports/2026-11-23-delta-review.md). Môi trường và lệnh: [ENVIRONMENT](ENVIRONMENT.md).
 
 ## Execution 2026-11-20 — Nam (native preview)
 

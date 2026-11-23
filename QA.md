@@ -21,6 +21,8 @@ tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệ
 
 Handoff mới nhất 2026-11-23: upstream `main` snapshot `82ef14f38e086d6b558b392fc54a328c3d7f26a2`, QA integration `622640325b7c1b4bf0f3a5018ffd2635dce27061`, focused retest source `04d858c5348626198b1879a7900e2d75c9390e58`. Acceptance matrix: **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**; regression local không phải acceptance. Xem [tiến độ](docs/qa/PROGRESS.md), [regression](docs/qa/reports/2026-11-23-regression.md), [web preview](docs/qa/reports/2026-11-23-web.md), và [tóm tắt phiên](docs/qa/reports/2026-11-23-summary.md).
 
+Tracker `TESTING LỖI` được coordinator cập nhật/readback ngày 23/11: **15 issue duy nhất — 8 Closed, 1 Ready for Retest, 6 Open**. Chi tiết và links ghim vào QA report commit xem [tracker update report](docs/qa/reports/2026-11-23-tracker-update.md).
+
 Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (cập nhật 2026-11-23),
 [tóm tắt QA 15/11](docs/qa/reports/2026-11-15-summary.md),
 [ghi nhận cập nhật tracker](docs/qa/reports/2026-11-15-tracker-update.md),
@@ -72,7 +74,7 @@ tính năng đã hoàn thành hoặc tự động ghi nhận nó là bug.
 2. Chạy analyzer và regression:
 
 ```bash
-"$FLUTTER" analyze --no-pub
+"$FLUTTER" analyze --no-pub lib test qa/repro
 "$FLUTTER" test --no-pub
 .qa-tools/flutter/bin/dart format --output=none --set-exit-if-changed lib test qa/repro
 ```
@@ -203,20 +205,19 @@ không kiểm chứng định dạng media thực, nội dung file hay dịch v�
 
 ## Bug list và mẫu ghi nhận
 
-Chưa có defect server/backend được xác nhận. Ba client defect được tái hiện trên Nam
-snapshot bằng mock/fake, không phải API thật. Ba UI overflow từ exploratory run khác
-SHA cần xác minh lại trên source sạch; không coi là confirmed ở đây. Hai invariant client
-tái hiện bằng fake transport được ghi ở [RISKS.md](docs/qa/RISKS.md); không phải bằng chứng
-đã gọi server. Ghi nhận:
+Tracker canonical `TESTING LỖI` đã được coordinator cập nhật và readback xác nhận: 15 issue
+duy nhất gồm 8 Closed, 1 Ready for Retest và 6 Open. Không có bug API/backend được xác nhận.
+Các issue 010..015 có bằng chứng local widget, preview hoặc fake adapter như ghi theo từng dòng;
+không diễn giải chúng thành API/native evidence. Xem [tracker update report](docs/qa/reports/2026-11-23-tracker-update.md).
 
 | ID | Liên quan | Quan sát | Cách xác nhận / trạng thái |
 |---|---|---|---|
-| QH-QA-006..008 (Open / Retest Fail, 20/11) | Nam / Push settings, search, FCM | Năm async completion paths emit sau cubit close; second notification tap pending không được điều hướng | Tái hiện lại bằng focused local repro/UI trên pristine Nam SHA `639da129d89e8290c13b63af3d36045309b38fd6` ngày 20/11: 6 lỗi (bao gồm các repro này), exit 1. Native preview không dựng race; không tính là retest. [Nam local report](docs/qa/reports/2026-11-20-nam-local.md), [lần tái hiện ban đầu](docs/qa/reports/2026-11-15-summary.md). Chưa có fix được quan sát. |
+| QH-QA-001..004, 006..008 (Closed / Retest Pass) | Client lifecycle, qbank, exam, push/search notification paths | Focused local suite đạt 47 PASS trên `04d858c`; các ca bao gồm late close, image-only validation, launcher error, role UI, async close, saved-search delete và queued notification tap. | Closed sau khi observed checks và tracker readback; phạm vi local unit/widget/mock, không phải API acceptance. [Retest report](docs/qa/reports/2026-11-23-retest.md). |
 | QH-QA-009 (Closed / Retest Pass) | Sơn / test harness | Host thiếu app `Scaffold`/`AppTheme` gây false positive overflow 917 px; corrected UI test 3/3, independent rerun passed, 244 runtime/config files match pristine source | [Host-correction evidence](docs/qa/evidence/2026-11-15/nam/host-correction.txt). Đóng lỗi harness đã sửa; không phải bug sản phẩm. |
-| QH-QA-010..012 (candidate; tracker update pending) | Conversations / shared empty view / PostCard | Focused layout retest `04d858c` quan sát ba điểm tràn trong viewport 320×640/text scale 2. Ba lỗi hit-test/viewport còn lại thuộc harness. | Local widget candidates, chưa xác nhận thiết bị; tracker update chờ điều phối. [Regression report](docs/qa/reports/2026-11-23-regression.md) |
-| QH-QA-013 (candidate; tracker update pending) | Web preview boot / Firebase fallback | Local preview build thành công nhưng body trống; Firebase web init lỗi rồi lazy messaging service ném `[core/no-app]`. | Local web repro; không API/native. [Web report](docs/qa/reports/2026-11-23-web.md) |
-| QH-QA-014..015 (candidate; tracker update pending) | Network client redirect / concurrent refresh timeout | Fake adapter còn gửi bearer/body sang off-origin redirect; concurrent 401 callers phân loại timeout khác nhau. | In-memory fake, không API thật; [focused retest evidence](docs/qa/evidence/2026-11-23/retest/results.txt). |
-| QH-QA-005 (logged, Open / Retest Fail) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Tracker đọc lại 19/11: compile-only failure trên root source `447ecf3`; test body chưa chạy, chưa có upstream fix. Một import chỉ dùng ở QA workspace cô lập theo Sơn cho phép; không đóng issue. [Evidence baseline](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt), [execution ngày 19/11](docs/qa/reports/2026-11-19-quoc-anh-summary.md). |
+| QH-QA-010..012 (Open / Retest Fail) | Conversations / shared empty view / PostCard | Focused layout retest `04d858c`: hai failed tests có ba overflow component sites trong viewport 320×640/text scale 2; ba failed tests khác bị chặn bởi hit-test/viewport harness. | Local widget evidence, chưa xác nhận thiết bị. [Retest report](docs/qa/reports/2026-11-23-retest.md), [tracker update](docs/qa/reports/2026-11-23-tracker-update.md). |
+| QH-QA-013 (Open / Not Retested) | Web preview boot / Firebase fallback | Local preview build thành công nhưng body trống; Firebase web init lỗi rồi lazy messaging service ném `[core/no-app]`. | First observed local web failure; chưa có retest. Không phải API/native evidence. [Web report](docs/qa/reports/2026-11-23-web.md). |
+| QH-QA-014..015 (Open / Retest Fail) | Network client redirect / concurrent refresh timeout | Fake adapter gửi dummy bearer/body sang off-origin redirect; hai concurrent 401 callers phân loại timeout khác nhau. | In-memory fake, không API thật; không ghi nhận real credential exposure. [Retest report](docs/qa/reports/2026-11-23-retest.md). |
+| QH-QA-005 (Ready for Retest / Retest Blocked) | AppTheme / Tố Như | `CupertinoPageTransitionsBuilder` không resolve ở Flutter 3.47.9 khi compile test | Main snapshot chạy được với Flutter 3.41.6, nhưng điều kiện gốc cần retest bằng Flutter 3.47.9 tương thích lockfile; chưa kết luận fix. [Evidence baseline](docs/qa/evidence/2026-11-15/regression/theme-baseline.txt), [retest report](docs/qa/reports/2026-11-23-retest.md). |
 | QA-NOTE-01 | Auth / Như | `AuthRepository.changePassword` cập nhật bất kỳ saved account nào sau API thành công | Kiểm tra khả năng A còn được lưu khi B đăng nhập; UI hiện nhớ B hoặc bỏ lưu A khi B đăng nhập. Chưa xác nhận đường tái hiện thực tế, chưa coi là bug |
 | QA-ENV-01 | Môi trường | Flutter 3.41.6 và 3.47.9 đã có; Android RMX3370 / Android 13 được coordinator xác nhận online qua WindowsADB/MobileMCP. Backend host và tài khoản QA A/B chưa có theo xác nhận Sơn; xem [PROGRESS](docs/qa/PROGRESS.md) và [ENVIRONMENT](docs/qa/ENVIRONMENT.md) | Không dùng production credentials/data |
 
