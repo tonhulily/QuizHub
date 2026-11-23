@@ -1,4 +1,5 @@
 import '../core/utils/json_utils.dart';
+import 'preview_games.dart';
 
 /// Dữ liệu mẫu cho module Ngân hàng câu hỏi + Đề thi + AI trong bản xem trước
 /// (`lib/main_preview.dart`). Tách khỏi `PreviewBackend` để file đó khỏi phình;
@@ -64,6 +65,18 @@ class PreviewQbank {
   /// editLogId -> bản gợi ý của AI đang chờ áp dụng
   final Map<int, Map<String, dynamic>> _aiLogs = {};
   final Map<int, Map<String, dynamic>> _exams = {};
+
+  /// Minigame dự đoán (`/games/...`), cần biết nguồn câu của phiên cho Game 2.
+  late final PreviewGames _games = PreviewGames(
+    mySessionSources: (id) {
+      final s = _sessions[id];
+      if (s == null || s['author_id'] != _meId) return null;
+      return [
+        for (final q in _questionsOf(s['question_ids']))
+          J.stringOr(q['source'], 'HOMO_SAPIENS'),
+      ];
+    },
+  );
 
   PreviewQbank() {
     Map<String, dynamic> opt(String key, String text, [bool correct = false]) =>
@@ -396,9 +409,17 @@ class PreviewQbank {
   // JSON trả về (theo schema Swagger)
   // ------------------------------------------------------------------
 
+  /// Lớp học phần (mẫu) của môn [subjectId], null nếu không học môn đó.
+  static Map<String, Object>? _classOfSubject(int subjectId) =>
+      _classes.where((c) => c['subject_id'] == subjectId).firstOrNull;
+
   Map<String, dynamic> _summary(Map<String, dynamic> s) {
     final subject = _subject(s['subject_id'] as int);
+    final cls = _classOfSubject(subject['subject_id']! as int);
     return {
+      'course_class_id': cls?['course_class_id'],
+      'class_code': cls?['class_code'],
+      'semester_name': cls?['semester_name'],
       'session_id': s['session_id'],
       'session_code': s['session_code'],
       'title': s['title'],
@@ -529,9 +550,11 @@ class PreviewQbank {
     for (final key in const ['title', 'content', 'source_url']) {
       if (body[key] != null) s[key] = body[key];
     }
-    if (J.asInt(body['subject_id']) case final subjectId?) {
-      s['subject_id'] = subjectId;
-    }
+    final classId = J.asInt(body['course_class_id']);
+    final cls = _classes
+        .where((c) => c['course_class_id'] == classId)
+        .firstOrNull;
+    if (cls != null) s['subject_id'] = cls['subject_id'];
     final ids = <int>[];
     for (final q in J.list(body['questions'], (m) => m)) {
       final id = J.asInt(q['question_id']) ?? _nextId++;
@@ -577,11 +600,28 @@ class PreviewQbank {
   ) {
     final seg = path.split('/'); // ['', 'sessions', '12', 'questions']
 
+    if (path.startsWith('/games/') && path != '/games/check-in') {
+      return _games.route(m, path, q, body);
+    }
     if (path == '/subjects') return _subjects;
-    if (path == '/sessions/my-enrolled-subjects') {
+    if (path == '/sessions/my-enrolled-course-classes') {
       return [
-        for (final s in _subjects)
-          if (_enrolledIds.contains(s['subject_id'])) s,
+        for (final c in _classes)
+          if (_enrolledIds.contains(c['subject_id']))
+            {
+              for (final k in const [
+                'course_class_id',
+                'class_code',
+                'subject_id',
+                'subject_code',
+                'subject_name',
+                'semester_id',
+                'semester_name',
+              ])
+                k: c[k],
+              'active_semester': true,
+              'can_propose': true,
+            },
       ];
     }
 
@@ -616,7 +656,12 @@ class PreviewQbank {
     }
     if (path == '/sessions/propose' && m == 'POST') {
       final id = _nextId++;
-      final subjectId = J.intOr(body['subject_id'], 10);
+      final subjectId = J.intOr(
+        _classes
+            .where((c) => c['course_class_id'] == body['course_class_id'])
+            .firstOrNull?['subject_id'],
+        10,
+      );
       final s = <String, dynamic>{
         'session_id': id,
         'session_code': '${_subject(subjectId)['code']}_PREVIEW_$id',

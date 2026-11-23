@@ -23,6 +23,7 @@ import '../data/repositories/comment_repository.dart';
 import '../data/repositories/exam_repository.dart';
 import '../data/repositories/feed_repository.dart';
 import '../data/repositories/friend_repository.dart';
+import '../data/repositories/game_repository.dart';
 import '../data/repositories/media_repository.dart';
 import '../data/repositories/post_repository.dart';
 import '../data/repositories/like_state_store.dart';
@@ -198,6 +199,9 @@ Future<void> setupLocator({
   );
   getIt.registerLazySingleton<AiRepository>(
     () => AiRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<GameRepository>(
+    () => GameRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<UserDirectory>(
     () => UserDirectory(getIt<UserRepository>()),

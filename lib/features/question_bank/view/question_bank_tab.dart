@@ -252,6 +252,19 @@ class _Header extends StatelessWidget {
                         ).pushNamed(AppRoutes.examMyExams),
                       ),
                     ),
+                  ] else ...[
+                    // Minigame dự đoán dành cho sinh viên
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _Shortcut(
+                        icon: AppIcons.bolt,
+                        color: AppColors.warningDark,
+                        label: 'Minigame',
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pushNamed(AppRoutes.minigameHub),
+                      ),
+                    ),
                   ],
                 ],
               ),

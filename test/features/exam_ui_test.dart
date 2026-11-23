@@ -147,7 +147,7 @@ void main() {
 
   test('form đề xuất: tối đa 4 ảnh mỗi câu', () {
     final draft = SessionDraft(
-      subjectId: 10,
+      courseClassId: 100,
       title: 'Ảnh',
       questions: [
         QuestionDraft(
@@ -158,6 +158,15 @@ void main() {
             QuestionOption(key: 'B', text: 'Hình 2'),
           ],
         ),
+        // Bù cho đủ số câu tối thiểu của phiên
+        for (var i = 0; i < 2; i++)
+          QuestionDraft(
+            content: 'Câu phụ $i',
+            options: const [
+              QuestionOption(key: 'A', text: 'Có', isCorrect: true),
+              QuestionOption(key: 'B', text: 'Không'),
+            ],
+          ),
       ],
     );
     expect(validateSessionDraft(draft), 'Câu 1: tối đa 4 ảnh.');

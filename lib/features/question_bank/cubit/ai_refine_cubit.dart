@@ -256,7 +256,7 @@ class AiRefineCubit extends Cubit<AiRefineState> {
       confidence: old.confidence,
     );
     return SessionDraft(
-      subjectId: base.subjectId,
+      courseClassId: base.courseClassId,
       title: base.title,
       content: base.content,
       sourceUrl: base.sourceUrl,

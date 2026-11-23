@@ -15,6 +15,7 @@ import '../../../data/models/session_models.dart';
 import '../../../data/repositories/submission_repository.dart';
 import '../../../di/locator.dart';
 import '../../../shared/widgets/link_text.dart';
+import '../../minigame/widgets/game2_action.dart';
 import '../cubit/ai_refine_cubit.dart';
 import '../cubit/load_cubit.dart';
 import '../widgets/qbank_widgets.dart';
@@ -139,6 +140,11 @@ class _DetailBody extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 96),
                 children: [
                   _InfoBlock(detail: d!, status: _status(d)),
+                  if (canPredictGame2(_status(d)) &&
+                      d.questions.isNotEmpty) ...[
+                    const SectionGap(),
+                    Game2Block(key: ValueKey(d.sessionId), detail: d),
+                  ],
                   for (var i = 0; i < d.questions.length; i++) ...[
                     const SectionGap(),
                     _QuestionBlock(
