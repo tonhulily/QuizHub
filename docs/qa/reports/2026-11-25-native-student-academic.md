@@ -37,13 +37,13 @@
 | S-GH-01 | Leaderboard kỳ học hiển thị user #3, 135 điểm và danh sách xếp hạng fixture. | PASS — `S-GH-01-leaderboard-term.png` |
 | S-GH-02 | Chọn `Theo môn`; view có IT3011/IT3070 và hiển thị dữ liệu leaderboard môn (user #3, 55 điểm). | PASS — fixture UI. `S-GH-02-leaderboard-subject.png` |
 | S-GH-03 | Lịch sử hiển thị hai lượt mới chờ kết quả (Game 1: 12; Game 2: 0 AI · 1 tự soạn) và hai lượt Game 1 resolved mẫu. | PASS — `S-GH-03-history.png` |
-| S-QB-04 | Practice rating và question statistics. | NOT RUN — chưa thao tác hai nhánh này. |
+| S-QB-04 | Q102 trong practice: `Thống kê câu hỏi` hiển thị 51 lượt, tỉ lệ đúng 59%, phân bố A30/B7/C7/D7 và 0 lượt đánh giá; chọn gửi đánh giá 4 sao (`Câu hỏi hay`), UI hiện `Cảm ơn bạn đã đánh giá!` và nút đổi thành `Đã chấm`. | PASS — preview cục bộ. `S-QB-04-statistics.png`, `S-QB-04-rating-sheet.png`, `S-QB-04-rating-success.png` |
 | S-EXAM-01 | Đường UI Student vào màn đề thi khác shortcut Qbank. | NOT RUN — không quan sát đường dẫn UI khác; không deep-link hoặc gọi endpoint. `Đề thi` shortcut không hiện ở S-ROLE-01. |
-| S-G2-04 | Tạo phiên QA mới 3 câu (1 AI, 2 tự soạn, phương án riêng và đáp án A) rồi đặt cược Game 2 hỗn hợp. | NOT RUN — chưa tạo fixture QA mới; không sửa session/câu seed 3/301/302. |
+| S-G2-04 | Tạo phiên QA mới 3 câu (1 AI, 2 tự soạn, phương án riêng và đáp án A) rồi đặt cược Game 2 hỗn hợp. | NOT RUN — đã thử tạo bản nháp mới nhưng IME nối lặp nội dung khi sửa trường; hủy bản nháp trước khi gửi. Không tạo session mới, không sửa session/câu seed 3/301/302. |
 | S-G2-05 | Đặt số AI dương cho session 3 chỉ có câu tự soạn. | NOT RUN — UI không có trường AI khi số câu AI là 0; nhánh backend 400 không thể thử qua UI và không gọi endpoint trực tiếp. |
 | S-G4-03 | Đặt trùng môn IT3011 sau prediction đã ghi nhận. | NOT RUN — màn Game 4 thay nút dự đoán bằng trạng thái đã đặt; không có action submit lại qua UI. Không ép 409 qua endpoint. |
 
-**Đếm:** 22 PASS, 1 FAIL, 0 BLOCKED, 0 WAITING, 6 NOT RUN (29 case có ID trong bảng).
+**Đếm:** 23 PASS, 1 FAIL, 0 BLOCKED, 0 WAITING, 5 NOT RUN (29 case có ID trong bảng).
 
 ## Giới hạn và khôi phục
 
