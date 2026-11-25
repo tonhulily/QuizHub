@@ -1,5 +1,15 @@
 # Môi trường QA
 
+## Native PREVIEW đang tiếp tục — 2026-11-25
+
+- Source archive `d89a8d660d93842475b694100ccef1fdf783ed9e` (upstream `82ef14f38e086d6b558b392fc54a328c3d7f26a2`), QA checkpoint `b3d91f371ac4ba073fa3d2a2d10ddef6bae5fefc`. Runtime source và dependency/lock không đổi. QA application ID `vn.edu.hust.quizhub.qa.retest`; Student APK SHA-256 `7e73007a0f1a0a641a0f60c7ee75375cb671bede178c151f9b57a7292347a718` (`qa-artifacts/2026-11-24/apks/student-preview-fresh.apk`); cài trên thiết bị với hash khớp và Home đã quan sát. Lecturer academic: 19 kiểm tra unique gộp từ hai phiên, 18 PASS/1 WAITING (PW-03); lựa chọn quyền OS còn NOT RUN và nằm ngoài 19 kiểm tra. Student academic ban đầu 22 PASS/1 FAIL/6 NOT RUN; các core gaps còn pending. Core UI 24/11: 40 preview checks, 27 PASS, 1 WAITING, 6 NOT RUN, 6 BLOCKED ([báo cáo core](reports/2026-11-24-native-core.md)). Đây đều là preview UI, không phải acceptance. Xem [checkpoint Student](reports/2026-11-25-native-student-academic.md), [checkpoint Lecturer](reports/2026-11-25-native-lecturer.md), [resume](reports/2026-11-25-resume.md).
+- Môi trường quan sát: RMX3370, Android 13/API 33, MCP nhận là emulator; serial được che. Màn hình 1080×2400, density 480/360 dp, font scale 1.0. QH-QA-016 ghi nhận overflow khoảng 15 px ở hàng thẻ Game 2 trên hub; [ảnh lỗi](evidence/2026-11-25/native-student-academic/S-GAME-00-hub.png). Nguyên nhân còn là giả thuyết.
+- Điện thoại hiện còn cài QA Student và ADB đang hoạt động để tiếp tục lease. Host có 20 fixture tại `qa-artifacts/2026-11-25/fixtures`; fixture chưa được đẩy vào `/sdcard/Download/QuizHub-QA-20261125/`. Không chạy lại APK cũ Student 24/11 do kernel stale.
+- Thứ tự đang chờ: utility checks (báo cáo dự kiến `reports/2026-11-25-native-student-utilities.md`), Student academic gaps (rating/stats, 3 câu Game 2 QA hỗn hợp, validation minigame 171150, tái hiện overflow/UI guards), sau đó Student core gaps (auth, media, report, chat, biên 500/501 từ; báo cáo dự kiến `reports/2026-11-25-native-student-core.md`). Các pha chưa hoàn tất, không coi như đã chạy.
+- User cho phép tạm thời giữ màn hình awake khi đang sạc. Coordinator đọc `stay_on_while_plugged_in=0`; các lần thử ghi setting thất bại (`WRITE_SECURE_SETTINGS`, `svc power stayon usb` exit 137), và lần đọc sau vẫn là `0`. Không có thay đổi cài đặt được xác nhận; không tìm cách root hoặc đổi quyền. Khi cleanup phải đọc lại và xác nhận giá trị vẫn `0`; gỡ QA app, dọn đúng thư mục fixture nếu đã đẩy, sync, dừng ADB và xác nhận không còn mount thiết bị; lưu checkpoint rồi mới handoff.
+
+Baseline 25-case acceptance vẫn **24 NOT RUN, 1 WAITING**; API host/tài khoản chưa có nên API/backend/FCM còn BLOCKED. Không đổi issue status ngoài tracker update QH-QA-016 được ghi tại [report tracker](reports/2026-11-25-tracker-update.md).
+
 ## Kiểm thử PREVIEW native — 2026-11-24
 
 - Source archive: `d89a8d660d93842475b694100ccef1fdf783ed9e`. APK được build trong `.qa-tools/native-20261124/` với package `vn.edu.hust.quizhub.qa.retest`; không sửa mã runtime, manifest dependency hoặc lockfile. Dùng Java 17, Gradle và Android SDK có sẵn.
