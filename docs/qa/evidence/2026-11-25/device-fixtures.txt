@@ -1,0 +1,13 @@
+Thiết lập fixture thiết bị — 2026-11-25
+
+- Device ID/serial đã che: `bdbe…2c20`.
+- Thư mục đích trên thiết bị: `/sdcard/Download/QuizHub-QA-20261125/`.
+- Trước khi tạo thư mục, phép thử `test -e` trả exit 1 (đường dẫn chưa tồn tại); `mkdir` trả exit 0.
+- `adb push` 8 file trả exit 0: 8 pushed, 0 skipped, tổng 8,388,994 byte.
+- `ls` trả exit 0 và xác nhận:
+  - `photo_1.png`–`photo_5.png`: mỗi file 70 byte;
+  - `image_exact_4mib.png`: 4,194,304 byte;
+  - `image_over_4mib_by_1.png`: 4,194,305 byte;
+  - `animated.gif`: 35 byte.
+- Picker ban đầu đang ở đúng thư mục đích nhưng danh sách trống. Coordinator broadcast `MEDIA_SCANNER_SCAN_FILE` cho đủ 8 URI; cả 8 lệnh trả exit 0 và result 0.
+- Chưa xác nhận lại danh sách file trong picker sau khi quét media. Ghi chú này chỉ xác nhận bước chuẩn bị fixture trên thiết bị; không kết luận picker truy cập được ảnh, upload thành công hay API chấp nhận file.
