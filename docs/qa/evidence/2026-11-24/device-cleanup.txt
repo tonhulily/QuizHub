@@ -1,0 +1,16 @@
+# Selected QA device cleanup evidence — 2026-11-24
+
+Device serial and personal/device identifiers omitted. Results supplied by the coordinator's final cleanup record.
+
+- `adb shell am force-stop vn.edu.hust.quizhub.qa.retest`: exit 0.
+- `adb uninstall vn.edu.hust.quizhub.qa.retest`: exit 0, `Success`.
+- `adb shell pm path vn.edu.hust.quizhub.qa.retest`: exit 1, empty output; package absent.
+- `adb shell pidof vn.edu.hust.quizhub.qa.retest`: exit 1, empty output.
+- `adb shell sync`: exit 0.
+- Windows `adb kill-server`: exit 0; `tasklist` confirmed no `adb.exe` process.
+- Linux `adb kill-server`: exit 0 (daemon already absent); `pgrep adb`: exit 1, empty output.
+- `findmnt`: exit 0; no Android/MTP/gphoto mount was present.
+- Removed exactly eight QA fixture files under `/sdcard/Download/QuizHub-QA-20261124/`: removal exit 0; directory removal exit 0; `test ! -d` exit 0.
+- Browser QA was closed. Browser temporary logs/snapshots moved from untracked `.playwright-mcp` into ignored `qa-artifacts/2026-11-24/playwright-session/`. Existing failure screenshots were retained.
+
+Host cleanup was also verified: full hashes of the retained Lecturer and fresh Student APKs matched their recorded values; only ignored generated intermediates `.qa-tools/native-20261124/build` (1,374,387,636 bytes) and `.qa-tools/native-20261124/.dart_tool/flutter_build` (249,347,103 bytes) were removed, freeing about 1.62 GB. Source archive/config/metadata, SDK/dependency caches, APKs, logs, guides, and the old Student APK for forensic reference were retained. Cleanup command record: ignored `qa-artifacts/2026-11-24/device-cleanup.txt` and `qa-artifacts/2026-11-24/host-cleanup.txt`.

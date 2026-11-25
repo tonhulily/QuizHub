@@ -1,0 +1,33 @@
+Native PREVIEW build and startup evidence — 2026-11-24
+
+Source archive: d89a8d660d93842475b694100ccef1fdf783ed9e
+Checkout: qa/khanhson2005
+Isolated build root: .qa-tools/native-20261124/
+Installed package ID: vn.edu.hust.quizhub.qa.retest
+Device serial: redacted
+
+Build gate resolution
+- Flutter plugin metadata was regenerated in the isolated archive from the lock-matched package config. The corrected graph validated all manifests and hosted versions; the expanded generator self-check passed (exit 0) with 15 Android plugin entries, including shared_preferences_android. Details: qa-artifacts/2026-11-24/build-readiness/plugin-tooling/result.md.
+- Google Services task input uses the existing source client ID after Android variant configuration; Android defaultConfig remains the QA package ID. The exact source-to-isolated Gradle patch is in qa-packaging.patch. The original Firebase JSON and Dart FirebaseOptions were byte-identical to source.
+- Offline command `./gradlew --offline --no-daemon -Ptarget=lib/main_preview.dart -Ptarget-platform=android-arm64 -Pandroid.builder.sdkDownload=false :app:processDebugGoogleServices` exited 0. Generated `google_app_id`, `project_id`, and `gcm_defaultSenderId` matched the existing source Firebase client. This enables preview resources only; FCM delivery and QA Firebase identity are untested.
+- The first Student build (no role define) and Lecturer `assembleDebug` build completed successfully. Lecturer used `-Pdart-defines=UFJFVklFV19ST0xFQ1RVUkVS` (`PREVIEW_ROLE=LECTURER`). Both original APK inspections, DEX assertions, and signature checks exited 0. The first Student artifact later failed startup due to a stale Dart kernel cache; see the read-only cache audit.
+- Fresh Student build used `-Pdart-defines=UFJFVklFV19ST0xFPVNUVURFTlQ=` (`PREVIEW_ROLE=STUDENT`); exit 0, `BUILD SUCCESSFUL` (1m28s). Build log: `qa-artifacts/2026-11-24/build-readiness/gradle-preview-student-fresh.log`. Kernel assertion passed with strings `SharedPreferencesAndroid`, `ImagePickerAndroid`, `UrlLauncherAndroid`, `AndroidVideoPlayer`, and `SqfliteAndroid`; v2 APK signature verification also exited 0. This artifact has not been installed or observed at startup; no fix is yet confirmed.
+
+Artifacts
+- First STUDENT APK (stale kernel; retained as evidence): `qa-artifacts/2026-11-24/apks/student-preview.apk`; SHA-256 `ab9b32a37f143901d6c8f6a4d06b10474495995cd1f8f7838e70f18bedaa007b`; 93,761,716 bytes.
+- Fresh STUDENT APK (not installed/tested): `qa-artifacts/2026-11-24/apks/student-preview-fresh.apk`; SHA-256 `7e73007a0f1a0a641a0f60c7ee75375cb671bede178c151f9b57a7292347a718`; 120,520,585 bytes.
+- LECTURER APK: `qa-artifacts/2026-11-24/apks/lecturer-preview.apk`; SHA-256 `6e77ccf5ff4a81dd55f7cbe9b0637325fbf547bde48bd1cc03cce7d77a11cf4d`; 120,520,446 bytes.
+- The first Student and Lecturer APKs were inspected as package `vn.edu.hust.quizhub.qa.retest`, version 1/1.0, min SDK 24, target SDK 36; launcher `vn.edu.hust.quizhub.MainActivity`; ABIs arm64-v8a/armeabi-v7a/x86_64. V2 signature verification succeeded with one signer for each. The fresh Student APK v2 signature also verified; it has not been installed or startup-observed.
+- `pubspec.lock` root and isolated SHA-256: `16323c9bda2fb99ee663aed235886b72e2b6d75a20e4a05f371b871a1b25c768`. Root runtime source, lockfile, and Firebase configuration were not edited.
+
+Native startup observations
+- First Student APK above was installed via direct ADB after the prior install timeout: install command completed with exit 0 (90-second timeout allowance). Mobile MCP launch succeeded, but the app remained at splash. Its process log shows Firebase initialization succeeded followed by `MissingPluginException` for `shared_preferences` `getAll`; see [redacted excerpt](native-startup/startup-log-redacted.txt).
+- Read-only cache audit matched the Student APK's embedded `kernel_blob.bin` byte-for-byte to an older 76,210,896-byte `app.dill` that lacks the SharedPreferences Dart adapter. The Lecturer kernel matched the newer 85,205,248-byte `app.dill` with the adapter. The fresh Student APK passed the named kernel assertions and signature verification, but has not been installed or startup-observed. The corrected plugin registrant timestamp followed the Student artifact build. The Student APK is stale for further preview case execution. This supports a QA build-cache failure, not a product-source bug. Audit: `qa-artifacts/2026-11-24/native-startup/cache-audit.md`.
+- Lecturer APK with the same QA package ID was installed using ADB `install -r` (90-second timeout allowance), exit 0. Mobile MCP launch succeeded and the Home screen was visible in the observed hierarchy. `native-startup/lecturer-home-context.png` is context evidence only, not bug proof or case acceptance evidence.
+- Student first-splash failure screenshot is retained at `native-startup/student-first-splash-failure.png`.
+- The fresh Student APK passed the listed build/kernel/signature checks but has not been installed or startup-observed. No retest result is claimed.
+
+Scope and limits
+- User authorized PREVIEW-only native testing and declared artifact downloads; no QA API host/account was provided. No API acceptance, FCM delivery, or QA Firebase identity was tested.
+- Native core preview UI phase completed; Lecturer academic phase was interrupted by the user quota stop after 12 UI PASS (see `../../reports/2026-11-24-native-lecturer.md`). The fresh Student APK was not installed or observed. Cleanup force-stopped and uninstalled the QA package, removed the eight device fixtures, and stopped ADB. See `device-cleanup.txt` for selected evidence. No acceptance PASS is inferred. The 25-case baseline remains 24 `NOT RUN`, 1 `WAITING`.
+- Acceptance matrix and issue statuses are unchanged. API/backend and FCM cases require an authorized QA host/account. Resume steps: `../../reports/2026-11-24-resume.md`.

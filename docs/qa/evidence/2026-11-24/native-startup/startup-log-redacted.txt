@@ -1,0 +1,9 @@
+# Selected Student preview process-log excerpt — 2026-11-24
+# PID/TID, device identifiers, paths, and unrelated system log lines omitted.
+# Source: qa-artifacts/2026-11-24/native-startup/student-process-raw.log
+
+11-24 19:05:50.069 <PID> <TID> I FirebaseApp: Device unlocked: initializing all Firebase APIs for app [DEFAULT]
+11-24 19:05:50.087 <PID> <TID> I FirebaseInitProvider: FirebaseApp initialization successful
+11-24 19:05:50.653 <PID> <TID> E flutter : [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: MissingPluginException(No implementation found for method getAll on channel plugins.flutter.io/shared_preferences)
+
+Interpretation: Student preview startup reached Firebase initialization, then failed on the Dart SharedPreferences plugin channel and remained at splash. The read-only artifact/cache comparison in qa-artifacts/2026-11-24/native-startup/cache-audit.md identifies the Student APK's embedded Dart kernel as an older cached app.dill without the SharedPreferences Dart adapter. This is evidence of a stale QA build artifact, not an observed product-source defect. The Lecturer APK contains the newer kernel; its separate Home launch observation is documented in the retest report. FCM delivery was not tested.

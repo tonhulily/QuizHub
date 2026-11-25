@@ -1,5 +1,7 @@
 # Góc làm việc của Sơn — Tester / QA
 
+Cập nhật PREVIEW native 24/11: pha core trên bản Lecturer hoàn tất; pha học thuật Lecturer bị dừng theo yêu cầu quota (19 kiểm tra: 12 PASS, 0 FAIL, 1 WAITING, 0 BLOCKED, 6 NOT RUN); APK Student mới chưa cài hoặc quan sát. Trong core có 40 kiểm tra UI riêng: 27 PASS, 1 WAITING, 6 NOT RUN, 6 BLOCKED; không tính vào acceptance. Ma trận 25 case giữ **24 NOT RUN, 1 WAITING**, issue status không đổi. API/backend và FCM còn BLOCKED vì chưa có API host/tài khoản QA. Ứng dụng QA đã gỡ và fixture thiết bị đã dọn. Xem [báo cáo native](docs/qa/reports/2026-11-24-native-retest.md), [báo cáo Lecturer](docs/qa/reports/2026-11-24-native-lecturer.md), [hướng dẫn resume](docs/qa/reports/2026-11-24-resume.md), và [evidence cleanup](docs/qa/evidence/2026-11-24/device-cleanup.txt).
+
 [Kết quả native preview Nam 20/11 — Search/Notifications/Push settings, permission inconclusive](docs/qa/reports/2026-11-20-nam-native.md)
 
 [Kết quả native preview Quốc Anh 20/11 — app đã gỡ, acceptance API vẫn chưa chạy](docs/qa/reports/2026-11-20-quoc-anh-native.md)
@@ -19,11 +21,11 @@ Thay đổi QA đúng phạm vi được phép commit/push thường lệ lên `
 tuyệt đối không push QA lên `main` hoặc nhánh khác. Mã runtime QA mặc định theo đúng snapshot `main` đã
 tích hợp; phạm vi cá nhân chỉ gồm test, cấu hình QA và tài liệu. Không thay đổi nghiệp vụ app.
 
-Handoff mới nhất 2026-11-23: upstream `main` snapshot `82ef14f38e086d6b558b392fc54a328c3d7f26a2`, QA integration `622640325b7c1b4bf0f3a5018ffd2635dce27061`, focused retest source `04d858c5348626198b1879a7900e2d75c9390e58`. Acceptance matrix: **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**; regression local không phải acceptance. Xem [tiến độ](docs/qa/PROGRESS.md), [regression](docs/qa/reports/2026-11-23-regression.md), [web preview](docs/qa/reports/2026-11-23-web.md), và [tóm tắt phiên](docs/qa/reports/2026-11-23-summary.md).
+Acceptance/tracker checkpoint ngày 2026-11-23 (baseline giữ nguyên): upstream `main` snapshot `82ef14f38e086d6b558b392fc54a328c3d7f26a2`, QA integration `622640325b7c1b4bf0f3a5018ffd2635dce27061`, focused retest source `04d858c5348626198b1879a7900e2d75c9390e58`. Acceptance matrix: **24 NOT RUN, 1 WAITING, 0 PASS, 0 FAIL**; regression local không phải acceptance. Xem [tiến độ](docs/qa/PROGRESS.md), [regression](docs/qa/reports/2026-11-23-regression.md), [web preview](docs/qa/reports/2026-11-23-web.md), và [tóm tắt phiên](docs/qa/reports/2026-11-23-summary.md).
 
 Tracker `TESTING LỖI` được coordinator cập nhật/readback ngày 23/11: **15 issue duy nhất — 8 Closed, 1 Ready for Retest, 6 Open**. Chi tiết và links ghim vào QA report commit xem [tracker update report](docs/qa/reports/2026-11-23-tracker-update.md).
 
-Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (cập nhật 2026-11-23),
+Tài liệu: [theo dõi tiến độ](docs/qa/PROGRESS.md) (cập nhật 2026-11-24),
 [tóm tắt QA 15/11](docs/qa/reports/2026-11-15-summary.md),
 [ghi nhận cập nhật tracker](docs/qa/reports/2026-11-15-tracker-update.md),
 [kế hoạch kiểm thử](docs/qa/TEST_PLAN.md),

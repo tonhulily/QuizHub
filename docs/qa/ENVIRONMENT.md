@@ -1,5 +1,13 @@
 # Môi trường QA
 
+## Kiểm thử PREVIEW native — 2026-11-24
+
+- Source archive: `d89a8d660d93842475b694100ccef1fdf783ed9e`. APK được build trong `.qa-tools/native-20261124/` với package `vn.edu.hust.quizhub.qa.retest`; không sửa mã runtime, manifest dependency hoặc lockfile. Dùng Java 17, Gradle và Android SDK có sẵn.
+- Google Services task dùng client Firebase nguồn sau khi Android variant đăng ký; `applicationId` cài vẫn là ID QA. Lệnh riêng `:app:processDebugGoogleServices` chạy `--offline`, exit 0; resource ID khớp client nguồn. Đây chỉ là cấu hình resource cho PREVIEW, không xác minh FCM. Xem [patch](evidence/2026-11-24/qa-packaging.patch) và [build gate](evidence/2026-11-24/native-build-gate.txt).
+- Metadata plugin Android đã được tạo lại; self-check có 15 plugin entries, exit 0. Hai APK Student/Lecturer ban đầu build thành công; Student ban đầu dùng Dart kernel cũ và treo ở splash. APK Student mới build với `PREVIEW_ROLE=STUDENT`, kiểm tra kernel/chữ ký thành công nhưng chưa cài hoặc quan sát lúc khởi động. APK Lecturer cài và mở đến Home.
+- Mobile MCP báo RMX3370, Android 13/API 33, loại `emulator`; ADB serial đã che. Không suy ra thiết bị vật lý. Pha core PREVIEW đã xong; trong 40 kiểm tra UI riêng có **27 PASS, 1 WAITING, 6 NOT RUN, 6 BLOCKED**. Đây không phải acceptance. Pha Lecturer học thuật bị dừng theo yêu cầu quota (19 kiểm tra: 12 PASS, 0 FAIL, 1 WAITING, 0 BLOCKED, 6 NOT RUN); [báo cáo Lecturer](reports/2026-11-24-native-lecturer.md). QA app đã gỡ và 8 fixture thiết bị đã dọn. Xem [báo cáo native](reports/2026-11-24-native-retest.md), [báo cáo core](reports/2026-11-24-native-core.md), [resume](reports/2026-11-24-resume.md), và [cleanup evidence](evidence/2026-11-24/device-cleanup.txt).
+- Chưa có API host/tài khoản QA. API/backend và FCM acceptance vẫn BLOCKED; preview UI không đổi ma trận 25 case hoặc trạng thái issue.
+
 ## Regression runner cập nhật 2026-11-23
 
 - Checkout QA: `qa/khanhson2005`; tested sources gồm merge `622640325b7c1b4bf0f3a5018ffd2635dce27061`, regression checkpoint `2f040844ee939317ac06da6a9d7473670f4213cd`, và focused retest checkpoint `04d858c5348626198b1879a7900e2d75c9390e58`. Upstream main snapshot: `82ef14f38e086d6b558b392fc54a328c3d7f26a2`.
