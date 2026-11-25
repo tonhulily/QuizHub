@@ -1,0 +1,12 @@
+# Cleanup thiết bị QA — 2026-11-25
+
+- Source app: `d89a8d660d93842475b694100ccef1fdf783ed9e`; package QA: `vn.edu.hust.quizhub.qa.retest`. Device ID/serial đã che.
+- `adb shell settings get global stay_on_while_plugged_in`: exit 0, giá trị `0` (không đổi).
+- `adb shell am force-stop vn.edu.hust.quizhub.qa.retest`: exit 0.
+- `adb uninstall vn.edu.hust.quizhub.qa.retest`: exit 0, `Success`. `adb shell pm path vn.edu.hust.quizhub.qa.retest`: exit 1, stdout rỗng. `adb shell pidof vn.edu.hust.quizhub.qa.retest`: exit 1, stdout rỗng.
+- Xóa đúng 8 fixture trong `/sdcard/Download/QuizHub-QA-20261125/`: `rm` exit 0; xóa thư mục rỗng (`rmdir`) exit 0; `test ! -d` exit 0. Media scan gửi lại 8 URI đã xóa để refresh index: tất cả lệnh exit 0/result 0; không truy vấn MediaStore để xác nhận DB.
+- `sync`: exit 0. Windows `adb kill-server`: exit 0; `tasklist` exit 0, không có `adb.exe`. Linux `adb kill-server`: exit 0 nhưng stderr báo `Operation not permitted`; `pgrep -ax adb`: exit 1, không có process. `findmnt`: exit 0, không thấy Android/MTP/gphoto mount.
+- Windows Shell namespace filter theo ID điện thoại trả `QA_PHONE_SHELL_ITEMS=0`; không chạy eject verb. Chưa xác nhận rút cáp hoặc tháo vật lý.
+- Playwright đóng, không có tab đang mở. Hai APK được giữ lại và hash khớp artifact đã ghi.
+
+Đây là cleanup trạng thái app/fixture và host process. Kết quả không xác nhận nội dung picker trước cleanup, dữ liệu MediaStore, hay việc tháo cáp vật lý.

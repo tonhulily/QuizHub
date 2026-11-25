@@ -1,0 +1,33 @@
+Native Student core-gap UI observations — 2026-11-25
+Source: d89a8d660d93842475b694100ccef1fdf783ed9e
+APK: Student fresh preview SHA-256 7e73007a0f1a0a641a0f60c7ee75375cb671bede178c151f9b57a7292347a718
+Device: RMX3370 / Android 13 API 33 / 1080x2400 / 480 dpi (360 dp) / font 1.0
+Method: manual mobile MCP interactions; local preview UI only; no API host/account.
+
+Profile/media:
+- Picker cancellation returned to profile edit.
+- QA-folder photo_1.png appeared as the avatar; photo_2.png appeared as the cover.
+- Removing both returned the edit draft to default/no-image state. Profile was not saved.
+- Opening camera then pressing Back before shutter returned to profile edit.
+- Multi-selecting five QA PNGs returned to composer with 4/4 and “Chỉ thêm được 4 ảnh mỗi bài.”
+- Removing one attachment updated count to 3/4.
+- Closing composer prompted “Bỏ bài viết? / Nội dung bạn đã nhập sẽ bị mất.” Confirmed discard.
+
+Preview auth:
+- Synthetic preview.invalid email and dummy password reached Home.
+- Logout showed saved-account quick-login card; tapping login returned Home.
+- “Bỏ tài khoản đã lưu” confirmation returned to manual login.
+- A subsequent login after toggling remember off returned to the manual form on logout.
+- No real authentication service was contacted.
+
+Posts:
+- Intended 500/501-word transliterations were typed, but the accessibility value did not expose a complete count and the UI showed no counter. Do not infer exact entered word count.
+- The 501-intended attempt was submitted and showed “Đã đăng bài viết”. The exact new QA post was removed from its own overflow menu and confirmed with “Xoá”. No seed post was removed.
+
+Chat/report:
+- “Chưa đọc” showed “Bạn đã đọc hết tin nhắn / Các đoạn chat chưa đọc sẽ hiện ở đây.”
+- Search result profile identified a sample user (“Người dùng mẫu số 4”) and opened a chat with preexisting sample messages; new-chat creation is unverified.
+- Selected QA image showed “Gỡ ảnh”; removing and reselecting worked. After send, UI showed “Xem ảnh / Đã gửi”; after “Thu hồi với mọi người”, UI showed “Tin nhắn đã thu hồi”. Local preview only.
+- Reporting sample post as “Spam / quảng cáo” displayed “Đã gửi báo cáo. Cảm ơn bạn đã góp ý!” This is preview feedback, not server confirmation.
+
+No screenshots were retained. No personal gallery items were selected or captured. Device lease returned to coordinator after the final report confirmation; Home feed was visible at handoff.

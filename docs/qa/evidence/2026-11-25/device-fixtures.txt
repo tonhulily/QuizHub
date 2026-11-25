@@ -10,4 +10,5 @@ Thiết lập fixture thiết bị — 2026-11-25
   - `image_over_4mib_by_1.png`: 4,194,305 byte;
   - `animated.gif`: 35 byte.
 - Picker ban đầu đang ở đúng thư mục đích nhưng danh sách trống. Coordinator broadcast `MEDIA_SCANNER_SCAN_FILE` cho đủ 8 URI; cả 8 lệnh trả exit 0 và result 0.
-- Chưa xác nhận lại danh sách file trong picker sau khi quét media. Ghi chú này chỉ xác nhận bước chuẩn bị fixture trên thiết bị; không kết luận picker truy cập được ảnh, upload thành công hay API chấp nhận file.
+- Sau media scan, lượt Student core preview quan sát DocumentsUI và thấy đủ 8 fixture trong thư mục. Đây chỉ xác nhận file xuất hiện trong picker; không chứng minh upload hoặc API chấp nhận ảnh. Thao tác và giới hạn được ghi tại [core report](../../reports/2026-11-25-native-student-core.md).
+- Sau lượt test, cleanup đã xóa đúng thư mục fixture; chi tiết lệnh tại [device cleanup](device-cleanup.txt).
