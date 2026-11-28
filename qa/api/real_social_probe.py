@@ -2,6 +2,7 @@
 """Disposable two-account REST probe; credentials are read from stdin only."""
 
 import argparse
+import datetime as dt
 import json
 import re
 import subprocess
@@ -14,8 +15,9 @@ import uuid
 
 PREFIX = "QA 20261128"
 TIMEOUT = 15
-SAFE_KEYS = {"case", "status", "http", "code", "count", "sha", "cleanup_remaining", "cleanup_unconfirmed", "environment", "command"}
+SAFE_KEYS = {"case", "status", "http", "code", "count", "sha", "cleanup_remaining", "cleanup_unconfirmed", "environment", "command", "method", "timestamp_utc", "matched_id_present", "hidden", "deleted", "content_null", "author_null", "content_matches_qa_marker"}
 SUCCESS_CODES = {"0000", "1000"}
+FAILURES = []
 
 
 def safe(event):
@@ -35,6 +37,11 @@ def safe(event):
         row["environment"] = "unknown"
     if "command" in row:
         row["command"] = "python3 qa/api/real_social_probe.py"
+    if "method" in row and row["method"] not in {"GET", "POST", "PUT", "DELETE"}:
+        row.pop("method")
+    row["timestamp_utc"] = dt.datetime.now(dt.timezone.utc).isoformat()
+    if row.get("status") in {"FAIL", "HTTP_FAIL"}:
+        FAILURES.append(row.get("case", "unknown"))
     print(json.dumps(row, ensure_ascii=True), flush=True)
 
 
@@ -67,7 +74,7 @@ class Probe:
         except urllib.error.HTTPError as exc:
             raw, status = exc.read(), exc.code
         except Exception:
-            safe({"case": case, "status": "BLOCKED", "http": 0})
+            safe({"case": case, "status": "BLOCKED", "http": 0, "method": method})
             raise
         try:
             parsed = json.loads(raw) if raw else {}
@@ -76,7 +83,7 @@ class Probe:
         code = parsed.get("code", "") if isinstance(parsed, dict) else ""
         valid_code = code in SUCCESS_CODES
         ok = status in allow and (not 200 <= status < 300 or valid_code)
-        safe({"case": case, "status": "HTTP_PASS" if ok else "HTTP_FAIL", "http": status, "code": code if valid_code else ""})
+        safe({"case": case, "status": "HTTP_PASS" if ok else "HTTP_FAIL", "http": status, "code": code if re.fullmatch(r"\d{4}", str(code)) else "", "method": method})
         return status, parsed
 
     def login(self, account, device_id):
@@ -138,7 +145,7 @@ def self_check():
     with contextlib.redirect_stdout(out):
         safe(sample)
     got = json.loads(out.getvalue())
-    assert set(got) == SAFE_KEYS.intersection(sample)
+    assert set(got) == SAFE_KEYS.intersection(sample) | {"timestamp_utc"}
     assert "secret@example.test" not in out.getvalue() and "private" not in out.getvalue()
     assert got["code"] == "0000" and got["http"] == 201
     out = StringIO()
@@ -149,10 +156,12 @@ def self_check():
         assert (code in SUCCESS_CODES) is expected
         assert (code if code in SUCCESS_CODES else "") == (code if expected else "")
     safe({"case": "SELF_CHECK", "status": "PASS", "count": len(got)})
+    FAILURES.clear()
 
 
 def run(inp, output):
     sys.stdout = output
+    FAILURES.clear()
     try:
         sha = subprocess.run(["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True, timeout=2).stdout.strip()
     except Exception:
@@ -230,6 +239,18 @@ def run(inp, output):
         passed = status == 200 and code in SUCCESS_CODES and any(x.get("comment_id") == comment_id for x in rows)
         safe({"case": "COMMENT_LIST_ASSERT", "status": "PASS" if passed else "FAIL", "count": len(rows)})
         assert passed
+        status, body = probe.request(a, "DELETE", f"/comments/{comment_id}", case="COMMENT_DELETE_NON_OWNER", allow=(403,))
+        passed = status == 403
+        safe({"case": "COMMENT_DELETE_NON_OWNER_ASSERT", "status": "PASS" if passed else "FAIL", "http": status})
+        assert passed
+        status, body = probe.request(a, "GET", f"/comments?target_type=POST&target_id={public_id}&sort=newest&limit=20", case="COMMENT_SURVIVES_DENIED_DELETE", allow=(200,))
+        data, code = envelope(body)
+        rows = data.get("items", []) if isinstance(data, dict) else []
+        still_present = status == 200 and code in SUCCESS_CODES and any(
+            x.get("comment_id") == comment_id and x.get("content") == marker + " comment" for x in rows
+        )
+        safe({"case": "COMMENT_SURVIVES_DENIED_DELETE_ASSERT", "status": "PASS" if still_present else "FAIL", "count": len(rows)})
+        assert still_present
         delete_status, delete_body = probe.request(b, "DELETE", f"/comments/{comment_id}", case="COMMENT_DELETE", allow=(200,))
         _, delete_code = envelope(delete_body) if delete_status == 200 else ({}, "")
         if delete_status == 200 and delete_code in SUCCESS_CODES:
@@ -237,9 +258,24 @@ def run(inp, output):
         status, body = probe.request(a, "GET", f"/comments?target_type=POST&target_id={public_id}&sort=newest&limit=20", case="COMMENT_ABSENT", allow=(200,))
         data, code = envelope(body)
         rows = data.get("items", []) if isinstance(data, dict) else []
-        passed = status == 200 and code in SUCCESS_CODES and not any(x.get("comment_id") == comment_id for x in rows)
-        safe({"case": "COMMENT_ABSENT_ASSERT", "status": "PASS" if passed else "FAIL", "count": len(rows)})
-        assert passed
+        row = next((x for x in rows if x.get("comment_id") == comment_id), None)
+        hidden = bool(isinstance(row, dict) and (row.get("hidden") is True or row.get("deleted") is True))
+        content_null = isinstance(row, dict) and row.get("content") is None
+        author_null = isinstance(row, dict) and row.get("author") is None
+        content_matches = isinstance(row, dict) and row.get("content") == marker + " comment"
+        if status != 200 or code not in SUCCESS_CODES:
+            result = "FAIL"
+        elif row is None or ((hidden or (isinstance(row, dict) and row.get("deleted") is True) or content_null) and not content_matches):
+            result = "PASS"
+        elif content_matches:
+            result = "FAIL"
+        else:
+            result = "WAITING"
+        safe({"case": "COMMENT_DELETE_ASSERT", "status": result, "http": status,
+              "matched_id_present": row is not None, "hidden": hidden,
+              "deleted": bool(isinstance(row, dict) and row.get("deleted") is True),
+              "content_null": content_null, "author_null": author_null,
+              "content_matches_qa_marker": content_matches, "count": len(rows)})
         for post_id in (public_id, private_id):
             delete_status, delete_body = probe.request(a, "DELETE", f"/posts/{post_id}", case="POST_DELETE", allow=(200,))
             _, delete_code = envelope(delete_body) if delete_status == 200 else ({}, "")
@@ -287,7 +323,7 @@ def main():
     try:
         try:
             run(inp, output)
-            return 0
+            return 1 if FAILURES else 0
         except AssertionError:
             safe({"case": "RUN", "status": "FAIL"})
             return 1
