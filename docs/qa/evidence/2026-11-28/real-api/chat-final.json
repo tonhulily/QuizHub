@@ -1,0 +1,82 @@
+{
+  "source_sha": "30bb1ef8227c8f5fa9f5244c39e4a4f134c79ced",
+  "timestamp_utc": "2026-11-28T10:53:10.097Z",
+  "mode": "real_api_probe",
+  "results": [
+    {
+      "case_id": "LOGIN-1",
+      "status": "PASS",
+      "alias": "son",
+      "http_status": 200
+    },
+    {
+      "case_id": "LOGIN-2",
+      "status": "PASS",
+      "alias": "nam",
+      "http_status": 200
+    },
+    {
+      "case_id": "DIRECT",
+      "status": "PASS",
+      "http_status": 201,
+      "reused_or_created": true
+    },
+    {
+      "case_id": "WS-CONNECT",
+      "status": "PASS",
+      "sockets": 2,
+      "endpoint": "/api/v1/ws/websocket"
+    },
+    {
+      "case_id": "DELIVERY",
+      "status": "PASS",
+      "marker_received": true,
+      "payload_keys": [
+        "event_type",
+        "message_id",
+        "conversation_id",
+        "conversation_type",
+        "sender",
+        "content",
+        "message_type",
+        "media_urls",
+        "reply_to_message_id",
+        "reply_to_message",
+        "created_at",
+        "edited"
+      ]
+    },
+    {
+      "case_id": "REST-HISTORY",
+      "status": "PASS",
+      "http_status": 200,
+      "code": "1000",
+      "marker_found": true,
+      "marks_read": true
+    },
+    {
+      "case_id": "RECALL",
+      "status": "PASS",
+      "delete_http_status": 200,
+      "delete_code": "1000",
+      "verify_http_status": 200,
+      "verify_code": "1000",
+      "revoked_flag": true,
+      "marker_content_logged": false
+    },
+    {
+      "case_id": "LOGOUT-1",
+      "status": "PASS",
+      "alias": "son",
+      "http_status": 200,
+      "code": "1000"
+    },
+    {
+      "case_id": "LOGOUT-2",
+      "status": "PASS",
+      "alias": "nam",
+      "http_status": 200,
+      "code": "1000"
+    }
+  ]
+}

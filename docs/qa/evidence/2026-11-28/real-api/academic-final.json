@@ -1,0 +1,622 @@
+{
+  "phase": "real-academic-smoke",
+  "classification": "real API smoke; not whole acceptance",
+  "timestamp_utc": "2026-11-28T11:07:05.198966+00:00",
+  "tested_sha": "7ed7d7d11893838a20b2d2ea577569ba0997747c",
+  "api_host": "snsqb.duckdns.org",
+  "accounts": [
+    "son",
+    "nam"
+  ],
+  "cases": [
+    {
+      "case_id": "ACA-AUTH-LOGIN-son",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "success envelope and STUDENT role",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:56.382445+00:00",
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "ACA-AUTH-LOGIN-nam",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "success envelope and STUDENT role",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:56.997178+00:00",
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "ACA-ENROLLED-CLASSES",
+      "method": "GET",
+      "path": "/sessions/my-enrolled-course-classes",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx success envelope; inspect can_propose",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "array",
+          "count": 1,
+          "item_type": "dict"
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T11:06:57.358687+00:00",
+      "eligible_count": 1,
+      "can_propose_available": true
+    },
+    {
+      "case_id": "ACA-SUBJECTS",
+      "method": "GET",
+      "path": "/subjects",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "array",
+          "count": 2,
+          "item_type": "dict"
+        },
+        "count": 2
+      },
+      "timestamp_utc": "2026-11-28T11:06:57.692258+00:00"
+    },
+    {
+      "case_id": "ACA-MY-SUBMISSIONS",
+      "method": "GET",
+      "path": "/sessions/my-submissions",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx success envelope; own submissions",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "contents",
+            "pagination"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:58.088740+00:00"
+    },
+    {
+      "case_id": "ACA-EXAMS-STUDENT-DENY",
+      "method": "GET",
+      "path": "/lecturer/exams/my-exams",
+      "status": "PASS",
+      "http_status": 403,
+      "business_code": "1009",
+      "expected": "student is forbidden by qbank contract (403)",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1009",
+        "message": {
+          "type": "string",
+          "length": 13
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:58.435410+00:00"
+    },
+    {
+      "case_id": "ACA-EXAMS-LEGACY-ROUTE",
+      "method": "GET",
+      "path": "/exams/my-exams",
+      "status": "WAITING",
+      "http_status": 404,
+      "business_code": "1012",
+      "expected": "legacy app route; live contract route differs, classification WAITING",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1012",
+        "message": {
+          "type": "string",
+          "length": 34
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:58.893386+00:00"
+    },
+    {
+      "case_id": "ACA-PROPOSE-DISPOSABLE",
+      "method": "POST",
+      "path": "/sessions/propose",
+      "status": "PASS",
+      "http_status": 201,
+      "business_code": "1000",
+      "expected": "create unique three-question PENDING proposal",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "course_class_id",
+            "created_at",
+            "question_count",
+            "semester_name",
+            "session_code",
+            "session_id",
+            "status",
+            "subject_id"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:01.131701+00:00",
+      "question_count": 3
+    },
+    {
+      "case_id": "ACA-PROPOSAL-DETAIL",
+      "method": "GET",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "created title, three questions, PENDING",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "class_code",
+            "comment_count",
+            "content",
+            "course_class_id",
+            "created_at",
+            "questions",
+            "react_count",
+            "reviewed_at",
+            "reviewed_by_lecturer",
+            "semester_id",
+            "semester_name",
+            "session_code",
+            "session_id",
+            "status",
+            "subject_code",
+            "subject_id",
+            "subject_name",
+            "title"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:01.578869+00:00",
+      "title_matches": true,
+      "pending": true,
+      "question_count": 3,
+      "pending_status_source": "detail"
+    },
+    {
+      "case_id": "ACA-PENDING-PRACTICE-FORBIDDEN",
+      "method": "GET",
+      "path": "/sessions/{sessionId}/questions",
+      "status": "PASS",
+      "http_status": 403,
+      "business_code": "1009",
+      "expected": "other student cannot access pending session (403)",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1009",
+        "message": {
+          "type": "string",
+          "length": 33
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:01.993817+00:00"
+    },
+    {
+      "case_id": "ACA-UPDATE-DISPOSABLE",
+      "method": "PUT",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "rename only own pending QA proposal and preserve all three questions",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:02.763622+00:00",
+      "sent_question_count": 3
+    },
+    {
+      "case_id": "ACA-UPDATE-VERIFY",
+      "method": "GET",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "updated title and same three questions remain PENDING",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "class_code",
+            "comment_count",
+            "content",
+            "course_class_id",
+            "created_at",
+            "questions",
+            "react_count",
+            "reviewed_at",
+            "reviewed_by_lecturer",
+            "semester_id",
+            "semester_name",
+            "session_code",
+            "session_id",
+            "status",
+            "subject_code",
+            "subject_id",
+            "subject_name",
+            "title"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:03.173133+00:00",
+      "title_matches": true,
+      "pending": true,
+      "question_count": 3
+    },
+    {
+      "case_id": "ACA-DELETE-DISPOSABLE",
+      "method": "DELETE",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "delete only the created PENDING proposal",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.158827+00:00"
+    },
+    {
+      "case_id": "ACA-DELETE-VERIFY",
+      "method": "GET",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "PASS",
+      "http_status": 404,
+      "business_code": "2008",
+      "expected": "deleted proposal is absent (404)",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "2008",
+        "message": {
+          "type": "string",
+          "length": 17
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.498338+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-DETAIL",
+      "method": "GET",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires own list item with explicit RESOLVED status",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.498366+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-PRACTICE",
+      "method": "GET",
+      "path": "/sessions/{sessionId}/questions",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires own verified RESOLVED session",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.498370+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-STATS",
+      "method": "GET",
+      "path": "/questions/{questionId}/statistics",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires question ID from own resolved session",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.498375+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-RATINGS",
+      "method": "GET",
+      "path": "/questions/{questionId}/ratings",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires question ID from own resolved session",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.498379+00:00"
+    },
+    {
+      "case_id": "ACA-AUTH-LOGOUT-son",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "logout generated QA device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.853946+00:00"
+    },
+    {
+      "case_id": "ACA-AUTH-LOGOUT-nam",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "logout generated QA device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:05.198936+00:00"
+    }
+  ]
+}

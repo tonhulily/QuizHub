@@ -1,0 +1,2011 @@
+{
+  "phase": "baseline",
+  "classification": "real API smoke; not whole acceptance",
+  "timestamp_utc": "2026-11-28T10:52:14.941295+00:00",
+  "tested_sha": "c34ece09f92f06103257eabfa2c92a92d46d40a3",
+  "api_host": "snsqb.duckdns.org",
+  "accounts": [
+    "nhu",
+    "dung",
+    "son",
+    "nam"
+  ],
+  "cases": [
+    {
+      "case_id": "AUTH-LOGIN-nhu",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx login; test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:30.797782+00:00"
+    },
+    {
+      "case_id": "IDENTITY-nhu",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx authenticated account identity",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:31.125281+00:00",
+      "identity_matches_login": true,
+      "student_role_confirmed": true,
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "AUTH-ANON-ME-nhu",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "OpenAPI declares 401/403",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 55
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:31.416928+00:00"
+    },
+    {
+      "case_id": "ROLE-LECTURER-nhu",
+      "method": "GET",
+      "path": "/lecturer/course-classes/my-classes",
+      "status": "PASS",
+      "http_status": 403,
+      "business_code": "1009",
+      "expected": "student access denied (401/403)",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1009",
+        "message": {
+          "type": "string",
+          "length": 13
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:31.749148+00:00"
+    },
+    {
+      "case_id": "STUDENT-GET-SETTINGS-PUSH-nhu",
+      "method": "GET",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:32.153458+00:00"
+    },
+    {
+      "case_id": "STUDENT-GET-SUBJECTS-nhu",
+      "method": "GET",
+      "path": "/subjects",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "array",
+          "count": 2,
+          "item_type": "dict"
+        },
+        "count": 2
+      },
+      "timestamp_utc": "2026-11-28T10:51:32.494731+00:00"
+    },
+    {
+      "case_id": "STUDENT-GET-SESSIONS-MY-SUBMISSIONS-nhu",
+      "method": "GET",
+      "path": "/sessions/my-submissions",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "contents",
+            "pagination"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:32.844507+00:00",
+      "query_params": {}
+    },
+    {
+      "case_id": "STUDENT-GET-SEARCH-USER-nhu",
+      "method": "GET",
+      "path": "/search",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination",
+            "total_hits"
+          ]
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:33.248477+00:00",
+      "query_params": {
+        "query": "QA",
+        "type": "USER",
+        "limit": "10"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-SEARCH-QUESTION-nhu",
+      "method": "GET",
+      "path": "/search",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination",
+            "total_hits"
+          ]
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:33.648308+00:00",
+      "query_params": {
+        "query": "QA",
+        "type": "QUESTION",
+        "limit": "10"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-SEARCH-SESSION-nhu",
+      "method": "GET",
+      "path": "/search",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination",
+            "total_hits"
+          ]
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:33.987879+00:00",
+      "query_params": {
+        "query": "QA",
+        "type": "SESSION",
+        "limit": "10"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-SEARCH-SAVED-nhu",
+      "method": "GET",
+      "path": "/search/saved",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "saved_searches",
+            "trending_searches"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:34.318703+00:00"
+    },
+    {
+      "case_id": "STUDENT-GET-POSTS-ME-nhu",
+      "method": "GET",
+      "path": "/posts/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination"
+          ]
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T10:51:34.658499+00:00",
+      "query_params": {
+        "limit": "10"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-NOTIFICATIONS-nhu",
+      "method": "GET",
+      "path": "/notifications",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination",
+            "unread_count"
+          ]
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:39.011093+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-GAMES-MY-PREDICTIONS-nhu",
+      "method": "GET",
+      "path": "/games/my-predictions",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "contents",
+            "pagination"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:44.059618+00:00",
+      "query_params": {
+        "limit": "10"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-GAMES-LEADERBOARD-nhu",
+      "method": "GET",
+      "path": "/games/leaderboard",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "entries",
+            "my_rank",
+            "pagination"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:44.497149+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-FRIENDSHIPS-nhu",
+      "method": "GET",
+      "path": "/friendships",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "next_cursor",
+            "pagination",
+            "total_friends"
+          ]
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T10:51:44.832950+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-FRIENDSHIPS-REQUESTS-SENT-nhu",
+      "method": "GET",
+      "path": "/friendships/requests/sent",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "next_cursor",
+            "pagination",
+            "total_sent"
+          ]
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:45.152768+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-FRIENDSHIPS-REQUESTS-RECEIVED-nhu",
+      "method": "GET",
+      "path": "/friendships/requests/received",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "next_cursor",
+            "pagination",
+            "total_pending"
+          ]
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T10:51:45.482500+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-FOLLOWS-FOLLOWING-nhu",
+      "method": "GET",
+      "path": "/follows/following",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "next_cursor",
+            "pagination",
+            "total_following"
+          ]
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T10:51:45.815350+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-FOLLOWS-FOLLOWERS-nhu",
+      "method": "GET",
+      "path": "/follows/followers",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "next_cursor",
+            "pagination",
+            "total_followers"
+          ]
+        },
+        "count": 2
+      },
+      "timestamp_utc": "2026-11-28T10:51:46.123355+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-DEVICES-nhu",
+      "method": "GET",
+      "path": "/devices",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "devices"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:46.476678+00:00"
+    },
+    {
+      "case_id": "STUDENT-GET-COSMETICS-SHOP-nhu",
+      "method": "GET",
+      "path": "/cosmetics/shop",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination",
+            "user_points"
+          ]
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:46.836826+00:00",
+      "query_params": {
+        "type": "AVATAR_FRAME",
+        "sort_by": "NEWEST",
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-COSMETICS-MY-INVENTORY-nhu",
+      "method": "GET",
+      "path": "/cosmetics/my-inventory",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "currently_equipped",
+            "inventory",
+            "pagination",
+            "summary"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:53.195428+00:00",
+      "query_params": {
+        "type": "AVATAR_FRAME",
+        "only_unlocked": "True",
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-CONVERSATIONS-nhu",
+      "method": "GET",
+      "path": "/conversations",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "next_cursor",
+            "pagination",
+            "total_conversations"
+          ]
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T10:51:53.573550+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-BLOCKS-nhu",
+      "method": "GET",
+      "path": "/blocks",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "next_cursor",
+            "pagination",
+            "total_blocked"
+          ]
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:53.915169+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "STUDENT-GET-BADGES-ME-nhu",
+      "method": "GET",
+      "path": "/badges/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "array",
+          "count": 0,
+          "item_type": null
+        },
+        "count": 0
+      },
+      "timestamp_utc": "2026-11-28T10:51:54.268073+00:00"
+    },
+    {
+      "case_id": "STUDENT-GET-ACTIVITY-FEEDS-nhu",
+      "method": "GET",
+      "path": "/activity-feeds",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI documented 2xx read with success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination"
+          ]
+        },
+        "count": 20
+      },
+      "timestamp_utc": "2026-11-28T10:51:54.759550+00:00",
+      "query_params": {
+        "limit": "20"
+      }
+    },
+    {
+      "case_id": "CONTRACT-ENROLLED-LEGACY-nhu",
+      "method": "GET",
+      "path": "/sessions/my-enrolled-subjects",
+      "status": "WAITING",
+      "http_status": 404,
+      "business_code": "1012",
+      "expected": "legacy OpenAPI route; current app uses another route",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1012",
+        "message": {
+          "type": "string",
+          "length": 49
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:51:55.139500+00:00"
+    },
+    {
+      "case_id": "AUTH-REFRESH-nhu",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx token refresh",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "refresh_token"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:01.394690+00:00"
+    },
+    {
+      "case_id": "IDENTITY-AFTER-REFRESH-nhu",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx identity with refreshed access token",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:01.737114+00:00",
+      "identity_matches_login": true
+    },
+    {
+      "case_id": "CONTRACT-ENROLLED-CLIENT-nhu",
+      "method": "GET",
+      "path": "/sessions/my-enrolled-course-classes",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "current client route; expect 2xx success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "array",
+          "count": 1,
+          "item_type": "dict"
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T10:52:02.057017+00:00",
+      "query_params": {
+        "limit": "10"
+      }
+    },
+    {
+      "case_id": "AUTH-LOGIN-dung",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx login; test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:02.635330+00:00"
+    },
+    {
+      "case_id": "IDENTITY-dung",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx authenticated account identity",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:02.957911+00:00",
+      "identity_matches_login": true,
+      "student_role_confirmed": true,
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "AUTH-ANON-ME-dung",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "OpenAPI declares 401/403",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 55
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:03.367100+00:00"
+    },
+    {
+      "case_id": "AUTH-REFRESH-dung",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx token refresh",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "refresh_token"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:03.724781+00:00"
+    },
+    {
+      "case_id": "IDENTITY-AFTER-REFRESH-dung",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx identity with refreshed access token",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:04.040226+00:00",
+      "identity_matches_login": true
+    },
+    {
+      "case_id": "AUTH-LOGIN-son",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx login; test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:04.773427+00:00"
+    },
+    {
+      "case_id": "IDENTITY-son",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx authenticated account identity",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:05.129508+00:00",
+      "identity_matches_login": true,
+      "student_role_confirmed": true,
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "AUTH-ANON-ME-son",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "OpenAPI declares 401/403",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 55
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:05.435879+00:00"
+    },
+    {
+      "case_id": "AUTH-REFRESH-son",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx token refresh",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "refresh_token"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:05.759338+00:00"
+    },
+    {
+      "case_id": "IDENTITY-AFTER-REFRESH-son",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx identity with refreshed access token",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:06.065539+00:00",
+      "identity_matches_login": true
+    },
+    {
+      "case_id": "AUTH-LOGIN-nam",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx login; test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:06.783862+00:00"
+    },
+    {
+      "case_id": "IDENTITY-nam",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx authenticated account identity",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:07.090006+00:00",
+      "identity_matches_login": true,
+      "student_role_confirmed": true,
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "AUTH-ANON-ME-nam",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "OpenAPI declares 401/403",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 55
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:07.382615+00:00"
+    },
+    {
+      "case_id": "AUTH-REFRESH-nam",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "OpenAPI 2xx token refresh",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "refresh_token"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:11.950980+00:00"
+    },
+    {
+      "case_id": "IDENTITY-AFTER-REFRESH-nam",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx identity with refreshed access token",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:12.255706+00:00",
+      "identity_matches_login": true
+    },
+    {
+      "case_id": "AUTH-LOGOUT-nhu",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx logout of generated test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:12.575369+00:00"
+    },
+    {
+      "case_id": "AUTH-REVOKED-nhu",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "old refresh token rejected after logout",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 24
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:12.851045+00:00"
+    },
+    {
+      "case_id": "AUTH-LOGOUT-dung",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx logout of generated test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:13.182440+00:00"
+    },
+    {
+      "case_id": "AUTH-REVOKED-dung",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "old refresh token rejected after logout",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 24
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:13.503468+00:00"
+    },
+    {
+      "case_id": "AUTH-LOGOUT-son",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx logout of generated test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:13.829684+00:00"
+    },
+    {
+      "case_id": "AUTH-REVOKED-son",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "old refresh token rejected after logout",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 24
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:14.142293+00:00"
+    },
+    {
+      "case_id": "AUTH-LOGOUT-nam",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx logout of generated test-device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:14.496317+00:00"
+    },
+    {
+      "case_id": "AUTH-REVOKED-nam",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "status": "PASS",
+      "http_status": 401,
+      "business_code": "9998",
+      "expected": "old refresh token rejected after logout",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "9998",
+        "message": {
+          "type": "string",
+          "length": 24
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T10:52:14.941259+00:00"
+    }
+  ]
+}

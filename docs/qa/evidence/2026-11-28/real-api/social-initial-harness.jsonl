@@ -1,0 +1,29 @@
+{"case": "RUN", "status": "STARTED", "sha": "30bb1ef8227c8f5fa9f5244c39e4a4f134c79ced", "environment": "unknown", "command": "python3 qa/api/real_social_probe.py"}
+{"case": "AUTH", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "AUTH", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "POST_PUBLIC", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "POST_A_READ", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "POST_A_READ_CONTENT", "status": "PASS", "http": 200}
+{"case": "POST_B_READ", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "POST_B_READ_CONTENT", "status": "PASS", "http": 200}
+{"case": "POSTS_ME", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "POSTS_ME_ASSERT", "status": "PASS", "count": 1}
+{"case": "POST_PRIVATE", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "PRIVATE_B_READ", "status": "HTTP_PASS", "http": 403}
+{"case": "PRIVATE_B_ASSERT", "status": "PASS", "http": 403}
+{"case": "COMMENT_CREATE", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "LIKE_ON", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "LIKE_ON_ASSERT", "status": "PASS", "http": 200}
+{"case": "LIKE_TOGGLE_OFF", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "LIKE_OFF_ASSERT", "status": "PASS", "http": 200}
+{"case": "COMMENT_LIST", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "COMMENT_LIST_ASSERT", "status": "PASS", "count": 1}
+{"case": "COMMENT_DELETE", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "COMMENT_ABSENT", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "COMMENT_ABSENT_ASSERT", "status": "FAIL", "count": 1}
+{"case": "CLEAN_POST", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "CLEAN_POST", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "CLEANUP", "status": "PASS", "cleanup_remaining": 0}
+{"case": "LOGOUT", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "LOGOUT", "status": "HTTP_PASS", "http": 200, "code": "1000"}
+{"case": "RUN", "status": "FAIL"}

@@ -2,6 +2,20 @@
 
 Collection v2.1 chứa 41 request thủ công, dựng từ các endpoint hiện được gọi trong repository Auth, Profile, Posts, Comments, Relations, Feed, Search, Media, Reaction và Report. Đây là bộ thao tác có chọn lọc, không phải runner hay khẳng định contract server.
 
+## Real API smoke runners
+
+Các runner bên dưới là QA probes tách khỏi acceptance matrix. Dùng host/tài khoản test được cấp; credentials chỉ truyền qua stdin và không được ghi vào command history, output hay evidence. Giữ output đã lọc trong `docs/qa/evidence/<date>/`; input credentials để ở file local ignored/secure và không commit.
+
+| Phạm vi | Chạy |
+|---|---|
+| Student baseline, auth và GET đọc | `python3 qa/api/real_student_probe.py --phase baseline --output docs/qa/evidence/<date>/real-api/baseline.json` — stdin JSON gồm `base_url` (HTTPS API root, ví dụ `/api/v1`) và `accounts` (`alias`, `email`, `password`). |
+| Social hai tài khoản | `python3 qa/api/real_social_probe.py --output docs/qa/evidence/<date>/real-api/social.jsonl` — stdin JSON gồm `base_url` và `accounts` đúng thứ tự alias `son`, `nam` (A/Sơn, B/Nam), email/password; runner tạo dữ liệu marker rồi cố cleanup. Dừng và giữ evidence nếu cleanup còn lại/chưa xác nhận. |
+| Chat realtime hai tài khoản | `node qa/api/real_chat_probe.mjs --output docs/qa/evidence/<date>/real-api/chat.json` — stdin JSON gồm `base_url` chính xác tới `/api/v1`, `accounts` với alias/email/password; runner gửi marker qua STOMP, GET history (đánh dấu đã đọc), thu hồi marker `EVERYONE`, rồi logout. Direct conversation có thể được tạo hoặc lấy lại và được giữ lại. |
+| Academic proposal hai tài khoản | `python3 qa/api/real_academic_probe.py --output docs/qa/evidence/<date>/real-api/academic.json` — stdin JSON gồm `base_url` HTTPS và `accounts` với alias `son` (bắt buộc), `nam` (tùy chọn), email/password. Runner tạo đề xuất 3 câu dùng test fixture, đọc/cập nhật/xóa chính đề xuất đó, rồi logout; nó chờ case resolved-session nếu không có phiên đã duyệt của tài khoản test. |
+| Student utilities hai tài khoản | `python3 qa/api/real_student_utilities_probe.py --output docs/qa/evidence/<date>/real-api/utilities.json` — stdin JSON gồm `base_url` HTTPS và `accounts` đúng thứ tự alias `son`, `nam`, email/password. Runner kiểm tra privacy, feed cursor, saved search, push settings và follow; push settings/follow được khôi phục về trạng thái ban đầu, search marker được xóa. |
+
+Mỗi runner có self-check offline, không gửi request: `python3 qa/api/real_student_probe.py --phase baseline --output /tmp/student-self-check.json --self-check`, `python3 qa/api/real_social_probe.py --self-check`, `node qa/api/real_chat_probe.mjs --self-check`, `python3 qa/api/real_academic_probe.py --output /tmp/academic-self-check.json --self-check`, hoặc `python3 qa/api/real_student_utilities_probe.py --self-check --output /tmp/utilities-self-check.json`. Kết quả self-check không phải API evidence. Đọc báo cáo từng lượt để biết source SHA, lệnh, exit code và giới hạn.
+
 ## Import và cấu hình
 
 1. Trong Postman, import `quizhub-qa.postman_collection.json` và `quizhub-qa.environment.template.json`.

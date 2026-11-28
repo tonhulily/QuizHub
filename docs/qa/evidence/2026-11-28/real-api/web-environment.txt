@@ -1,0 +1,15 @@
+WEB BUILD
+Source SHA: 0a1fbf8d0f26bcf00b3e40c3ce3647df18359221
+Command: .qa-tools/flutter/bin/flutter build web --no-pub -t lib/main.dart --output qa-artifacts/2026-11-28/real-api-web
+Exit: 0
+Result: Compiling lib/main.dart for the Web... 93.0s; Built qa-artifacts/2026-11-28/real-api-web
+Full local log: qa-artifacts/2026-11-28/web-build.log (ignored)
+
+BROWSER LOGIN ATTEMPT
+Local page: http://127.0.0.1:4183/#/login
+Browser origin: http://127.0.0.1:4183
+API preflight target: https://snsqb.duckdns.org/api/v1/auth/login
+Observed: browser blocked the login request at CORS preflight because the response had no Access-Control-Allow-Origin header. No auth POST was sent; no login result was observed.
+Console excerpt: qa-artifacts/2026-11-28/web-cors-console.txt (ignored)
+Scope: local web build and browser attempt only; no phone, lecturer account, or API acceptance result.
+Cleanup: browser closed and local server on port 4183 stopped (Ctrl-C, exit 0); no QA web server remains running.

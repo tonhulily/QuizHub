@@ -1,0 +1,964 @@
+{
+  "phase": "utilities",
+  "classification": "reversible real API smoke",
+  "tested_sha": "7ed7d7d11893838a20b2d2ea577569ba0997747c",
+  "timestamp_utc": "2026-11-28T11:07:06.413997+00:00",
+  "environment": "unknown",
+  "api_host": "snsqb.duckdns.org",
+  "accounts": [
+    "son",
+    "nam"
+  ],
+  "cases": [
+    {
+      "case_id": "UTIL-AUTH-son",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "test-device login",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:56.636648+00:00"
+    },
+    {
+      "case_id": "UTIL-IDENTITY-son",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "student role and numeric user id",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:56.980617+00:00"
+    },
+    {
+      "case_id": "UTIL-AUTH-nam",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "test-device login",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:58.701988+00:00"
+    },
+    {
+      "case_id": "UTIL-IDENTITY-nam",
+      "method": "GET",
+      "path": "/users/me",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "student role and numeric user id",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "created_at",
+            "email",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "hidden_chat_pin_configured",
+            "major",
+            "profile_completed",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:59.077253+00:00"
+    },
+    {
+      "case_id": "UTIL-PROFILE-PRIVACY",
+      "method": "GET",
+      "path": "/users/{userId}",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "other-user profile omits email and date_of_birth",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "major",
+            "profile_completed",
+            "relationships",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:59.603746+00:00"
+    },
+    {
+      "case_id": "UTIL-PROFILE-PRIVACY-ASSERT",
+      "method": "GET",
+      "path": "/users/{userId}",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "omit email/date_of_birth keys from other-user profile",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "avatar_url",
+            "badges_count",
+            "bio",
+            "class_name",
+            "cover_url",
+            "followers_count",
+            "following_count",
+            "frame_url",
+            "friends_count",
+            "full_name",
+            "gamification_points",
+            "major",
+            "profile_completed",
+            "relationships",
+            "role",
+            "school_faculty",
+            "student_lecturer_code",
+            "timezone",
+            "total_proposed_questions",
+            "user_id",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:06:59.603820+00:00",
+      "email_key_present": false,
+      "email_value_present": false,
+      "date_of_birth_key_present": false,
+      "date_of_birth_value_present": false
+    },
+    {
+      "case_id": "UTIL-PUSH-GET",
+      "method": "GET",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx success envelope with PushSettings model",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:00.199520+00:00"
+    },
+    {
+      "case_id": "UTIL-PUSH-TOGGLE",
+      "method": "PUT",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "toggle push_enabled; preserve other fields",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:01.210846+00:00"
+    },
+    {
+      "case_id": "UTIL-PUSH-VERIFY",
+      "method": "GET",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "push_enabled changed and other settings preserved",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:01.629123+00:00"
+    },
+    {
+      "case_id": "UTIL-PUSH-ASSERT",
+      "method": "GET",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "exact temporary state readback",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:01.629242+00:00"
+    },
+    {
+      "case_id": "UTIL-FEED-PAGE-1",
+      "method": "GET",
+      "path": "/activity-feeds",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "first two feed items",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination"
+          ]
+        },
+        "count": 2
+      },
+      "timestamp_utc": "2026-11-28T11:07:02.098136+00:00"
+    },
+    {
+      "case_id": "UTIL-FEED-PAGE-2",
+      "method": "GET",
+      "path": "/activity-feeds",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "next page with exact returned cursor",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination"
+          ]
+        },
+        "count": 2
+      },
+      "timestamp_utc": "2026-11-28T11:07:02.559883+00:00"
+    },
+    {
+      "case_id": "UTIL-FEED-PAGE-OVERLAP",
+      "method": "GET",
+      "path": "/activity-feeds",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "no repeated feed IDs across pages",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "items",
+            "pagination"
+          ]
+        },
+        "count": 2
+      },
+      "timestamp_utc": "2026-11-28T11:07:02.560125+00:00",
+      "overlap_count": 0
+    },
+    {
+      "case_id": "UTIL-SEARCH-BASELINE",
+      "method": "GET",
+      "path": "/search/saved",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "current saved-search list",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "saved_searches",
+            "trending_searches"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:02.940669+00:00"
+    },
+    {
+      "case_id": "UTIL-SEARCH-SAVE",
+      "method": "POST",
+      "path": "/search/saved",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "create disposable QA term; local pinned snapshot may lag live Swagger",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:03.348356+00:00"
+    },
+    {
+      "case_id": "UTIL-SEARCH-FIND",
+      "method": "GET",
+      "path": "/search/saved",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "identify only exact disposable term",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "saved_searches",
+            "trending_searches"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:03.736341+00:00"
+    },
+    {
+      "case_id": "UTIL-SEARCH-DELETE",
+      "method": "DELETE",
+      "path": "/search/saved/{id}",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "delete only disposable search",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "saved_search_id"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.196884+00:00"
+    },
+    {
+      "case_id": "UTIL-SEARCH-ABSENT",
+      "method": "GET",
+      "path": "/search/saved",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "exact marker absent after delete",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "saved_searches",
+            "trending_searches"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.513804+00:00"
+    },
+    {
+      "case_id": "UTIL-SEARCH-ABSENT-ASSERT",
+      "method": "GET",
+      "path": "/search/saved",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "marker absent",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "saved_searches",
+            "trending_searches"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.513851+00:00"
+    },
+    {
+      "case_id": "UTIL-FOLLOW-BASELINE",
+      "method": "GET",
+      "path": "/users/{userId}/relationship-stats",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "relationship_with_me.is_following is false",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "counts",
+            "relationship_with_me",
+            "user_id"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.871414+00:00"
+    },
+    {
+      "case_id": "UTIL-FOLLOW-SHAPE",
+      "method": "GET",
+      "path": "/users/{userId}/relationship-stats",
+      "status": "WAITING",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "is_following boolean required",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "counts",
+            "relationship_with_me",
+            "user_id"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:04.871619+00:00"
+    },
+    {
+      "case_id": "UTIL-PUSH-RESTORE",
+      "method": "PUT",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "restore exact original settings",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:05.248348+00:00"
+    },
+    {
+      "case_id": "UTIL-PUSH-RESTORE-VERIFY",
+      "method": "GET",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "original settings restored",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:05.604903+00:00"
+    },
+    {
+      "case_id": "UTIL-PUSH-RESTORE-ASSERT",
+      "method": "GET",
+      "path": "/settings/push",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "full settings equal baseline",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "categories",
+            "push_enabled",
+            "quiet_hours",
+            "sound_enabled",
+            "vibration_enabled"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:05.604966+00:00"
+    },
+    {
+      "case_id": "UTIL-LOGOUT-son",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "logout only probe-created session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:06.011326+00:00"
+    },
+    {
+      "case_id": "UTIL-LOGOUT-nam",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "logout only probe-created session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:07:06.409698+00:00"
+    }
+  ]
+}

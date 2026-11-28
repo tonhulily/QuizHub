@@ -1,0 +1,401 @@
+{
+  "phase": "real-academic-smoke",
+  "classification": "real API smoke; not whole acceptance",
+  "timestamp_utc": "2026-11-28T11:04:24.936481+00:00",
+  "tested_sha": "939445c288fdb52b507b1634cd624d30d34d48b1",
+  "api_host": "snsqb.duckdns.org",
+  "accounts": [
+    "son",
+    "nam"
+  ],
+  "cases": [
+    {
+      "case_id": "ACA-AUTH-LOGIN-son",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "success envelope and STUDENT role",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:20.983434+00:00",
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "ACA-AUTH-LOGIN-nam",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "success envelope and STUDENT role",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 225
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "access_token",
+            "account_state",
+            "avatar_url",
+            "cover_url",
+            "frame_url",
+            "profile_completed",
+            "refresh_token",
+            "role",
+            "token_type",
+            "user_id",
+            "username",
+            "verified"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:21.540275+00:00",
+      "identity_role": "STUDENT"
+    },
+    {
+      "case_id": "ACA-ENROLLED-CLASSES",
+      "method": "GET",
+      "path": "/sessions/my-enrolled-course-classes",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx success envelope; inspect can_propose",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "array",
+          "count": 1,
+          "item_type": "dict"
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T11:04:21.904617+00:00",
+      "eligible_count": 1,
+      "can_propose_available": true
+    },
+    {
+      "case_id": "ACA-SUBJECTS",
+      "method": "GET",
+      "path": "/subjects",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx success envelope",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "array",
+          "count": 2,
+          "item_type": "dict"
+        },
+        "count": 2
+      },
+      "timestamp_utc": "2026-11-28T11:04:22.296373+00:00"
+    },
+    {
+      "case_id": "ACA-MY-SUBMISSIONS",
+      "method": "GET",
+      "path": "/sessions/my-submissions",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "2xx success envelope; own submissions",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "object",
+          "keys": [
+            "contents",
+            "pagination"
+          ]
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:22.769106+00:00"
+    },
+    {
+      "case_id": "ACA-EXAMS-STUDENT-DENY",
+      "method": "GET",
+      "path": "/exams/my-exams",
+      "status": "FAIL",
+      "http_status": 404,
+      "business_code": "1012",
+      "expected": "student is forbidden by qbank contract (403)",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1012",
+        "message": {
+          "type": "string",
+          "length": 34
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:23.156490+00:00"
+    },
+    {
+      "case_id": "ACA-PROPOSE-DISPOSABLE",
+      "method": "POST",
+      "path": "/sessions/propose",
+      "status": "FAIL",
+      "http_status": 400,
+      "business_code": "1002",
+      "expected": "create unique two-question PENDING proposal",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1002",
+        "message": {
+          "type": "string",
+          "length": 73
+        },
+        "data": {
+          "type": "array",
+          "count": 1,
+          "item_type": "dict"
+        },
+        "count": 1
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.117182+00:00",
+      "question_count": 2
+    },
+    {
+      "case_id": "ACA-UPDATE-DISPOSABLE",
+      "method": "PUT",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "BLOCKED",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires successfully created disposable proposal",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.117202+00:00"
+    },
+    {
+      "case_id": "ACA-DELETE-DISPOSABLE",
+      "method": "DELETE",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "BLOCKED",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires successfully created disposable proposal",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.117206+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-DETAIL",
+      "method": "GET",
+      "path": "/sessions/my-submissions/{sessionId}",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires own list item with explicit RESOLVED status",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.117225+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-PRACTICE",
+      "method": "GET",
+      "path": "/sessions/{sessionId}/questions",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires own verified RESOLVED session",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.117229+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-STATS",
+      "method": "GET",
+      "path": "/questions/{questionId}/statistics",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires question ID from own resolved session",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.117233+00:00"
+    },
+    {
+      "case_id": "ACA-OWN-RESOLVED-RATINGS",
+      "method": "GET",
+      "path": "/questions/{questionId}/ratings",
+      "status": "WAITING",
+      "http_status": null,
+      "business_code": null,
+      "expected": "requires question ID from own resolved session",
+      "observed": {
+        "shape": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.117236+00:00"
+    },
+    {
+      "case_id": "ACA-AUTH-LOGOUT-son",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "logout generated QA device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.525572+00:00"
+    },
+    {
+      "case_id": "ACA-AUTH-LOGOUT-nam",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": "PASS",
+      "http_status": 200,
+      "business_code": "1000",
+      "expected": "logout generated QA device session",
+      "observed": {
+        "shape": {
+          "type": "object",
+          "keys": [
+            "code",
+            "data",
+            "message"
+          ]
+        },
+        "business_code": "1000",
+        "message": {
+          "type": "string",
+          "length": 7
+        },
+        "data": {
+          "type": "NoneType"
+        }
+      },
+      "timestamp_utc": "2026-11-28T11:04:24.936450+00:00"
+    }
+  ]
+}

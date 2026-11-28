@@ -1,0 +1,36 @@
+{"case": "RUN", "status": "STARTED", "sha": "1255b538b44f885a0d72c59aaccd5f759f1ebe59", "environment": "unknown", "command": "python3 qa/api/real_social_probe.py", "timestamp_utc": "2026-11-28T10:57:29.622906+00:00"}
+{"case": "AUTH", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:30.622535+00:00"}
+{"case": "AUTH", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:31.298185+00:00"}
+{"case": "POST_PUBLIC", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:31.668970+00:00"}
+{"case": "POST_A_READ", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "GET", "timestamp_utc": "2026-11-28T10:57:32.035386+00:00"}
+{"case": "POST_A_READ_CONTENT", "status": "PASS", "http": 200, "timestamp_utc": "2026-11-28T10:57:32.035524+00:00"}
+{"case": "POST_B_READ", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "GET", "timestamp_utc": "2026-11-28T10:57:32.448426+00:00"}
+{"case": "POST_B_READ_CONTENT", "status": "PASS", "http": 200, "timestamp_utc": "2026-11-28T10:57:32.448601+00:00"}
+{"case": "POSTS_ME", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "GET", "timestamp_utc": "2026-11-28T10:57:32.828063+00:00"}
+{"case": "POSTS_ME_ASSERT", "status": "PASS", "count": 1, "timestamp_utc": "2026-11-28T10:57:32.828257+00:00"}
+{"case": "POST_PRIVATE", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:33.267569+00:00"}
+{"case": "PRIVATE_B_READ", "status": "HTTP_PASS", "http": 403, "code": "1009", "method": "GET", "timestamp_utc": "2026-11-28T10:57:33.617798+00:00"}
+{"case": "PRIVATE_B_ASSERT", "status": "PASS", "http": 403, "timestamp_utc": "2026-11-28T10:57:33.617987+00:00"}
+{"case": "COMMENT_CREATE", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:33.988494+00:00"}
+{"case": "LIKE_ON", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:34.362082+00:00"}
+{"case": "LIKE_ON_ASSERT", "status": "PASS", "http": 200, "timestamp_utc": "2026-11-28T10:57:34.362233+00:00"}
+{"case": "LIKE_TOGGLE_OFF", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:34.774413+00:00"}
+{"case": "LIKE_OFF_ASSERT", "status": "PASS", "http": 200, "timestamp_utc": "2026-11-28T10:57:34.774557+00:00"}
+{"case": "COMMENT_LIST", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "GET", "timestamp_utc": "2026-11-28T10:57:35.144490+00:00"}
+{"case": "COMMENT_LIST_ASSERT", "status": "PASS", "count": 1, "timestamp_utc": "2026-11-28T10:57:35.144605+00:00"}
+{"case": "COMMENT_DELETE_NON_OWNER", "status": "HTTP_PASS", "http": 403, "code": "1009", "method": "DELETE", "timestamp_utc": "2026-11-28T10:57:35.506523+00:00"}
+{"case": "COMMENT_DELETE_NON_OWNER_ASSERT", "status": "PASS", "http": 403, "timestamp_utc": "2026-11-28T10:57:35.506623+00:00"}
+{"case": "COMMENT_SURVIVES_DENIED_DELETE", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "GET", "timestamp_utc": "2026-11-28T10:57:35.876723+00:00"}
+{"case": "COMMENT_SURVIVES_DENIED_DELETE_ASSERT", "status": "PASS", "count": 1, "timestamp_utc": "2026-11-28T10:57:35.876836+00:00"}
+{"case": "COMMENT_DELETE", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "DELETE", "timestamp_utc": "2026-11-28T10:57:36.263175+00:00"}
+{"case": "COMMENT_ABSENT", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "GET", "timestamp_utc": "2026-11-28T10:57:36.619101+00:00"}
+{"case": "COMMENT_DELETE_ASSERT", "status": "PASS", "http": 200, "matched_id_present": true, "hidden": true, "deleted": true, "content_null": false, "author_null": true, "content_matches_qa_marker": false, "count": 1, "timestamp_utc": "2026-11-28T10:57:36.619334+00:00"}
+{"case": "POST_DELETE", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "DELETE", "timestamp_utc": "2026-11-28T10:57:36.974825+00:00"}
+{"case": "POST_ABSENT", "status": "HTTP_PASS", "http": 404, "code": "2009", "method": "GET", "timestamp_utc": "2026-11-28T10:57:37.349231+00:00"}
+{"case": "POST_ABSENT_ASSERT", "status": "PASS", "http": 404, "timestamp_utc": "2026-11-28T10:57:37.349582+00:00"}
+{"case": "POST_DELETE", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "DELETE", "timestamp_utc": "2026-11-28T10:57:37.706536+00:00"}
+{"case": "POST_ABSENT", "status": "HTTP_PASS", "http": 404, "code": "2009", "method": "GET", "timestamp_utc": "2026-11-28T10:57:38.116925+00:00"}
+{"case": "POST_ABSENT_ASSERT", "status": "PASS", "http": 404, "timestamp_utc": "2026-11-28T10:57:38.117060+00:00"}
+{"case": "CLEANUP", "status": "PASS", "cleanup_remaining": 0, "timestamp_utc": "2026-11-28T10:57:38.117211+00:00"}
+{"case": "LOGOUT", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:38.478229+00:00"}
+{"case": "LOGOUT", "status": "HTTP_PASS", "http": 200, "code": "1000", "method": "POST", "timestamp_utc": "2026-11-28T10:57:38.876760+00:00"}

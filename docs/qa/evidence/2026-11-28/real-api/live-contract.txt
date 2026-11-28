@@ -1,0 +1,23 @@
+Live OpenAPI retrieved by coordinator from:
+https://snsqb.duckdns.org/api/v1/docs/openapi.json
+Retrieval command: curl --fail https://snsqb.duckdns.org/api/v1/docs/openapi.json -o qa-artifacts/2026-11-28/live-openapi.json (exit 0)
+SHA-256: e10d1c6555d61ab2d34daa5b90da84d1ce5661e61d981d7e8d29115511c25404
+
+Observed live OpenAPI 3.1.0 snapshot: 160 paths. This is a contract snapshot, not an API acceptance result.
+
+POST /sessions/propose
+- Required request fields include course_class_id, title, and questions.
+- questions has minItems=3.
+- each QuestionProposeDto requires confidence, content, llm_generated, and options.
+- Runtime app form validates a minimum of three questions (`lib/features/question_bank/cubit/submission_form_cubit.dart`); the first probe's two-question fixture was invalid.
+- Live UpdateSubmissionSessionRequest has a course_class_id field and questions minItems=3; the schema does not mark course_class_id required.
+- MySubmissionDetailResponse.status enum is PENDING, REVIEWING, RESOLVED.
+
+GET /lecturer/exams/my-exams
+- Lecturer-owned exams list route. `/exams/my-exams` is absent from this snapshot; test student authorization using the live lecturer path.
+
+Other live differences from the checked-in OpenAPI snapshot:
+- GET and POST /search/saved are documented.
+- Public GET /users/{userId} documents hiding email and date_of_birth.
+
+These are the live contract details relevant to the first academic probe. The checked-in docs/api-samples/openapi.json snapshot differs and must not be used to classify the first run as an application defect.
