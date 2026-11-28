@@ -162,7 +162,7 @@ async function run() {
     const row = hist.status >= 200 && hist.status < 300 ? messageRows(hist.payload).find(m => m?.content === MARKER) : undefined;
     messageId ??= row?.message_id;
     record('REST-HISTORY', successful(hist) && row ? 'PASS' : 'BLOCKED', { http_status: hist.status, ...(hist.code ? { code: hist.code } : {}), marker_found: Boolean(row), marks_read: true });
-    if (messageId == null) { record('CLEANUP', sendStarted ? 'BLOCKED' : 'NOT RUN', { marker_left_unconfirmed: sendStarted }); return; }
+    if (messageId == null) return;
 
     const del = await fetchJson(apiUrl(base, `/messages/${encodeURIComponent(messageId)}`), { method: 'DELETE', headers: { Authorization: `Bearer ${sessions[0].token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ scope: 'EVERYONE' }) });
     recallComplete = successful(del);
@@ -184,7 +184,12 @@ async function run() {
       try {
         const cleanup = await fetchJson(apiUrl(base, `/messages/${encodeURIComponent(messageId)}`), { method: 'DELETE', headers: { Authorization: `Bearer ${sessions[0].token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ scope: 'EVERYONE' }) });
         recallComplete = successful(cleanup);
-        record('CLEANUP', recallComplete ? 'PASS' : 'BLOCKED', { http_status: cleanup.status, ...(cleanup.code ? { code: cleanup.code } : {}), marker_only: true });
+        if (recallComplete) {
+          const verify = await fetchJson(apiUrl(base, `/conversations/${encodeURIComponent(conversationId)}/messages?limit=20`), { headers: { Authorization: `Bearer ${sessions[1]?.token ?? sessions[0].token}` } });
+          const recoveredRow = messageRows(verify.payload).find(m => m?.content === MARKER || String(m?.message_id) === String(messageId));
+          const removed = successful(verify) && (!recoveredRow || recoveredRow.revoked === true);
+          record('CLEANUP', removed ? 'PASS' : successful(verify) && recoveredRow?.revoked === false ? 'FAIL' : 'WAITING', { delete_http_status: cleanup.status, verify_http_status: verify.status, marker_only: true, removed_or_revoked: removed });
+        } else record('CLEANUP', 'BLOCKED', { http_status: cleanup.status, ...(cleanup.code ? { code: cleanup.code } : {}), marker_only: true });
       } catch { record('CLEANUP', 'BLOCKED', { marker_only: true }); }
     } else if (sendStarted && !recallComplete) record('CLEANUP', 'BLOCKED', { marker_left_unconfirmed: true });
     socketA?.close(); socketB?.close();
