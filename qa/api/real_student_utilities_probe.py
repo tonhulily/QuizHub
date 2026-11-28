@@ -223,11 +223,11 @@ def main():
         else:
             follow_target = other_id
             stats_path = f"/users/{other_id}/relationship-stats"
-            status, body, error = check_request(son, "GET", stats_path, "UTIL-FOLLOW-BASELINE", "relationship_with_me.is_following is false", report_path="/users/{userId}/relationship-stats")
+            status, body, error = check_request(son, "GET", stats_path, "UTIL-FOLLOW-BASELINE", "relationship_with_me.following is false", report_path="/users/{userId}/relationship-stats")
             stats = body.get("data", {}).get("relationship_with_me", {}) if isinstance(body, dict) else {}
-            baseline_following = stats.get("is_following") if isinstance(stats, dict) else None
+            baseline_following = stats.get("following") if isinstance(stats, dict) else None
             if not envelope_ok(status, body) or type(baseline_following) is not bool:
-                record("UTIL-FOLLOW-SHAPE", "GET", "/users/{userId}/relationship-stats", "is_following boolean required", status, body, error, "WAITING")
+                record("UTIL-FOLLOW-SHAPE", "GET", "/users/{userId}/relationship-stats", "following boolean required", status, body, error, "WAITING")
             elif baseline_following:
                 record("UTIL-FOLLOW-SKIP-EXISTING", "GET", "/users/{userId}/relationship-stats", "preserve existing follow", status, body, error, "NOT RUN")
             else:
@@ -235,10 +235,10 @@ def main():
                 status, body, error = check_request(son, "POST", f"/follows/{other_id}", "UTIL-FOLLOW", "create follow from false baseline", report_path="/follows/{targetUserId}")
                 if envelope_ok(status, body):
                     follow_owned = True
-                    status, body, error = check_request(son, "GET", stats_path, "UTIL-FOLLOW-VERIFY", "relationship_with_me.is_following true", report_path="/users/{userId}/relationship-stats")
+                    status, body, error = check_request(son, "GET", stats_path, "UTIL-FOLLOW-VERIFY", "relationship_with_me.following true", report_path="/users/{userId}/relationship-stats")
                     observed = body.get("data", {}).get("relationship_with_me", {}) if isinstance(body, dict) else {}
-                    passed = envelope_ok(status, body) and isinstance(observed, dict) and observed.get("is_following") is True
-                    record("UTIL-FOLLOW-ASSERT", "GET", "/users/{userId}/relationship-stats", "is_following true", status, body, error, "PASS" if passed else "FAIL")
+                    passed = envelope_ok(status, body) and isinstance(observed, dict) and observed.get("following") is True
+                    record("UTIL-FOLLOW-ASSERT", "GET", "/users/{userId}/relationship-stats", "following true", status, body, error, "PASS" if passed else "FAIL")
     except Exception:
         record("UTIL-RUN", "GET", "/", "runner stopped safely", None, None, force="BLOCKED")
     finally:
@@ -256,15 +256,15 @@ def main():
         if follow_attempted and not follow_owned and follow_target is not None and sessions:
             status, body, error = check_request(son, "GET", f"/users/{follow_target}/relationship-stats", "UTIL-FOLLOW-AMBIGUOUS-CHECK", "check baseline after ambiguous follow result", report_path="/users/{userId}/relationship-stats")
             observed = body.get("data", {}).get("relationship_with_me", {}) if isinstance(body, dict) else {}
-            if envelope_ok(status, body) and isinstance(observed, dict) and observed.get("is_following") is True:
+            if envelope_ok(status, body) and isinstance(observed, dict) and observed.get("following") is True:
                 record("UTIL-FOLLOW-CLEANUP-UNCERTAIN", "GET", "/users/{userId}/relationship-stats", "manual cleanup needed; not confirmed test-created", status, body, error, "BLOCKED")
         if follow_owned and follow_target is not None and sessions:
             status, body, error = check_request(son, "DELETE", f"/follows/{follow_target}", "UTIL-FOLLOW-RESTORE", "remove only newly created follow", report_path="/follows/{targetUserId}")
             if envelope_ok(status, body):
-                status, body, error = check_request(son, "GET", f"/users/{follow_target}/relationship-stats", "UTIL-FOLLOW-RESTORE-VERIFY", "is_following false restored", report_path="/users/{userId}/relationship-stats")
+                status, body, error = check_request(son, "GET", f"/users/{follow_target}/relationship-stats", "UTIL-FOLLOW-RESTORE-VERIFY", "following false restored", report_path="/users/{userId}/relationship-stats")
                 observed = body.get("data", {}).get("relationship_with_me", {}) if isinstance(body, dict) else {}
-                record("UTIL-FOLLOW-RESTORE-ASSERT", "GET", "/users/{userId}/relationship-stats", "is_following false", status, body, error,
-                       "PASS" if envelope_ok(status, body) and isinstance(observed, dict) and observed.get("is_following") is False else "FAIL")
+                record("UTIL-FOLLOW-RESTORE-ASSERT", "GET", "/users/{userId}/relationship-stats", "following false", status, body, error,
+                       "PASS" if envelope_ok(status, body) and isinstance(observed, dict) and observed.get("following") is False else "FAIL")
         for session in sessions:
             status, body, error = request(base, "POST", "/auth/logout", session["access"])
             record("UTIL-LOGOUT-" + session["alias"], "POST", "/auth/logout", "logout only probe-created session", status, body, error)
