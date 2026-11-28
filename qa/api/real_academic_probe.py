@@ -75,6 +75,15 @@ def proposal_payload(course_class_id, marker):
                 "explanation": "Regression tests catch unintended changes to prior behavior.",
                 "llm_generated": False, "confidence": 3.0,
             },
+            {
+                "content": f"QA {marker}: Why keep a test case reproducible?",
+                "options": [
+                    {"key": "A", "text": "To compare results consistently", "is_correct": True},
+                    {"key": "B", "text": "To avoid recording expected behavior", "is_correct": False},
+                ],
+                "explanation": "Reproducible cases make observed results comparable.",
+                "llm_generated": False, "confidence": 3.0,
+            },
         ],
     }
 
@@ -130,10 +139,10 @@ def main():
     args = parser.parse_args()
     if args.self_check:
         payload = proposal_payload(42, "offline")
-        assert payload["course_class_id"] == 42 and len(payload["questions"]) == 2
+        assert payload["course_class_id"] == 42 and len(payload["questions"]) == 3
         assert all(len(q["options"]) == 2 and sum(o["is_correct"] for o in q["options"]) == 1 for q in payload["questions"])
         updated = update_payload(42, "offline", [{"question_id": 1, **q} for q in payload["questions"]])
-        assert len(updated["questions"]) == 2 and all(q["source"] == "HOMO_SAPIENS" for q in updated["questions"])
+        assert len(updated["questions"]) == 3 and all(q["source"] == "HOMO_SAPIENS" for q in updated["questions"])
         private = http.response_summary({"email": "private@example.test", "message": "private@example.test", "data": {"password": "secret"}})
         assert "private@example.test" not in json.dumps(private) and "secret" not in json.dumps(private)
         assert reject_result(200) == "FAIL" and reject_result(403) == "PASS" and reject_result(None) == "BLOCKED"
@@ -205,9 +214,13 @@ def main():
             record(cases, "ACA-MY-SUBMISSIONS", "GET", "/sessions/my-submissions",
                    "2xx success envelope; own submissions", status, body, error)
 
-            status, body, error = request(base, "GET", "/exams/my-exams", token)
-            record(cases, "ACA-EXAMS-STUDENT-DENY", "GET", "/exams/my-exams", "student is forbidden by qbank contract (403)",
+            status, body, error = request(base, "GET", "/lecturer/exams/my-exams", token)
+            record(cases, "ACA-EXAMS-STUDENT-DENY", "GET", "/lecturer/exams/my-exams", "student is forbidden by qbank contract (403)",
                    status, body, error, force=reject_result(status))
+            status, body, error = request(base, "GET", "/exams/my-exams", token)
+            record(cases, "ACA-EXAMS-LEGACY-ROUTE", "GET", "/exams/my-exams",
+                   "legacy app route; live contract route differs, classification WAITING",
+                   status, body, error, force="BLOCKED" if error else "WAITING")
 
             chosen = eligible[0] if eligible else None
             class_id = chosen.get("course_class_id", chosen.get("id")) if chosen else None
@@ -220,7 +233,7 @@ def main():
                 proposal = body_data(body)
                 session_id = proposal.get("session_id", proposal.get("id")) if isinstance(proposal, dict) else None
                 record(cases, "ACA-PROPOSE-DISPOSABLE", "POST", "/sessions/propose",
-                       "create unique two-question PENDING proposal", status, body, error,
+                       "create unique three-question PENDING proposal", status, body, error,
                        question_count=len(payload["questions"]))
                 if http.envelope_ok(status, body) and isinstance(session_id, int) and session_id > 0:
                     created.append({"session_id": session_id, "course_class_id": class_id, "marker": marker,
@@ -241,14 +254,14 @@ def main():
                                "status=PENDING list contains created session", pstatus, pbody, pending_error,
                                force="BLOCKED" if pending_error else "PASS" if in_pending_list else "WAITING",
                                pending_list_contains_session=in_pending_list)
-                    verified = detail_ok and matches and state == "PENDING" and qcount == 2
+                    verified = detail_ok and matches and state == "PENDING" and qcount == 3
                     record(cases, "ACA-PROPOSAL-DETAIL", "GET", "/sessions/my-submissions/{sessionId}",
-                           "created title, two questions, PENDING", status, detail_body, detail_error,
+                           "created title, three questions, PENDING", status, detail_body, detail_error,
                            force="BLOCKED" if detail_error or pending_error else "PASS" if verified else "WAITING" if detail_ok and state is None else "FAIL",
                            title_matches=matches, pending=state == "PENDING", question_count=qcount,
                            pending_status_source=pending_source)
 
-                    if state == "PENDING" and matches and qcount == 2:
+                    if state == "PENDING" and matches and qcount == 3:
                         if nam and nam.get("role") == "STUDENT":
                             status, body, error = request(base, "GET", f"/sessions/{session_id}/questions", nam["token"])
                             record(cases, "ACA-PENDING-PRACTICE-FORBIDDEN", "GET", "/sessions/{sessionId}/questions",
@@ -265,7 +278,7 @@ def main():
                         if valid_update:
                             status, body, error = request(base, "PUT", f"/sessions/my-submissions/{session_id}", token, update)
                             record(cases, "ACA-UPDATE-DISPOSABLE", "PUT", "/sessions/my-submissions/{sessionId}",
-                                   "rename only own pending QA proposal and preserve both questions", status, body, error,
+                                   "rename only own pending QA proposal and preserve all three questions", status, body, error,
                                    sent_question_count=len(update["questions"]))
                             status, verify_body, verify_error = call_detail(base, token, session_id)
                             verify = body_data(verify_body)
@@ -282,12 +295,12 @@ def main():
                                        force="BLOCKED" if verify_pending_error else "PASS" if in_pending_list else "WAITING",
                                        pending_list_contains_session=in_pending_list)
                             record(cases, "ACA-UPDATE-VERIFY", "GET", "/sessions/my-submissions/{sessionId}",
-                                   "updated title and same two questions remain PENDING", status, verify_body, verify_error,
-                                   force="BLOCKED" if verify_error or verify_pending_error else "PASS" if verify_ok and matches and state == "PENDING" and qcount == 2 else "WAITING" if verify_ok and state is None else "FAIL",
+                                   "updated title and same three questions remain PENDING", status, verify_body, verify_error,
+                                   force="BLOCKED" if verify_error or verify_pending_error else "PASS" if verify_ok and matches and state == "PENDING" and qcount == 3 else "WAITING" if verify_ok and state is None else "FAIL",
                                    title_matches=matches, pending=state == "PENDING", question_count=qcount)
                         else:
                             record(cases, "ACA-UPDATE-DISPOSABLE", "PUT", "/sessions/my-submissions/{sessionId}",
-                                   "update requires two returned question IDs/options", None, None, force="BLOCKED",
+                                   "update requires three returned question IDs and options", None, None, force="BLOCKED",
                                    sent_question_count=len(update["questions"]))
 
                         # Delete only after a fresh read still confirms this disposable proposal is PENDING.
